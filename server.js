@@ -14,7 +14,7 @@ const exceljs = require('exceljs');
 const app = express();
 
 const port = 3000;
-const hostname = '192.168.2.49';
+const hostname = '0.0.0.0';
 
 
 //VIRIFER SI LE DIRECTORY EXIST
