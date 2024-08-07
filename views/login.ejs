@@ -1,0 +1,392 @@
+<!doctype html>
+
+<html lang="en"> 
+
+ <head> 
+
+  <meta charset="UTF-8"> 
+
+  <title>Log In</title> 
+  <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');  
+    @media (max-width:800px){
+      *{
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: 'Quicksand', sans-serif;
+}
+body 
+{
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+background:linear-gradient(rgb(255, 255, 255,1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+
+}
+
+
+section 
+{
+position: absolute;
+width: 100vw;
+height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 2px;
+flex-wrap: wrap;
+overflow: hidden;
+}
+section .signin
+{
+position: absolute;
+width: 400px;
+background: hsla(289, 64%, 87%, 0.075);  
+z-index: 1000;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 40px;
+border-radius: 4px;
+box-shadow: 0 15px 35px rgba(0,0,0,9);
+}
+section .signin .content 
+{
+position: relative;
+width: 100%;
+display: flex;
+justify-content: center;
+align-items: center;
+flex-direction: column;
+gap: 40px;
+}
+section .signin .content h2 
+{
+font-size: 2em;
+color: rgb(8, 8, 8);
+text-transform: uppercase;
+}
+section .signin .content .form 
+{
+width: 100%;
+display: flex;
+flex-direction: column;
+gap: 25px;
+}
+section .signin .content .form .inputBox
+{
+position: relative;
+width: 100%;
+}
+section .signin .content .form .inputBox input 
+{
+position: relative;
+width: 100%;
+background: rgba(255, 255, 255, 0.411);
+border: none;
+outline: none;
+padding: 25px 10px 7.5px;
+border-radius: 4px;
+color: #000000;
+font-weight: 500;
+font-size: 1em;
+}
+section .signin .content .form .inputBox i 
+{
+position: absolute;
+left: 0;
+padding: 15px 10px;
+font-style: normal;
+color: #1a1818;
+transition: 0.5s;
+pointer-events: none;
+}
+.signin .content .form .inputBox input:focus ~ i,
+.signin .content .form .inputBox input:valid ~ i
+{
+transform: translateY(-7.5px);
+font-size: 0.8em;
+color: #000000;
+font-weight: bold;
+}
+.signin .content .form .links 
+{
+position: relative;
+width: 100%;
+display: flex;
+justify-content: space-between;
+}
+.signin .content .form .links a 
+{
+color: #000000;
+font-size: larger;
+margin: 0;
+}
+.signin .content .form .links a:hover{
+color: #190630;
+font-weight: bold;
+}
+.signin .content .form .links a:nth-child(2)
+{
+color: rgb(0, 0, 0);
+font-weight: 600;
+}
+.signin .content .form .inputBox input[type="submit"]
+{
+padding: 10px;
+background: rgba(195, 154, 211, 0.459);
+color: #000;
+font-weight: 600;
+font-size: 1.35em;
+letter-spacing: 0.05em;
+cursor: pointer;
+}
+input[type="submit"]:hover
+{
+ background-color: rgb(36, 10, 36);
+}
+input[type="submit"]:active
+{
+opacity: 0.6;
+}
+}
+@media (min-width: 800px){
+  *
+{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Quicksand', sans-serif;
+}
+body 
+{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background:linear-gradient(rgb(255, 255, 255,1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+}
+.logo-container {
+    position: absolute;
+    top: 10px;
+    left: 10px; 
+}
+
+.logo {
+    height: 50px; 
+    transition: transform 0.3s ease; 
+}
+
+.logo-container .logo:hover {
+    transform: scale(1.1); 
+}
+section 
+{
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+section .signin
+{
+  position: absolute;
+  width: 400px;
+  background: hsla(289, 64%, 87%, 0.075);  
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  border-radius: 4px;
+  box-shadow: 0 15px 35px rgba(0,0,0,9);
+}
+section .signin .content 
+{
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 40px;
+}
+section .signin .content h2 
+{
+  font-size: 2em;
+  color: rgb(8, 8, 8);
+  text-transform: uppercase;
+}
+section .signin .content .form 
+{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+section .signin .content .form .inputBox
+{
+  position: relative;
+  width: 100%;
+}
+section .signin .content .form .inputBox input 
+{
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.411);
+  border: none;
+  outline: none;
+  padding: 25px 10px 7.5px;
+  border-radius: 4px;
+  color: #000000;
+  font-weight: 500;
+  font-size: 1em;
+}
+section .signin .content .form .inputBox i 
+{
+  position: absolute;
+  left: 0;
+  padding: 15px 10px;
+  font-style: normal;
+  color: #1a1818;
+  transition: 0.5s;
+  pointer-events: none;
+}
+.signin .content .form .inputBox input:focus ~ i,
+.signin .content .form .inputBox input:valid ~ i
+{
+  transform: translateY(-7.5px);
+  font-size: 0.8em;
+  color: #000000;
+  font-weight: bold;
+}
+.signin .content .form .links 
+{
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.signin .content .form .links a 
+{
+  color: #000000;
+  font-size: larger;
+  margin: 0;
+}
+.signin .content .form .links a:hover{
+  color: #190630;
+  font-weight: bold;
+}
+.signin .content .form .links a:nth-child(2)
+{
+  color: rgb(0, 0, 0);
+  font-weight: 600;
+}
+.signin .content .form .inputBox input[type="submit"]
+{
+  padding: 10px;
+  background: rgba(195, 154, 211, 0.459);
+  color: #000;
+  font-weight: 600;
+  font-size: 1.35em;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+input[type="submit"]:hover
+{
+     background-color: rgb(36, 10, 36);
+}
+input[type="submit"]:active
+{
+  opacity: 0.6;
+}
+}
+ 
+@media (max-width: 900px)
+{
+ 
+section span 
+{
+width: calc(10vw - 2px);
+height: calc(10vw - 2px);
+}
+}
+
+@media (max-width: 600px)
+{
+section span 
+{
+width: calc(20vw - 2px);
+height: calc(20vw - 2px);
+}
+}
+
+
+
+</style>
+  
+
+ </head> 
+
+ <body>
+  <div class="logo-container">
+    <a href="/">
+      <img class="logo" src="../bmsLogo.svg" />
+    </a>
+ </div>
+
+  <section> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> <span></span> 
+
+   <div class="signin"> 
+
+    <div class="content"> 
+
+     <h2>Log In</h2> 
+     <% if (error) { %>
+      <p style="color: red;background-color: rgba(245, 245, 220, 0.288);font-weight: bold;"><%= error %></p>
+    <% } %>
+    <form action="/login" method="post">
+     <div class="form">   
+      <div class="inputBox"> 
+
+       <input type="text" name="username" required> <i>Username</i> 
+
+      </div> 
+
+      <div class="inputBox"> 
+
+       <input type="password" name="password" required> <i>Password</i> 
+
+      </div> 
+
+      <div class="links">  <a href="/signup">Signup</a> 
+
+      </div> 
+
+      <div class="inputBox"> 
+
+       <input type="submit" value="Login"> 
+
+      </div> 
+
+     </div> 
+    </form>
+    </div> 
+
+   </div> 
+
+  </section> 
+  <script>
+  
+</script>
+ </body>
+
+</html>

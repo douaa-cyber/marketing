@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+    <style>
+        input[type="radio"].active {
+    border: 2px solid #007BFF;
+    background-color: #e7f3ff;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.highlight {
+        background-color: #e2e2e2;
+    }
+    #categoryDiv label{
+        color: black;
+    }
+  @media(min-width:800px){
+       body {
+    background: linear-gradient(rgb(255, 255, 255, 1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.5s ease-in-out;
+    overflow-y: auto;
+    zoom: 0.8;
+   
+}
+
+* {
+    zoom: 0.97;
+}
+.inputBox select[multiple] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s ease-in-out;
+    height: auto; 
+}
+
+.inputBox select[multiple] option {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.inputBox select[multiple] option:hover {
+    background-color: #e9e9e9;
+}
+.comment {
+    display: block;
+}
+
+.rating-container {
+  position: relative;
+}
+
+.rating-container input {
+  width: calc(100% - 30px);
+  padding-right: 30px;
+}
+.stepstep-3{
+    max-height: 300px;
+}
+
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  
+}
+
+.logo {
+    height: 50px;
+}
+
+.autocomplete-suggestions {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    position: absolute;
+    z-index: 9999;
+    width: 100%;
+}
+
+.autocomplete-suggestion {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.autocomplete-suggestion:hover {
+    background-color: #e9e9e9;
+}
+
+
+
+.content {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin: 0 auto;
+    transition: transform 0.5s ease-in-out;
+    padding-bottom: 12%;
+}
+
+.content:hover {
+    transform: translateY(-10px);
+}
+
+.form {
+    text-align: left;
+}
+
+.step {
+    display: none;
+}
+header .logo:hover {
+  transform: scale(1.5);
+}
+.step.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.inputBox {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.inputBox input,
+.inputBox select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.inputBox input {
+    width: 96%;
+}
+
+.inputBox input:focus,
+.inputBox select:focus {
+    border-color: #007bff;
+}
+
+.inputBox i {
+    position: absolute;
+    top: 10px;
+    left: 5px;
+    color: #777;
+    pointer-events: none;
+    transition: 0.3s ease-out;
+    top: -19px;
+    font-size: 12px;
+    color: #8d5acd;
+}
+
+label {
+    color: #8d5acd;
+    font-size:larger;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    background-color: #8d5acd;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-out, transform 0.3s ease-in-out;
+}
+
+.btn:hover {
+    background-color: #6a1b9a;
+    transform: scale(1.05);
+}
+
+.btn.prev {
+    margin-right: 10px;
+    background-color: #67b0e0;
+}
+
+.btn.prev:hover {
+    background-color: #b3dfdc;
+}
+
+.btn.next {
+    float: right;
+}
+
+.btn.next:hover {
+    background-color: #5e35b1;
+}
+
+.btn[type="submit"] {
+    background-color: #4caf50;
+}
+
+.btn[type="submit"]:hover {
+    background-color: #388e3c;
+}
+.signin{
+    margin-top:15%;
+}
+  }
+  @media(max-width:800px){
+    body {
+    background: linear-gradient(rgb(255, 255, 255, 1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.5s ease-in-out;
+    overflow-y: auto;
+    zoom: 0.9;
+}
+
+
+.hidden {
+    display: none;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100000;
+    backdrop-filter: blur(10px);
+    transition: background-color 0.5s ease-in-out;
+}
+
+header .logo {
+    height: 50px;
+}
+    
+.autocomplete-suggestions {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    position: absolute;
+    z-index: 9999;
+    width: 100%;
+}
+
+
+
+.autocomplete-suggestion {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.autocomplete-suggestion:hover {
+    background-color: #e9e9e9;
+}
+
+
+
+.content {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 600px;
+    text-align: center;
+    margin: 0 auto;
+    transition: transform 0.5s ease-in-out;
+}
+
+.content:hover {
+    transform: translateY(-10px);
+}
+
+.form {
+    text-align: left;
+}
+
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.inputBox {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.inputBox input,
+.inputBox select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.inputBox input {
+    width: 96%;
+}
+
+.inputBox input:focus,
+.inputBox select:focus {
+    border-color: #007bff;
+}
+
+.inputBox i {
+    position: absolute;
+    top: 10px;
+    left: 5px;
+    color: #777;
+    pointer-events: none;
+    transition: 0.3s ease-out;
+    top: -19px;
+    font-size: 12px;
+    color: #8d5acd;
+}
+
+label {
+    color: #8d5acd;
+    font-size: 13px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    background-color: #8d5acd;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-out, transform 0.3s ease-in-out;
+}
+
+.btn:hover {
+    background-color: #6a1b9a;
+    transform: scale(1.05);
+}
+
+.btn.prev {
+    margin-right: 10px;
+    background-color: #67b0e0;
+}
+
+.btn.prev:hover {
+    background-color: #b3dfdc;
+}
+
+.btn.next {
+    float: right;
+}
+
+.btn.next:hover {
+    background-color: #5e35b1;
+}
+
+.btn[type="submit"] {
+    background-color: #4caf50;
+}
+
+.btn[type="submit"]:hover {
+    background-color: #388e3c;
+}
+.signin{
+    margin-top: 10%;
+}
+
+
+
+  }
+  .rating-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.star {
+    font-size: 30px;
+    color: #ddd;
+    cursor: pointer;
+    width: 20%; 
+    text-align: center; 
+}
+
+.star.selected {
+    color: #64beeb;
+}
+
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+}
+
+.inputBox {
+    margin-bottom: 20px;
+}
+
+.scroll-container {
+    max-height: 100px; 
+    overflow-y: auto; 
+    border: 1px solid #ccc; 
+    padding: 10px; 
+}
+
+#checkboxContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd; 
+    padding-bottom: 5px; 
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 20px; 
+    height: 20px; 
+    margin-right: 10px; 
+}
+
+.article-label {
+    flex: 1; 
+    margin-right: 10px;
+    min-width: 150px; 
+}
+
+.quantity-input {
+    width: 100px; 
+    margin-left: 10px;
+}
+/* General style for suggestion boxes */
+.suggestion-box {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    position: absolute; 
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 100%;
+}
+
+.suggestion-box div {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.suggestion-box div:hover {
+    background-color: #f0f0f0;
+}
+
+.suggestion-box div.selected {
+    background-color: #e0e0e0;
+}
+.autocomplete-suggestions {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            background: #fff;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .autocomplete-suggestion {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .autocomplete-suggestion:hover {
+            background-color: #ddd;
+        }
+
+        .autocomplete-suggestion.selected {
+            background-color: #bde0fe;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .tag .remove-tag {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .inputBox {
+            position: relative;
+        }
+
+
+
+    </style>
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[name="categorie"]').forEach(radio => {
+                radio.addEventListener('change', updateProductOptions);
+            });
+    
+            function updateProductOptions() {
+                const selectedCategory = document.querySelector('input[name="categorie"]:checked').value;
+                const categoryDiv = document.getElementById('categoryDiv');
+                // Hide all product dropdowns
+                document.getElementById('lampeProducts').style.display = 'none';
+                document.getElementById('appareillageProducts').style.display = 'none';
+                document.getElementById('disjoncteurProducts').style.display = 'none';
+    
+                // Hide all competitor dropdowns
+                document.getElementById('competitorSection').style.display = 'none';
+                document.getElementById('lampeConcurrent').style.display = 'none';
+                document.getElementById('appareillageConcurrent').style.display = 'none';
+                document.getElementById('disjoncteurConcurrent').style.display = 'none';
+
+                document.querySelectorAll('input[name="categorie"]').forEach(radio => {
+                     radio.classList.remove('active');
+                   });
+    
+                // Show the relevant product dropdown
+                if (selectedCategory === 'Lampe') {
+                    document.getElementById('lampeProducts').style.display = 'block';
+                    document.getElementById('competitorSection').style.display = 'block';
+                    document.getElementById('lampeConcurrent').style.display = 'block';
+                } else if (selectedCategory === 'Appareillage') {
+                    document.getElementById('appareillageProducts').style.display = 'block';
+                    document.getElementById('competitorSection').style.display = 'block';
+                    document.getElementById('appareillageConcurrent').style.display = 'block';
+                } else if (selectedCategory === 'Disjoncteur') {
+                    document.getElementById('disjoncteurProducts').style.display = 'block';
+                    document.getElementById('competitorSection').style.display = 'block';
+                    document.getElementById('disjoncteurConcurrent').style.display = 'block';
+                }
+                document.querySelector(`input[value="${selectedCategory}"]`).classList.add('active');
+                // Restore selections
+                restoreSelectedOptions();
+            }
+    
+           
+        });
+        
+   
+    document.addEventListener("DOMContentLoaded", function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, errorPosition);
+            } else {
+                alert("La géolocalisation n'est pas supportée par ce navigateur.");
+            }
+        });
+
+        function errorPosition(err) {
+            alert("Erreur lors de l'obtention de la position : " + err.message);
+        }
+
+        function showPosition(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            document.getElementById("latitude").value = latitude;
+            document.getElementById("longitude").value = longitude;
+
+            console.log("Latitude:", latitude, "Longitude:", longitude);
+        }
+        </script>
+       <script>
+   document.addEventListener('DOMContentLoaded', function () {
+    const clientInput = document.getElementById('source');
+    const suggestionsBox = document.getElementById('autocomplete-suggestions');
+    const tagContainer = document.getElementById('tagContainer');
+    const hiddenSources = document.getElementById('hiddenSources');
+    let sources = [];
+    let selectedSources = [];
+
+    clientInput.addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const filteredSources = sources.filter(source => source.toLowerCase().includes(query));
+        updateAutocompleteSuggestions(filteredSources);
+    });
+
+    function updateAutocompleteSuggestions(filteredSources) {
+        suggestionsBox.innerHTML = '';
+
+        if (filteredSources.length > 0) {
+            filteredSources.forEach(source => {
+                const div = document.createElement('div');
+                div.textContent = source;
+                div.className = 'autocomplete-suggestion';
+                div.addEventListener('click', () => {
+                    addTag(source);
+                    clientInput.value = '';
+                    suggestionsBox.innerHTML = '';
+                });
+                suggestionsBox.appendChild(div);
+            });
+        } else {
+            const div = document.createElement('div');
+            div.textContent = 'No suggestions available';
+            div.className = 'autocomplete-suggestion';
+            suggestionsBox.appendChild(div);
+        }
+    }
+
+    function addTag(source) {
+        if (!selectedSources.includes(source)) {
+            selectedSources.push(source);
+            const tag = document.createElement('div');
+            tag.className = 'tag';
+            tag.textContent = source;
+            const removeButton = document.createElement('span');
+            removeButton.textContent = '×';
+            removeButton.className = 'remove-tag';
+            removeButton.addEventListener('click', () => {
+                removeTag(source);
+            });
+            tag.appendChild(removeButton);
+            tagContainer.appendChild(tag);
+            updateHiddenSources();
+        }
+    }
+
+    function removeTag(source) {
+        selectedSources = selectedSources.filter(selected => selected !== source);
+        const tags = tagContainer.getElementsByClassName('tag');
+        for (let i = 0; i < tags.length; i++) {
+            if (tags[i].textContent.includes(source)) {
+                tagContainer.removeChild(tags[i]);
+                break;
+            }
+        }
+        updateHiddenSources();
+    }
+
+    function updateHiddenSources() {
+        hiddenSources.value = selectedSources.join(',');
+    }
+
+    document.addEventListener('click', function (event) {
+        if (!suggestionsBox.contains(event.target) && event.target !== clientInput) {
+            suggestionsBox.innerHTML = '';
+        }
+    });
+
+    const regionSelect = document.getElementById('region');
+    regionSelect.addEventListener('change', function () {
+        const selectedRegion = this.value;
+        if (selectedRegion) {
+            const societe = '<%= societe %>';
+            fetch(`/sources?societe=${societe}&region=${selectedRegion}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    sources = Array.isArray(data) ? data : [];
+                    updateAutocompleteSuggestions(sources);
+                })
+                .catch(error => console.error('Error fetching sources:', error));
+        } else {
+            sources = [];
+            suggestionsBox.innerHTML = '';
+        }
+    });
+});
+
+function toggleQuantityInput(checkbox) {
+    const quantityInputId = `${checkbox.id}Quantity`;
+    const quantityInput = document.getElementById(quantityInputId);
+
+    if (checkbox.checked) {
+        quantityInput.style.display = 'inline';
+    } else {
+        quantityInput.style.display = 'none';
+        quantityInput.value = ''; // clear the value
+    }
+}
+
+function getSelectedArticles() {
+    const selectedArticles = [];
+    const checkboxes = document.querySelectorAll('#checkboxContainer input[type="checkbox"]:checked');
+
+    checkboxes.forEach(checkbox => {
+   
+        const quantityInput = document.querySelector(`#${checkbox.id}Quantity`);
+        const quantity = quantityInput ? quantityInput.value.trim() : '';
+
+      
+        if (quantity !== '') {
+            selectedArticles.push({
+                name: checkbox.value,
+                quantity: quantity
+            });
+        }
+    });
+
+    return selectedArticles;
+}
+
+function submitForm() {
+    const form = document.querySelector('#multiStepForm');
+    const formData = new FormData(form);
+    const selectedArticles = getSelectedArticles();
+    formData.append('articles', JSON.stringify(selectedArticles)); 
+
+    fetch('/form', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+    
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+
+
+
+      </script>
+    
+      
+</head>
+<body>
+    <header class="header">
+       
+            <a href="/"><img class="logo" src="../bmsLogo.svg" alt="Logo" /></a>
+          
+    </header>
+    <section class="signin">
+        <div class="content">
+            <h2>FORMULAIRE</h2>
+            <div class="form">
+                <form id="multiStepForm" action="/form" method="post" autocomplete="off">
+                    <div class="step step-1 active">
+                        <h3>Etape 1/4</h3>
+                        <div class="inputBox">
+                            <label for="missionObjective">Objectif de mission :</label>
+                            
+                            <select id="missionObjective" name="missionObjective" >
+                                <option value="default" disabled>Sélectionnez un objectif</option>
+                                <option value="cadeaux fin d'année">cadeaux fin d'année</option>
+                                <option value="tourné marketing">tourné marketing</option>
+                                <option value="étude marché">étude marché</option>
+                                <option value="remise arriére">remise arriére</option>
+                                <option value="action marketing">action marketing</option>
+                                <option  value="autre" >autres</option>
+                            </select>
+                        </div>
+                        <div class="inputBox">
+                            <input type="date" name="date" id="currentDate"  readonly>
+                            <i>Date</i>
+                        </div>
+                        <div class="inputBox">
+                            <label for="region">Région:</label>
+                                <select name="region" id="region" >
+                                    <option value="" >selectionner region</option>
+                                  <% regions.forEach(region => { %>
+                                    <option value="<%= region %>"><%= region %></option>
+                                  <% }); %>
+                                </select>
+
+                            <div id="suggestions"></div>
+                        </div>
+                        <div class="inputBox">
+                            <label for="wilayaInput">Wilaya:</label>
+                            <input type="text" id="wilayaInput" name="wilaya"  oninput="fetchwilaya()" placeholder="Entrer une wilaya">
+                            <div id="wilayaSuggestions" class="suggestion-box"></div>
+                        </div>
+                        <div class="inputBox">
+                            <label for="DairaInput">Daira:</label>
+                            <input type="text" id="DairaInput" name="daira"  oninput="fetchDaira()">
+                            <div id="dairaSuggestions" class="suggestion-box"></div>
+                        </div>
+
+                        <div class="inputBox">
+                            <label for="communeInput">Commune:</label>
+                            <input type="text" id="communeInput" name="commune" oninput="fetchcommune()">
+                            <div id="communeSuggestions" class="suggestion-box"></div>
+                        </div>
+                      
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <button type="button" class="btn next" id="nextBtnStep1">Next</button>
+                    </div>
+                    <div class="step step-2">
+                        <h3>Etape 2/4</h3>
+                        <div class="inputBox">
+                            <label for="activite">Activité :</label>
+                            <select id="activite" name="activite">
+                                <option value="default" disabled>Sélectionnez une activité</option>
+                                <% if(agents ==='marketing'){ %>
+                                <option value="distributeur">Distributeur</option>
+                                <option value="grossiste">Grossiste</option>
+                                <option value="elect">Electricité</option>
+                                <option value="quincaillerie">Quincaillerie</option>
+                                <option value="Lighting">Lighting</option>
+                                <option value="Plomberie">Plomberie</option>
+                                <% } else{ %>
+                                    <option value="distributeur">Distributeur</option>
+                                    <option value="grossiste">Grossiste</option>
+                                <% } %>
+                               
+                            </select>
+                        </div>
+                        <div class="inputBox">
+                            <input type="text" name="nom_magasin" >
+                            <i>Nom_Magasin</i>
+                        </div>
+
+                        <div class="inputBox">
+                            <input type="text" name="nom" >
+                            <i>Nom_Client</i>
+                        </div>
+                        <div class="inputBox">
+                            <input type="text" name="prenom" >
+                            <i>Prénom_Client</i>
+                        </div>
+                        <div class="inputBox">
+                            <input type="tel" id="telinput" max="10" maxlength="10" name="tel" pattern="[0-9]{10}" title="Veuillez entrer un numéro de téléphone valide (10 chiffres)" >
+                            <i>tel</i>
+                        </div>
+                        <div class="inputBox">
+                            <input type="email" name="email" >
+                            <i>Email</i>
+                        </div>
+                        <div class="inputBox">
+                            <input type="text" name="nom_ach" >
+                            <i>Nom_Acheteur/Gérant</i>
+                        </div>
+                        <div class="inputBox">
+                            <label>Articles à distribuer:</label>
+                            <div class="scroll-container">
+                                <div id="checkboxContainer">
+                                   <% if(societe==='mono'){ %>
+                                    
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Catalogue" value="Catalogue" onchange="toggleQuantityInput(this)">
+                                        <label for="Catalogue" class="article-label">Catalogue</label>
+                                        <input type="number" class="quantity-input" id="CatalogueQuantity" name="CatalogueQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="MiniCatalogue" value="Mini Catalogue" onchange="toggleQuantityInput(this)">
+                                        <label for="MiniCatalogue" class="article-label">Mini Catalogue</label>
+                                        <input type="number" class="quantity-input" id="MiniCatalogueQuantity" name="MiniCatalogueQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="BonPour" value="Bon Pour" onchange="toggleQuantityInput(this)">
+                                        <label for="BonPour" class="article-label">Bon Pour</label>
+                                        <input type="number" class="quantity-input" id="BonPourQuantity" name="BonPourQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="BlocNot" value="Bloc Not" onchange="toggleQuantityInput(this)">
+                                        <label for="BlocNot" class="article-label">Bloc Not</label>
+                                        <input type="number" class="quantity-input" id="BlocNotQuantity" name="BlocNotQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Valise" value="Valise" onchange="toggleQuantityInput(this)">
+                                        <label for="Valise" class="article-label">Valise</label>
+                                        <input type="number" class="quantity-input" id="ValiseQuantity" name="ValiseQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Stylo" value="Stylo" onchange="toggleQuantityInput(this)">
+                                        <label for="Stylo" class="article-label">Stylo</label>
+                                        <input type="number" class="quantity-input" id="StyloQuantity" name="StyloQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Agenda" value="Agenda" onchange="toggleQuantityInput(this)">
+                                        <label for="Agenda" class="article-label">Agenda</label>
+                                        <input type="number" class="quantity-input" id="AgendaQuantity" name="AgendaQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Calendrier" value="Calendrier" onchange="toggleQuantityInput(this)">
+                                        <label for="Calendrier" class="article-label">Calendrier</label>
+                                        <input type="number" class="quantity-input" id="CalendrierQuantity" name="CalendrierQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="SousMain" value="Sous Main" onchange="toggleQuantityInput(this)">
+                                        <label for="SousMain" class="article-label">Sous Main</label>
+                                        <input type="number" class="quantity-input" id="SousMainQuantity" name="SousMainQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="ChevalierBureau" value="Chevalier de Bureau" onchange="toggleQuantityInput(this)">
+                                        <label for="ChevalierBureau" class="article-label">Chevalier de Bureau</label>
+                                        <input type="number" class="quantity-input" id="ChevalierBureauQuantity" name="ChevalierBureauQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="PapierEntete" value="Papier Entete" onchange="toggleQuantityInput(this)">
+                                        <label for="PapierEntete" class="article-label">Papier Entete</label>
+                                        <input type="number" class="quantity-input" id="PapierEnteteQuantity" name="PapierEnteteQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="ChemisARabat" value="Chemis A Rabat" onchange="toggleQuantityInput(this)">
+                                        <label for="ChemisARabat" class="article-label">Chemis A Rabat</label>
+                                        <input type="number" class="quantity-input" id="ChemisARabatQuantity" name="ChemisARabatQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="CarnetDecharge" value="Carnet Décharge" onchange="toggleQuantityInput(this)">
+                                        <label for="CarnetDecharge" class="article-label">Carnet Décharge</label>
+                                        <input type="number" class="quantity-input" id="CarnetDechargeQuantity" name="CarnetDechargeQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Shope" value="Shope" onchange="toggleQuantityInput(this)">
+                                        <label for="Shope" class="article-label">Shope</label>
+                                        <input type="number" class="quantity-input" id="ShopeQuantity" name="ShopeQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="TapisDeSouris" value="Tapis de souris" onchange="toggleQuantityInput(this)">
+                                        <label for="TapisDeSouris" class="article-label">Tapis de souris</label>
+                                        <input type="number" class="quantity-input" id="TapisDeSourisQuantity" name="TapisDeSourisQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="PannauxPublicitaire" value="Pannaux Publicitaire" onchange="toggleQuantityInput(this)">
+                                        <label for="PannauxPublicitaire" class="article-label">Pannaux Publicitaire</label>
+                                        <input type="number" class="quantity-input" id="PannauxPublicitaireQuantity" name="PannauxPublicitaireQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Tinda" value="Tinda" onchange="toggleQuantityInput(this)">
+                                        <label for="Tinda" class="article-label">Tinda</label>
+                                        <input type="number" class="quantity-input" id="TindaQuantity" name="TindaQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Flayer" value="Flayer" onchange="toggleQuantityInput(this)">
+                                        <label for="Flayer" class="article-label">Flayer</label>
+                                        <input type="number" class="quantity-input" id="FlayerQuantity" name="FlayerQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Depliant" value="Depliant" onchange="toggleQuantityInput(this)">
+                                        <label for="Depliant" class="article-label">Depliant</label>
+                                        <input type="number" class="quantity-input" id="DepliantQuantity" name="DepliantQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="TableauPresentoir" value="Tableau presentoir" onchange="toggleQuantityInput(this)">
+                                        <label for="TableauPresentoir" class="article-label">Tableau presentoir</label>
+                                        <input type="number" class="quantity-input" id="TableauPresentoirQuantity" name="TableauPresentoirQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="SacCadeaux" value="Sac Cadeaux" onchange="toggleQuantityInput(this)">
+                                        <label for="SacCadeaux" class="article-label">Sac Cadeaux</label>
+                                        <input type="number" class="quantity-input" id="SacCadeauxQuantity" name="SacCadeauxQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Autocollant" value="Autocollant" onchange="toggleQuantityInput(this)">
+                                        <label for="Autocollant" class="article-label">Autocollant</label>
+                                        <input type="number" class="quantity-input" id="AutocollantQuantity" name="AutocollantQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="CarteInvitation" value="Carte d'invitation" onchange="toggleQuantityInput(this)">
+                                        <label for="CarteInvitation" class="article-label">Carte d'invitation</label>
+                                        <input type="number" class="quantity-input" id="CarteInvitationQuantity" name="CarteInvitationQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Testeur" value="Testeur" onchange="toggleQuantityInput(this)">
+                                        <label for="Testeur" class="article-label">Testeur</label>
+                                        <input type="number" class="quantity-input" id="TesteurQuantity" name="TesteurQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Tablier" value="Tablier" onchange="toggleQuantityInput(this)">
+                                        <label for="Tablier" class="article-label">Tablier</label>
+                                        <input type="number" class="quantity-input" id="TablierQuantity" name="TablierQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Tshirt" value="T_shirt" onchange="toggleQuantityInput(this)">
+                                        <label for="Tshirt" class="article-label">T_shirt</label>
+                                        <input type="number" class="quantity-input" id="TshirtQuantity" name="TshirtQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Gilet" value="Gilet" onchange="toggleQuantityInput(this)">
+                                        <label for="Gilet" class="article-label">Gilet</label>
+                                        <input type="number" class="quantity-input" id="GiletQuantity" name="GiletQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Casquette" value="Casquette" onchange="toggleQuantityInput(this)">
+                                        <label for="Casquette" class="article-label">Casquette</label>
+                                        <input type="number" class="quantity-input" id="CasquetteQuantity" name="CasquetteQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="CeintureElectricien" value="Ceinture Electricien Porte Outils" onchange="toggleQuantityInput(this)">
+                                        <label for="CeintureElectricien" class="article-label">Ceinture Electricien Porte Outils</label>
+                                        <input type="number" class="quantity-input" id="CeintureElectricienQuantity" name="CeintureElectricienQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Combinisons" value="Combinisons" onchange="toggleQuantityInput(this)">
+                                        <label for="Combinisons" class="article-label">Combinisons</label>
+                                        <input type="number" class="quantity-input" id="CombinisonsQuantity" name="CombinisonsQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="Autre" value="autre" onchange="toggleQuantityInput(this)">
+                                        <label for="Autre" class="article-label">autre</label>
+                                        <input type="number" class="quantity-input" id="AutreQuantity" name="AutreQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                    </div>
+                                    <% }else{ %>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="BonPour" value="Bon Pour " onchange="toggleQuantityInput(this)">
+                                            <label for="BonPour" class="article-label">Bon Pour </label>
+                                            <input type="number" class="quantity-input" id="BonPourQuantity" name="BonPourQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                            
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="BlocNot" value="Bloc Not " onchange="toggleQuantityInput(this)">
+                                            <label for="BlocNot" class="article-label">Bloc Not </label>
+                                            <input type="number" class="quantity-input" id="BlocNotQuantity" name="BlocNotQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Stylo" value="Stylo " onchange="toggleQuantityInput(this)">
+                                            <label for="Stylo" class="article-label">Stylo</label>
+                                            <input type="number" class="quantity-input" id="StyloQuantity" name="StyloQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                       
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Agenda" value="Agenda" onchange="toggleQuantityInput(this)">
+                                            <label for="Agenda" class="article-label">Agenda</label>
+                                            <input type="number" class="quantity-input" id="AgendaQuantity" name="AgendaQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Calendrier" value="Calendrier " onchange="toggleQuantityInput(this)">
+                                            <label for="Calendrier" class="article-label">Calendrier </label>
+                                            <input type="number" class="quantity-input" id="CalendrierQuantity" name="CalendrierQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="SousMain" value="Sous Main" onchange="toggleQuantityInput(this)">
+                                            <label for="SousMain" class="article-label">Sous Main</label>
+                                            <input type="number" class="quantity-input" id="SousMainQuantity" name="SousMainQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="ChevalierBureau" value="Chevalier de Bureau" onchange="toggleQuantityInput(this)">
+                                            <label for="ChevalierBureau" class="article-label">Chevalier de Bureau</label>
+                                            <input type="number" class="quantity-input" id="ChevalierBureauQuantity" name="ChevalierBureauQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="PapierEntete" value="Papier Entete" onchange="toggleQuantityInput(this)">
+                                            <label for="PapierEntete" class="article-label">Papier Entete</label>
+                                            <input type="number" class="quantity-input" id="PapierEnteteQuantity" name="PapierEnteteQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                        
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="ChemisARabat" value="Chemis A Rabat" onchange="toggleQuantityInput(this)">
+                                            <label for="ChemisARabat" class="article-label">Chemis A Rabat</label>
+                                            <input type="number" class="quantity-input" id="ChemisARabatQuantity" name="ChemisARabatQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="CarnetDecharge" value="Carnet Décharge" onchange="toggleQuantityInput(this)">
+                                            <label for="CarnetDecharge" class="article-label">Carnet Décharge</label>
+                                            <input type="number" class="quantity-input" id="CarnetDechargeQuantity" name="CarnetDechargeQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Shope" value="Shope" onchange="toggleQuantityInput(this)">
+                                            <label for="Shope" class="article-label">Shope</label>
+                                            <input type="number" class="quantity-input" id="ShopeQuantity" name="ShopeQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="TapisDeSouris" value="Tapis de Souris" onchange="toggleQuantityInput(this)">
+                                            <label for="TapisDeSouris" class="article-label">Tapis de Souris</label>
+                                            <input type="number" class="quantity-input" id="TapisDeSourisQuantity" name="TapisDeSourisQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Autocollant" value="Autocollant" onchange="toggleQuantityInput(this)">
+                                            <label for="Autocollant" class="article-label">Autocollant </label>
+                                            <input type="number" class="quantity-input" id="AutocollantQuantity" name="AutocollantQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="PanneauxPublicitaire" value="Panneaux Publicitaire" onchange="toggleQuantityInput(this)">
+                                            <label for="PanneauxPublicitaire" class="article-label">Panneaux Publicitaire</label>
+                                            <input type="number" class="quantity-input" id="PanneauxPublicitaireQuantity" name="PanneauxPublicitaireQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Tinda" value="Tinda" onchange="toggleQuantityInput(this)">
+                                            <label for="Tinda" class="article-label">Tinda</label>
+                                            <input type="number" class="quantity-input" id="TindaQuantity" name="TindaQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="FlayerA5" value="Flayer A5" onchange="toggleQuantityInput(this)">
+                                            <label for="FlayerA5" class="article-label">Flayer A5</label>
+                                            <input type="number" class="quantity-input" id="FlayerA5Quantity" name="FlayerA5Quantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="DepliantA4" value="Depliant A4" onchange="toggleQuantityInput(this)">
+                                            <label for="DepliantA4" class="article-label">Depliant A4</label>
+                                            <input type="number" class="quantity-input" id="DepliantA4Quantity" name="DepliantA4Quantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="SacEnPlastique" value="Sac En Plastique" onchange="toggleQuantityInput(this)">
+                                            <label for="SacEnPlastique" class="article-label">Sac En Plastique </label>
+                                            <input type="number" class="quantity-input" id="SacEnPlastiqueQuantity" name="SacEnPlastiqueQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Tableau" value="Tableau Presentoir" onchange="toggleQuantityInput(this)">
+                                            <label for="Tableau" class="article-label">Tableau Presentoir </label>
+                                            <input type="number" class="quantity-input" id="TableauQuantity" name="Tableau" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Testeur" value="Testeur" onchange="toggleQuantityInput(this)">
+                                            <label for="Testeur" class="article-label">Testeur</label>
+                                            <input type="number" class="quantity-input" id="TesteurQuantity" name="TesteurQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="TablierHomme" value="Tablier Homme" onchange="toggleQuantityInput(this)">
+                                            <label for="TablierHomme" class="article-label">Tablier Homme</label>
+                                            <input type="number" class="quantity-input" id="TablierHommeQuantity" name="TablierHommeQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="TablierFemme" value="Tablier Femme" onchange="toggleQuantityInput(this)">
+                                            <label for="TablierFemme" class="article-label">Tablier Femme</label>
+                                            <input type="number" class="quantity-input" id="TablierFemmeQuantity" name="TablierFemmeQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="TShirt" value="T Shirt" onchange="toggleQuantityInput(this)">
+                                            <label for="TShirt" class="article-label">T Shirt</label>
+                                            <input type="number" class="quantity-input" id="TShirtQuantity" name="TShirtQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Gilet" value="Gilet" onchange="toggleQuantityInput(this)">
+                                            <label for="Gilet" class="article-label">Gilet</label>
+                                            <input type="number" class="quantity-input" id="GiletQuantity" name="GiletQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Salopette" value="Salopette" onchange="toggleQuantityInput(this)">
+                                            <label for="Salopette" class="article-label">Salopette</label>
+                                            <input type="number" class="quantity-input" id="SalopetteQuantity" name="SalopetteQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="Casquette" value="Casquette" onchange="toggleQuantityInput(this)">
+                                            <label for="Casquette" class="article-label">Casquette</label>
+                                            <input type="number" class="quantity-input" id="CasquetteQuantity" name="CasquetteQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="CeintureElectricien" value="Ceinture Electricien Porte Outils" onchange="toggleQuantityInput(this)">
+                                            <label for="CeintureElectricien" class="article-label">Ceinture Electricien Porte Outils</label>
+                                            <input type="number" class="quantity-input" id="CeintureElectricienQuantity" name="CeintureElectricienQuantity" min="1" step="1" style="display: none;" placeholder="Quantité">
+                                        </div>
+                                    <%} %>
+                                </div>
+                            </div>
+                        </div>
+                       
+                        <button type="button" class="btn prev" id="prevBtnStep2">Previous</button>
+                        <button type="button" class="btn next" id="nextBtnStep2">Next</button>
+                    </div>
+                    <div class="step step-3">
+                        <h3>Etape 3/4: Produits</h3>
+                        <div id="categoryDiv">
+                            <label>Produits disponible chez client:</label><br>
+                            <div  style="display: flex; margin-bottom: 10%;margin-top: 5%;font-size:14px;">
+                            <input type="radio" name="categorie" id="chkAppareillage" value="Appareillage"> 
+                            <label for="chkAppareillage">Appareillage</label><br>
+                            <input width="50px"  type="radio" name="categorie" id="chkDisjoncteur" value="Disjoncteur" >
+                            <label for="chkDisjoncteur"> Disjoncteur</label><br>
+                            <input width="50px" type="radio" name="categorie" id="chkLampe" value="Lampe"> 
+                            <label for="chkLampe">Lighting</label><br>
+                        </div>
+                        </div>
+                        <div class="inputBox" id="lampeProducts" style="display:none;">
+                            <label for="prodLampe">Produits:</label>
+                           
+                            <select id="prodLampe" name="produitLampe" multiple>
+                                <option value="default" disabled>Sélectionnez des produits</option>
+                                <% if(societe==='bms'){ %>
+                                <option value="Lampe filament">Lampe filament</option>
+                                <option value="Lampe led E27">Lampe led E27</option>
+                                <option value="Lampe led E14">Lampe led E14</option>
+                                <option value="spot3d">Spot 3D</option>
+                                <option value="spot3p">Spot 3P</option>
+                                <%} else { %>
+                                    
+                                    <option value="Lampe LED ">LAMPE LED</option>
+                                    <option value="SPOT"> SPOT</option>
+                                    <option value="TUBE LED"> TUBE LED</option>
+                                    <% } %>
+                                <option  value="autre" >autres</option>
+                            </select>
+                        </div>
+                        <div class="inputBox" id="appareillageProducts" style="display:none;">
+                            <label for="prodAppareillage">Produits:</label>
+                            <select id="prodAppareillage" name="produitAppareillage" multiple>
+                                <option value="default" disabled>Sélectionnez des produits</option>
+                                <% if(societe==='bms'){ %>
+                                <option value="Continuum">Continuum</option>
+                                <option value="Continuum Color">Continuum Color</option>
+                                <option value="eco">Eco</option>
+                                <option value="galaxie">Galaxie</option>
+                                <option value="karea">Karea</option>
+                                <option value="Boite d'encastrement">Boite d'encastrement</option>
+                                <option value="multiprise">Multiprise</option>
+                                <option value="douille">Douille</option>
+                                <option value="fiche multiprise">Fiche multiprise</option>
+                                <option value="Apolo">Apolo</option>
+                                <option value="fiche male/female">Fiche male/female</option>
+                                <option value="coupe courant">Coupe Courant</option>
+                                <option value="KBS">KBS</option>
+                                <option value="Adaptateur">Adaptateur</option>
+                                <option value="cadrecouleur">Cadre couleur</option>
+                                <option value="sokoy">Sokoy</option>
+                                <option value="soyouz">Soyouz</option>
+                                <option value="vortex">Vortex</option>
+                                <%} else { %>
+                                       <option value="CHROME">CHROME</option>
+                                       <option value="DISPINA">DISPINA</option>
+                                       <option value="DISPINA">DISPINA METALIC</option>
+                                       <option value="EVOLUTION">EVOLUTION</option>
+                                       <option value="EVOLUTION PLUS">EVOLUTION PLUS</option>
+                                       <option value="LARISSA">LARISSA</option>
+                                       <option value="OBERON">OBERON</option>
+                                       <option value="ORION">ORION</option>
+                                       <option value="TABLEAU DISTRIBUTION">TABLEAUX DISTRIBUTION</option>
+                                       <option value="MONO ACCESSOIRES">MONO ACCESSOIRES</option>
+                                       <option value="ICON">ICON</option>
+                                       <option value="LEON">LEON</option>
+                                      <option value="MODULE">MODULE</option> 
+                                      <option value="MOULURE">MOULURE</option> 
+                                      <option value="STYLE">STYle</option>
+
+
+                                 <% } %>
+                                <option  value="autre" >autres</option>
+                               
+                            </select>
+                        </div>
+                        <div class="inputBox" id="disjoncteurProducts" style="display:none;">
+                            <label for="prodDisjoncteur">Produits:</label>
+                            <select id="prodDisjoncteur" name="produitDisjoncteur" multiple>
+                                <option value="default" disabled>Sélectionnez des produits</option>
+                                <% if(societe==='bms'){ %>
+                                <option value="Disjoncteur">Disjoncteur</option>
+                               
+                                <option value="double phase neutre">Double phase +Neutre</option>
+                                <option value="télérupteur">Télérupteur</option>
+                                <option value="minuterie">Minuterie</option>
+                                <option value="marqueur">Marqueur</option>
+                                <option value="mini disjoncteur">mini disjoncteur</option>
+                                <option value="Disjoncteur differentiel ">Disjoncteur differentiel</option>
+                                <option value="Disjoncteur de branchement">Disjoncteur de branchement</option>
+                                <option  value="autre" >autres</option>
+                                <%} else { %>
+                                    <option value="double phase neutre">Double phase +Neutre</option>
+                                    <option value="mini disjoncteur">Mini disjoncteur</option>
+                                    <option value="Disjoncteur differentiel ">Disjoncteur differentiel</option>
+                                    <option value="Disjoncteur de branchement">Disjoncteur de branchement</option>
+                                    <option value="minuterie">Minuterie</option>
+                                    <option value="télérupteur">Télérupteur</option>
+                                    <option value="Marqueur">Marqueur</option>
+                                    <option value="Interupteur differentiel">Interrupteur differentiel</option>
+                                    <option  value="autre" >autres</option>
+                                <% } %>
+                               
+                               
+                            </select>
+                        </div>
+                    
+                        <div id="competitorSection" style="display:none;">
+                            
+                            <div class="inputBox" id="lampeConcurrent" style="display:none;">
+                                <label for="concurrentLampe"> Concurrent :</label>
+                                
+                                <select id="concurrentLampe" name="concurrentLampe" multiple>
+                                    <option value="default" disabled>Sélectionnez un concurrent</option>
+                                    <% if(societe==='bms'){ %>
+                                    <option value="MONO">MONO</option>
+                                    <% } else{ %>
+                                        <option value="BMS">BMS</option>
+                                    <% }  %>
+                                    <option value="ENERGICAL">ENERGICAL</option>
+                                    <option value="BEETRO">BEETRO</option>
+                                    <option value="TORCH">TORCH</option>
+                                    <option value="SPRINT">SPRINT</option>
+                                    <option value="WLMAX">WLMAX</option>
+                                    <option value="FOTONIX">FOTONIX</option>
+                                    <option  value="autre" >autres</option>
+                                </select>
+                               
+                              
+                            </div>
+                            <div class="inputBox" id="appareillageConcurrent" style="display:none;">
+                                <label for="concurrentAppareillage">Concurrent :</label>
+                                <select id="concurrentAppareillage" name="concurrentAppareillage" multiple>
+                                    <option value="default" disabled>Sélectionnez un concurrent</option>
+                                    <% if(societe==='bms'){ %>
+                                        <option value="MONO">MONO</option>
+                                        <% } else{ %>
+                                            <option value="BMS">BMS</option>
+                                        <% }  %>
+                                    <option value="LE GRAND">LE GRAND</option>
+                                    <option value="ENERGICAL">ENERGICAL</option>
+                                    <option value="SCHNEIDER">SCHNEIDER</option>
+                                    <option value="MAKEL">MAKEL</option>
+                                    <option value="OVIVO">OVIVO</option>
+                                    <option value="SOMEF">SOMEF</option>
+                                    <option value="GIMA">GIMA</option>
+                                    <option  value="autre" >autres</option>
+                                </select>
+                            </div>
+                            <div class="inputBox" id="disjoncteurConcurrent" style="display:none;">
+                                <label for="concurrentDisjoncteur">Concurrent :</label>
+                                <select id="concurrentDisjoncteur" name="concurrentDisjoncteur" multiple>
+                                    <option value="default" disabled>Sélectionnez un concurrent</option>
+                                    <% if(societe==='bms'){ %>
+                                        <option value="MONO">MONO</option>
+                                        <% } else{ %>
+                                            <option value="BMS">BMS</option>
+                                        <% }  %>
+                                    <option value="ENERGICAL">ENERGICAL</option>
+                                    <option value="LE GRAND">LE GRAND</option>
+                                    <option value="SCHNEIDER">SCHNEIDER</option>
+                                    <option value="CHINT">CHINT</option>
+                                    <option  value="autre" >autres</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="inputBox">
+                            <label for="source">Source d'approvisionnement:</label>
+                            <div class="tag-container" id="tagContainer"></div>
+                            <input type="text" id="source" name="sourceInput" autocomplete="off" placeholder="Type to select sources">
+                            <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+                            <input type="hidden" id="hiddenSources" name="Distributeur">
+         </div>
+                        <div class="inputBox">
+                           <label >Disponibilité Espace Publicitaire</label>
+                         <label><input type="checkbox"  name="espacepub" value="Non"> Non</label>
+                         <label><input type="checkbox"  name="espacepub" value="Oui"> Oui</label>
+                        </div>
+                    
+                    
+                        <button type="button" class="btn prev" id="prevBtnStep3">Previous</button>
+                        <button type="button" class="btn next" id="nextBtnStep3">Next</button>
+                    </div>
+                    
+                    <div class="step step-4">
+                        <h3>Etape 4/4 : Évaluation</h3>
+                    
+                        <!-- Client Rating -->
+                        <div class="inputBox">
+                            <label for="clientRating">Évaluation de client :</label>
+                            <label><input type="radio"  name="evaluecli" value="Chaud"> Chaud</label>
+                            <label><input type="radio"  name="evaluecli" value="Froid"> Froid</label>
+                        </div>
+                    
+                        <!-- BMS Rating -->
+                        <div class="inputBox">
+                            <label for="bmsRating">Présentation du produit :</label>
+                            <div class="rating-container" id="bmsRating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <input type="hidden" id="hiddenBmsRating" name="evalueBms">
+                            </div>
+                         
+                        </div>
+                        
+                        <!-- Competitor Rating -->
+                        <div class="inputBox">
+                            <label for="competitorRating">Présence concurrent :</label>
+                            <div class="rating-container" id="competitorRating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <input type="hidden" id="hiddenCompetitorRating" name="evaluconcurrent">
+                            </div>
+                        
+                        </div>
+                       
+                        <div class="inputBox">
+                            <label class="comment" for="commentaire" style="color: red;">Commentaire :</label>
+                            <textarea name="commentaire" cols="50" rows="10" style="color: red;"></textarea>
+                        </div>
+                    
+                        <button type="button" class="btn prev" id="prevBtnStep4">Previous</button>
+                        <button type="submit" class="btn" id="submitBtn">Submit</button>
+                    </div>
+                    
+                    
+                </form>
+            </div>
+        </div>
+    </section>
+    <script>
+        
+    document.addEventListener('DOMContentLoaded', function () {
+    function setupStarRating(containerId, hiddenInputId) {
+        const container = document.getElementById(containerId);
+        const hiddenInput = document.getElementById(hiddenInputId);
+
+        container.addEventListener('click', function (e) {
+            if (e.target.classList.contains('star')) {
+                const rating = parseInt(e.target.getAttribute('data-value'));
+                hiddenInput.value = rating;
+                updateStars(container, rating);
+            }
+        });
+
+        function updateStars(container, rating) {
+            const stars = container.getElementsByClassName('star');
+            Array.from(stars).forEach(star => {
+                const value = parseInt(star.getAttribute('data-value'));
+                if (value <= rating) {
+                    star.classList.add('selected');
+                } else {
+                    star.classList.remove('selected');
+                }
+            });
+        }
+    }
+
+    setupStarRating('competitorRating', 'hiddenCompetitorRating');
+    setupStarRating('bmsRating', 'hiddenBmsRating');
+});
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('multiStepForm');
+            const prevBtnStep2 = document.getElementById('prevBtnStep2');
+            const nextBtnStep1 = document.getElementById('nextBtnStep1');
+            const nextBtnStep2 = document.getElementById('nextBtnStep2');
+            const prevBtnStep3 = document.getElementById('prevBtnStep3');
+            const nextBtnStep3 = document.getElementById('nextBtnStep3');
+            const prevBtnStep4 = document.getElementById('prevBtnStep4');
+            const submitBtn = document.getElementById('submitBtn');
+
+            let currentStep = 0;
+            const steps = form.querySelectorAll('.step');
+
+            function showStep(stepIndex) {
+                steps.forEach(function(step, index) {
+                    step.classList.toggle('active', index === stepIndex);
+                });
+            }
+
+            function validateStep(stepIndex) {
+                const inputs = steps[stepIndex].querySelectorAll('input[required]');
+                let isValid = true;
+
+                inputs.forEach(function(input) {
+                    if (!input.value.trim()) {
+                        isValid = false;
+                    }
+                });
+
+                return isValid;
+            }
+
+            prevBtnStep2.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+
+            nextBtnStep1.addEventListener('click', function() {
+                if (validateStep(currentStep)) {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    }
+                } else {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                }
+            });
+
+            nextBtnStep2.addEventListener('click', function() {
+                if (validateStep(currentStep)) {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    }
+                } else {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                }
+            });
+
+            prevBtnStep3.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+             
+            nextBtnStep3.addEventListener('click', function() {
+                if (validateStep(currentStep)) {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    }
+                } else {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                }
+            });
+            
+            prevBtnStep4.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+            nextBtnStep4.addEventListener('click', function() {
+                if (validateStep(currentStep)) {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    }
+                } else {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                }
+            });
+
+            prevBtnStep5.addEventListener('click', function() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+
+
+            submitBtn.addEventListener('click', function(event) {
+                if (!validateStep(currentStep)) {
+                    event.preventDefault();
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                }
+            });
+
+          
+
+
+            function toggleLoginMessage() {
+                const loginMessage = document.getElementById('login-message');
+                if (loginMessage.style.display === 'none' || loginMessage.style.display === '') {
+                    loginMessage.style.display = 'block';
+                } else {
+                    loginMessage.style.display = 'none';
+                }
+            }
+
+            const logoutButton = document.getElementById('logout-button');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', function() {
+                    window.location.href = '/logout';
+                });
+            }
+        });
+       
+        window.addEventListener("pageshow", function(event) {
+            var historyTraversal = event.persisted ||
+                (typeof window.performance != "undefined" &&
+                    window.performance.navigation.type === 2);
+            if (historyTraversal) {
+                window.location.reload();
+            }
+        });
+        
+        // Fonction pour ajouter une nouvelle option à un select donné
+        function ajouterOption(selectId, newOption) {
+            var select = document.getElementById(selectId);
+            var autreOption = select.querySelector('option[value="autre"]'); // Trouver l'option "autre"
+
+            // Création de la nouvelle option
+            var option = document.createElement("option");
+            option.value = newOption.toLowerCase(); // Valeur de l'option
+            option.textContent = newOption; // Texte visible de l'option
+
+            // Insertion de la nouvelle option avant l'option "autre"
+            select.insertBefore(option, autreOption);
+
+            // Mise à jour localStorage avec l'élément en majuscules
+            var items = JSON.parse(localStorage.getItem(selectId)) || [];
+            items.push(newOption.toUpperCase());
+            localStorage.setItem(selectId, JSON.stringify(items));
+
+            // Sélection de la nouvelle option ajoutée
+            select.value = newOption.toLowerCase();
+        }
+
+        // Fonction pour gérer le changement dans les <select> avec l'option "autre"
+        function toggleAutreInput(select) {
+            var selectedOptions = Array.from(select.selectedOptions);
+            var autreSelected = selectedOptions.some(option => option.value === 'autre');
+
+            if (autreSelected) {
+                var newOption = prompt("Entrez le nom du nouvel élément :");
+                if (newOption) {
+                    var options = select.options;
+
+                    // Vérification si l'option existe déjà
+                    for (var i = 0; i < options.length; i++) {
+                        if (options[i].value === newOption.toLowerCase()) {
+                            alert("Cet élément existe déjà !");
+                            return;
+                        }
+                    }
+
+                    // Ajout de la nouvelle option avant l'option "autre"
+                    ajouterOption(select.id, newOption);
+                } else {
+                    // Option pour éviter de ne pas sélectionner quoi que ce soit si l'utilisateur annule
+                    select.value = '';
+                }
+            }
+        }
+
+        // Ajout des écouteurs d'événements pour chaque <select> avec l'option "autre"
+        var selects = document.querySelectorAll('select');
+
+        selects.forEach(function(select) {
+            if (select.querySelector('option[value="autre"]')) { // Vérifier s'il y a une option "autre"
+                select.addEventListener('change', function() {
+                    toggleAutreInput(select);
+                });
+            }
+        });
+// Chargement des options depuis localStorage lors du chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    selects.forEach(function(select) {
+        var selectId = select.id;
+        var items = JSON.parse(localStorage.getItem(selectId)) || [];
+        
+        items.forEach(function(item) {
+            var option = document.createElement("option");
+            option.value = item.toLowerCase();
+            option.textContent = item;
+            var autreOption = select.querySelector('option[value="autre"]');
+            select.insertBefore(option, autreOption);
+        });
+    });
+});
+
+
+    
+   const currentDateInput = document.getElementById('currentDate');
+    
+    if (currentDateInput) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayFormatted = `${year}-${month}-${day}`;
+
+        currentDateInput.value = todayFormatted;
+    }
+    async function fetchwilaya() {
+    const term = document.getElementById('wilayaInput').value;
+    if (term.length === 0) {
+        document.getElementById('wilayaSuggestions').innerHTML = '';
+        return;
+    }
+    const url = `/wilayas?term=${encodeURIComponent(term)}`;
+    console.log(`Fetching URL: ${url}`);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Erreur du serveur');
+        }
+        const wilayas = await response.json();
+        showsuggestions(wilayas, 'wilayaSuggestions', 'wilayaInput');
+    } catch (error) {
+        console.error('Erreur lors de la récupération des wilayas:', error.message);
+    }
+}
+
+
+async function fetchDaira() {
+    const term = document.getElementById('DairaInput').value;
+    const wilaya = document.getElementById('wilayaInput').value;
+    try {
+        const response = await fetch(`/Daira/${wilaya}?term=${encodeURIComponent(term)}`);
+        
+        if (!response.ok) {
+            throw new Error('Erreur du serveur');
+        }
+        const dairas = await response.json();
+        showsuggestions(dairas, 'dairaSuggestions', 'DairaInput');
+    } catch (error) {
+        console.error('Erreur lors de la récupération des dairas:', error.message);
+    }
+}
+    
+async function fetchcommune() {
+    const term = document.getElementById('communeInput').value;
+    const daira = document.getElementById('DairaInput').value;
+    const wilaya = document.getElementById('wilayaInput').value;
+    
+    try {
+        const response = await fetch(`/commune/${encodeURIComponent(wilaya)}/${encodeURIComponent(daira)}?term=${encodeURIComponent(term)}`);
+        if (!response.ok) {
+            throw new Error('Erreur du serveur');
+        }
+        const communes = await response.json();
+        showsuggestions(communes, 'communeSuggestions', 'communeInput');
+    } catch (err) {
+        console.error("Erreur lors de la récupération des communes:", err.message);
+    }
+}
+   
+    function showsuggestions(suggestions, suggestionBoxId, inputId) {
+    const suggestionBox = document.getElementById(suggestionBoxId);
+    suggestionBox.innerHTML = '';
+
+    if (!Array.isArray(suggestions)) {
+        console.error('Suggestions should be an array');
+        return;
+    }
+
+    suggestions.forEach(suggestion => {
+        const div = document.createElement('div');
+        const displayText = suggestion.wilaya || suggestion.daira || suggestion.commune || 'Unknown';
+        div.textContent = displayText;
+          div.onclick = () => {
+            const input = document.getElementById(inputId);
+            input.value = div.textContent;
+            suggestionBox.innerHTML = '';
+        };
+        suggestionBox.appendChild(div);
+    });
+}
+function updateMissionObjectiveOptions() {
+            const missionObjectiveSelect = document.getElementById('missionObjective');
+            const currentDateInput = document.getElementById('currentDate');
+            const currentDate = new Date(currentDateInput.value);
+            const startDate = new Date(currentDate.getFullYear(), 11, 15); // December 15
+            const endDate = new Date(currentDate.getFullYear() + 1, 0, 15); // January 15
+
+            // If current date is between December 15 and January 15
+            if (currentDate >= startDate && currentDate <= endDate) {
+                // Add 'cadeaux fin d'année' option if not present
+                if (!Array.from(missionObjectiveSelect.options).some(option => option.value === 'cadeaux fin d\'année')) {
+                    const newOption = document.createElement('option');
+                    newOption.value = 'cadeaux fin d\'année';
+                    newOption.text = 'cadeaux fin d\'année';
+                    missionObjectiveSelect.add(newOption);
+                }
+            } else {
+                // Remove 'cadeaux fin d'année' option if present
+                Array.from(missionObjectiveSelect.options).forEach(option => {
+                    if (option.value === 'cadeaux fin d\'année') {
+                        missionObjectiveSelect.remove(option.index);
+                    }
+                });
+            }
+        }
+
+        // Event listener to update options when the date input changes
+        document.getElementById('currentDate').addEventListener('change', updateMissionObjectiveOptions);
+
+        // Initialize on page load
+        updateMissionObjectiveOptions();
+
+
+
+
+        toggleObjectiveInput();
+        updateProductOptions();
+    </script>
+</body>
+</html>

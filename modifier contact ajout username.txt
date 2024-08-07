@@ -1,0 +1,105 @@
+app.get('/dashboardcontact', async (req, res) => {
+  if (req.session.role !== 'admin') {
+    return res.redirect('/');
+  }
+
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 50;
+    const search = req.query.search || '';
+
+    const pool = await sql.connect(bd);
+
+    // Get the total count of contacts
+    const countResult = await pool.request()
+      .query(`SELECT COUNT(*) AS totalCount FROM contact`);
+
+    const totalCount = countResult.recordset[0].totalCount;
+    const offset = (page - 1) * perPage;
+
+    let searchCondition = '';
+
+    if (search !== '') {
+      searchCondition = `
+        WHERE 
+        c.nom LIKE '${search}%' OR
+        c.prenom LIKE '${search}%' OR
+        c.message LIKE '${search}%'
+      `;
+    }
+
+    // Fetch contacts with associated usernames
+    const result = await pool.request()
+      .query(`
+        SELECT c.nom, c.prenom, c.message, u.username
+        FROM contact c
+        JOIN utilisateur u ON c.utilisateur_id = u.id
+        ${searchCondition}
+        ORDER BY c.id
+        OFFSET ${offset} ROWS FETCH NEXT ${perPage} ROWS ONLY
+      `);
+
+    if (result.recordset.length === 0) {
+      res.render('dashboardcontact', {
+        contacts: result.recordset,
+        page,
+        perPage,
+        totalCount,
+        message: 'Aucun résultat trouvé pour la recherche : ' + search
+      });
+    } else {
+      res.render('dashboardcontact', {
+        contacts: result.recordset,
+        page,
+        perPage,
+        totalCount
+      });
+    }
+  } catch (err) {
+    console.error("Erreur de récupération des données:", err.message);
+    res.status(500).send('Erreur interne du serveur');
+  }
+});
+
+
+
+<div class="main-div">
+    <div class="container">
+      <div class="search-sort">
+        <form id="filterForm" action="/dashboardcontact" method="GET" class="search-container">
+          <input type="text" name="search" placeholder="Search" id="searchInput" value="<%= search %>">
+          <img src="../clear.png" class="clear-search ms-2" onclick="clearSearch()">
+          <button type="submit">Search</button>
+        </form>
+      </div>
+
+      <div id="tableContainer">
+        <div id="tableBody">
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Message</th>
+                <th>Username</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (contacts.length > 0) { %>
+                <% contacts.forEach(contact => { %>
+                  <tr>
+                    <td><%= contact.nom %></td>
+                    <td><%= contact.prenom %></td>
+                    <td><%= contact.message %></td>
+                    <td><%= contact.username %></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4">Aucun contact trouvé</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>

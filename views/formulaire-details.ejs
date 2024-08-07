@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détails du Formulaire</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      margin-top: 0; 
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 15px;
+    }
+
+    li strong {
+      display: inline-block;
+      width: 180px; 
+      margin-right: 10px; 
+      font-weight: bold;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: #fff;
+      background-color: #007bff;
+      border: none;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    a:hover {
+      background-color: #0056b3;
+    }
+    strong{
+      color: rgb(77, 121, 102);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Détails du Formulaire</h1>
+    <ul>
+      <li><strong>Date:</strong> <%= formulaire.date.toLocaleDateString() %></li>
+      <li><strong>Objectif de Mission:</strong> <%= formulaire.objectif_de_mission %></li>
+      <li><strong>Nom Agent:</strong> <%= formulaire.nom_agent %></li>
+      <li><strong>Prénom Agent:</strong> <%= formulaire.prenom_agent %></li>
+      <li><strong>Nom Client:</strong> <%= formulaire.nom_client %></li>
+      <li><strong>Prénom Client:</strong> <%= formulaire.prenom_client %></li>
+      <li><strong>Tel:</strong><%= formulaire.tel%></li>
+      <li><strong>Commune:</strong> <%= formulaire.commune %></li>
+      <li><strong>Activite:</strong> <%= formulaire.activite %></li>
+      <li><strong>Distributions:</strong> <%= formulaire.distribution %></li>
+      <li><strong>Distributeur:</strong> <%= formulaire.distributeur %></li>
+      <li><strong>Produit Lampe:</strong> <%=formulaire.produitLampe %></li>
+      <li><strong>Produit Appareillage:</strong> <%= formulaire.produitAppareillage %></li>
+      <li><strong>Produit Disjoncteur:</strong> <%= formulaire.produitDisjoncteur %></li>
+      <li><strong>Concurrent Lampe:</strong> <%= formulaire.concurrentLampe %></li>
+      <li><strong>Concurrent Appareillage:</strong> <%= formulaire.concurrentAppareillage %></li>
+      <li><strong>Concurrent Disjoncteur:</strong> <%= formulaire.concurrentDisjoncteur %></li>
+      <li><strong>Evaluation Client:</strong> <%= formulaire.evalue_client %></li>
+      <li><strong>Evaluation BMS:</strong> <%= formulaire.evalue_bms %></li>
+      <li><strong>Evaluation Concurrents:</strong> <%= formulaire.evalue_concurrent %></li>
+      
+     
+      
+    </ul>
+    <a href="/dashboard">Retour au tableau de bord</a>
+  </div>
+</body>
+</html>

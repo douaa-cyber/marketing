@@ -1,0 +1,173 @@
+<!-- agentForms.ejs -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulaires PDF</title>
+  <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        color: #333;
+        font-size: 2em;
+        text-align: center;
+    }
+    .pdf-list {
+        display: none; /* Masquer par défaut */
+       margin-top: 20px;
+    }
+    .pdf-list.show {
+        display: block; /* Afficher lorsque la classe 'show' est ajoutée */
+        margin: 10px 0;
+    }
+    .pdf-link {
+        display: block;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #d62f05;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+        text-align: center;
+    }
+    .pdf-link:hover {
+        background-color: #790505;
+    }
+    .container { padding: 20px; }
+    .excel{
+        display: none;
+        padding-top: 5%;
+    }
+    .pdf{
+        display: none;
+        padding-top: 5%;
+    }
+  select{
+    width: 50%;
+    display:block;
+    margin-right: auto;
+    margin-left: auto;
+    border-radius: 5%;
+  }
+  .res{
+    display: block;
+  }
+  
+</style>
+
+</head>
+<body>
+<div class="container">
+    <h1>Formulaires Remplis</h1>
+    
+    <select name="type" id="type" onchange="typeR(event)">
+          <option value="" >selectionner un type de rapport</option>
+          <option value="pdf">PDF</option>
+          <option value="excel">Excel</option>
+    </select>
+    <div class="res" id="results" class="pdf-list <%= forms.length > 0 ? 'show' : '' %>">
+        <% if (forms.length > 0) { %>
+            <% forms.forEach(form => { %>
+                <% if (form.pdfFilename) { %>
+                    <a href="/pdfs/<%= encodeURIComponent(form.pdfFilename) %>" class="pdf-link">
+                        <%= form.Nom %> <%= form.Prenom %> - Télécharger
+                    </a>
+                <% } %>
+            <% }); %>
+        <% } else if (selectedYear || selectedMonth) { %>
+            <p>Aucun rapport trouvé pour les critères sélectionnés.</p>
+        <% } %>
+    </div>
+<div id="excel" class="excel"> 
+    <form action="/agent/forms/excel" method="get">
+        <input type="date" name="startDate" placeholder="Date de debut">
+        <input type="date" name="endDate" placeholder="Date de fin">
+        <input type="hidden" value="<%=id%>" name="id">
+        <button type="submit">afficher</button>
+    </form>
+</div>
+ <div class="pdf" id="pdf">
+    <form id="filterForm" action="/agent/forms" method="GET">
+        
+       
+        <select id="year" name="year" required>
+            <option value="">Sélectionner une année</option>
+            <% for (let i = new Date().getFullYear(); i <= 2035; i++) { %>
+                <option value="<%= i %>" <%= (i == selectedYear) ? 'selected' : '' %>><%= i %></option>
+            <% } %>
+        </select>
+  <br>
+        <select id="month" name="month" required>
+            <option value="">Sélectionner un mois</option>
+            <% const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]; %>
+            <% const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]; %>
+            <% months.forEach((m, index) => { %>
+                <option value="<%= m %>" <%= (m == selectedMonth) ? 'selected' : '' %>><%= monthNames[index] %></option>
+            <% }) %>
+        </select>
+        
+  <button type="submit" style="margin-top: 10%;">Afficher Rapports</button>
+</form>
+       
+  
+    
+
+    
+
+</div>
+    <p><a href="/">Retour à l'accueil</a></p>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const results = document.getElementById('results');
+        const filterForm = document.getElementById('filterForm');
+     
+   
+        if (results && filterForm) {
+            // Vérifier les valeurs des champs year et month
+            const year = filterForm.elements['year'].value;
+            const month = filterForm.elements['month'].value;
+            document.querySelector('.pdf'). style. display = 'none'
+            if (year === "" || month === "") {
+                results.classList.remove('show');
+                results.classList.add('pdf-list');
+            } else {
+                results.classList.remove('pdf-list');
+                results.classList.add('show');
+            }
+        }
+    });
+</script>
+<script>
+    function typeR(event){
+
+    const type = document.getElementById("type");
+    if(type.value==='pdf'){
+     
+        document.querySelector('.excel'). style. display = 'none'
+        document.querySelector('.pdf'). style. display = 'block'
+      
+    }else{
+        document.querySelector('.pdf'). style. display = 'none'
+        document.querySelector('.res'). style. display = 'none'
+
+        document.querySelector('.excel'). style. display = 'block'
+    }
+    
+  }
+
+</script>
+</body>
+</html>

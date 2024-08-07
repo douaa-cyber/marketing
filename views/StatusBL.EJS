@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Réclamations</title>
+   <style>
+    body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container Styles */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Header Styles */
+h1 {
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+thead {
+    background-color:rgb(46, 30, 80);
+    color: #ffffff;
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+
+}
+
+th {
+    font-weight: bold;
+}
+
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Button Styles */
+button {
+    background-color: #b4e2eb;
+    border: none;
+    color: black;
+    font-weight: bold;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Empty State */
+td[colspan="7"] {
+    text-align: center;
+    font-style: italic;
+    color: #777;
+}
+        .header {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .header .logo {
+            max-width: 150px;
+        }
+
+   </style>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const filter = document.getElementById('status-filter');
+        const tableRows = document.querySelectorAll('.reclamation-row');
+        const countElement = document.getElementById('count');
+
+        const updateCount = () => {
+            const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+            countElement.textContent = visibleRows.length;
+        };
+
+        filter.addEventListener('change', () => {
+            const selectedStatus = filter.value;
+            
+            tableRows.forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                
+                if (selectedStatus === '' || rowStatus === selectedStatus) {
+                    row.style.display = ''; // Afficher la ligne
+                } else {
+                    row.style.display = 'none'; // Masquer la ligne
+                }
+            });
+
+            updateCount(); // Mettre à jour le nombre total après le filtrage
+        });
+
+        // Mettre à jour le nombre total au chargement de la page
+        updateCount();
+    });
+</script>
+
+</head>
+<body>
+    <header class="header">
+       
+        <a href="/"><img class="logo" src="../bmsLogo.svg" alt="Logo" /></a>
+      
+</header>
+    <div class="container">
+        <h1>Dashboard de Réclamations</h1>
+        <label for="status-filter">Filtrer par statut:</label>
+        <select id="status-filter">
+            <option value="">Tous</option>
+            <option value="En Cours">En Cours</option>
+            <option value="Cloturé">Cloturé</option>
+           
+        </select>
+        <p id="total-count">Nombre total de réclamations : <span id="count">0</span></p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Numéro de Réclamation</th>
+                    <th>BL</th>
+                    <th>Date de Réclamation</th>
+                    <th>Nom Client</th>
+                    <th>Cause de Retour</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="reclamations-table-body">
+                <% if (reclamations.length > 0) { %>
+                    <% reclamations.forEach(reclamation => { %>
+                        <tr class="reclamation-row" data-status="<%= reclamation.status %>">
+                            <td><%= reclamation.id %></td>
+                            <td><%= reclamation.bln %></td>
+                            <td><%= reclamation.date %></td>
+                            <td><%= reclamation.NomClient %></td>
+                            <td><%= reclamation.cause %></td>
+                            <td ><%= reclamation.status %></td>
+                            <td>
+                                <% if (reclamation.status === 'En Cours') { %>
+                                    <form action="/update-status/<%= reclamation.id %>/CQ" method="POST">
+                                        <button type="submit">Passer à Controle Qualite</button>
+                                    </form>
+                                <% } else if (reclamation.status === 'CQ') { %>
+                                    <form action="/update-status/<%= reclamation.id %>/SVA" method="POST">
+                                        <button type="submit">Passer à SVA</button>
+                                    </form>
+                                <% } else if (reclamation.status === 'SVA') { %>
+                                    <form action="/update-status/<%= reclamation.id %>/DPF" method="POST">
+                                        <button type="submit">Passer au Depot PF</button>
+                                    </form>
+                                <% } else if (reclamation.status === 'DPF') { %>
+                                    <form action="/update-status/<%= reclamation.id %>/Cloturé" method="POST">
+                                        <button type="submit">Terminer</button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="7">Pas de reclamation trouvé.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+          
+        </table>
+       
+
+
+</body>
+</html>

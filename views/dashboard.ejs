@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+  <style>
+   @media screen and (max-width: 800px) {
+      table {
+            width: 100%;
+           background-color: white;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+        }
+        
+          th {
+        border-bottom: 2px solid black;
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 1; 
+    
+        }
+        #tableContainer{
+          overflow-y: auto;
+       overflow-x: auto;
+          max-height: 300px;
+         max-width: 100%;
+        }
+        
+        .clear-search{
+      width: 3%;
+      cursor: pointer;
+     
+    }
+        .pagination {
+            display: flex;
+            align-items: center;
+            margin-top: 5%;
+            overflow-y: hidden;
+            overflow-x: auto;
+            white-space: nowrap;
+            max-width: 200px;
+            margin-left: 20%;
+            
+        }
+        tbody{
+         overflow: auto;
+          max-height: 200px;
+        }
+        .pagination a {
+            margin: 0 5px;
+            padding: 8px 12px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .search-container input[type="text"] {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            width: 80%;
+            margin-right: -1px;
+        }
+         
+        .main-div {
+           
+            margin-top: 40%;
+            height: 450px;
+            background-color: rgba(218, 218, 213, 0.628);
+            border: 1px solid black;
+        }
+
+        .search-sort {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+
+        .search-sort input[type="text"] {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            width: 200px;
+            margin-right: -1px;
+        }
+
+        .search-sort button {
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            border-radius: 0 4px 4px 0;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 20px;
+        }
+
+        .search-sort button:hover {
+            background-color: #0056b3;
+        }
+       
+    }
+    @media screen and (min-width: 800px) {
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px 100px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10000;
+    }
+    header .logo {
+        height: 50px;
+    }
+             
+    .container {
+        display: block;
+        width: 80%;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .search-container input[type="text"] {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    width: 10%;
+    margin-right: -1px;
+   }
+
+                  
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    thead {
+        background-color: #f8f8f8;
+        position: sticky;
+          top: 0%;
+        
+    }
+    .search-sort {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .search-sort input[type="text"] {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        width:400%;
+        margin-right: -1px; 
+    }
+    .search-sort button {
+        padding: 16px 20px;
+        border: 1px solid #ddd;
+        border-radius: 0 4px 4px 0;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-right:5%;
+    }
+    .search-sort button:hover {
+        background-color: #0056b3;
+    }
+    .clear-search{
+      width: 3%;
+      cursor: pointer;
+      margin-left:50%;
+    }
+    .pagination {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+        overflow-y: hidden;
+        overflow-x: auto;
+        white-space: nowrap;
+        max-width: 500px;
+        margin-left: 20%;
+    }
+    .pagination a {
+        margin: 0 5px;
+        padding: 8px 12px;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+        color: #007bff;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .pagination a.active {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .show {
+        display: block;
+    }
+    .main-div{
+      display: flex;
+     justify-content: center;
+    }
+    #tableContainer {
+        display: flex;
+        flex-direction: column;
+        max-height: 400px;
+        overflow: hidden;
+    }
+    #tableHead {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    #tableBody {
+        display: flex;
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
+  
+    }
+    #tableBody table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    #tableBody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    #tableBody td, #tableBody th {
+        white-space: nowrap;
+    }
+    #tableBody td:nth-child(6) {
+        padding-left: 5%;
+       
+    }
+  }
+</style>
+</head>
+<body>
+    <header>
+        <a href="/"><img class="logo" src="../bmsLogo.svg" /></a>
+    </header>
+    <div class="main-div">
+        <div class="container">
+            <div class="search-sort">
+                <div class="search-container">
+                    <input type="text" placeholder="Search" id="searchInput" >
+                  
+                </div>
+                
+                <img src="../clear.png"  class="clear-search" onclick="clearSearch()">
+                <button onclick="search()">Search</button>
+              
+            </div>
+
+            <div id="tableContainer">
+               
+                <div id="tableBody">
+                    <table >
+                      <thead>
+                        <tr>
+                          <% if(role==='admin'){ %>
+                            <th>Societe</th>
+                            <% } %>
+                          <th>Nom Agent</th>
+                          <th>Prénom Agent</th>
+                          <th>Telephone</th>
+                          
+                            <th>Détails</th>
+                           
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% if (formulaires.length > 0) { %>
+                            <% formulaires.forEach(formulaire => { %>
+                                <tr>
+                                  <% if(role==='admin'){ %>
+                                    <td><%= formulaire.society %></td>
+                                    <% } %>
+                                    <td><%= formulaire.nom_agent %></td>
+                                    <td><%= formulaire.prenom_agent %></td>
+                                    <td><%= formulaire.telephone %></td>
+                                    <td>
+                                        <form action="/dashboard/<%= formulaire.agent_id %>/excel" method="get">
+                                            <button type="submit">Détails</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="3">Aucun agent trouvé</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+    <div class="pagination">
+      <% if (page > 1) { %>
+        <a href="/dashboard?page=<%= page - 1 %>&perPage=<%= perPage %>">«</a>
+      <% } %>
+      
+      <% for (let i = 1; i <= Math.ceil(totalCount / perPage); i++) { %>
+        <% if (i === page) { %>
+          <a href="/dashboard?page=<%= i %>&perPage=<%= perPage %>" class="active"><%= i %></a>
+        <% } else { %>
+          <a href="/dashboard?page=<%= i %>&perPage=<%= perPage %>"><%= i %></a>
+        <% } %>
+      <% } %>
+    
+      <% if (page < Math.ceil(totalCount / perPage)) { %>
+        <a href="/dashboard?page=<%= page + 1 %>&perPage=<%= perPage %>">»</a>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script>
+ function search() {
+  const searchString = document.getElementById('searchInput').value.trim().toLowerCase();
+  const tableRows = document.getElementById('tableBody').getElementsByTagName('tr');
+  localStorage.setItem('searchString', searchString);
+
+  for (let row of tableRows) {
+    let matchFound = false;
+    const cells = row.getElementsByTagName('td');
+    
+    for (let cell of cells) {
+      if (cell.querySelector('button')) continue; // Ignore les cellules contenant des boutons
+      const cellText = cell.textContent.toLowerCase();
+      if (cellText.startsWith(searchString)) {
+        cell.innerHTML = cellText.replace(new RegExp(`^${searchString}`, 'i'), match => `<span style="background-color: yellow;">${match}</span>`);
+        matchFound = true;
+      } else {
+        cell.innerHTML = cellText;
+      }
+    }
+    
+    row.style.display = matchFound ? '' : 'none';
+  }
+}
+
+function highlightSearch() {
+  const searchString = localStorage.getItem('searchString');
+  if (!searchString) return;
+
+  document.getElementById('searchInput').value = searchString; 
+
+  const tableRows = document.getElementById('tableBody').getElementsByTagName('tr');
+
+  for (let row of tableRows) {
+    let matchFound = false;
+    const cells = row.getElementsByTagName('td');
+    
+    for (let cell of cells) {
+      if (cell.querySelector('button')) continue; // Ignore les cellules contenant des boutons
+      const cellText = cell.textContent.toLowerCase();
+      if (cellText.startsWith(searchString)) {
+        cell.innerHTML = cellText.replace(new RegExp(`^${searchString}`, 'i'), match => `<span style="background-color: yellow;">${match}</span>`);
+        matchFound = true;
+      } else {
+        cell.innerHTML = cellText; 
+      }
+    }
+    
+    row.style.display = matchFound ? '' : 'none';
+  }
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  localStorage.removeItem('searchString'); 
+  
+  const tableRows = document.getElementById('tableBody').getElementsByTagName('tr');
+  for (let row of tableRows) {
+    row.style.display = '';
+    const cells = row.getElementsByTagName('td');
+    for (let cell of cells) {
+      if (cell.querySelector('button')) continue; // Ignore les cellules contenant des boutons
+      cell.innerHTML = cell.textContent;
+    }
+  }
+}
+
+window.onload = function() {
+  highlightSearch();
+};
+
+  </script>
+</body>
+</html>

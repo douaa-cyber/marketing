@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire de Réclamation</title>
+    <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .header .logo {
+            max-width: 150px;
+        }
+
+        .signin {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .content {
+            margin: 20px 0;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step h3 {
+            margin-top: 0;
+        }
+
+        .inputBox {
+            margin-bottom: 15px;
+        }
+
+        .inputBox label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .inputBox input,
+        .inputBox select,
+        .inputBox textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group label {
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .table-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .description {
+            margin-top: 20px;
+        }
+
+        .description textarea {
+            height: 100px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            background-color: #007BFF;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .buttons button.prevBtn {
+            background-color: #6c757d;
+        }
+
+        .buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .stepstep-1active{
+           display: flex;
+           justify-content: space-between;
+        }
+        .suggestions {
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: #fff;
+      position: absolute;
+      z-index: 1000;
+    }
+    .suggestion-item {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .suggestion-item:hover {
+      background-color: #f0f0f0;
+    }
+  
+    .autocomplete-container {
+    position: relative; 
+}
+
+
+
+.autocomplete-list {
+   position: relative;
+    top:40%; 
+    left: 0;
+    right: 0;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    z-index: 1000; 
+    max-height: 200px; 
+    overflow-y: auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
+}
+.autocomplete-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background-color: #ddd;
+}
+
+    @media(max-width:800px){
+            .table-container{
+                width: 100%;
+            height: 400px;
+            overflow-x: auto;
+            overflow-y: auto;
+            white-space: nowrap;
+            
+            }
+    }
+    @media(width:1024px){
+            .table-container{
+                width: 100%;
+            height: 400px;
+            overflow-x: auto;
+            overflow-y: auto;
+            white-space: nowrap;
+            
+            }
+    }
+    .message{
+        color: red;
+    }
+    .suggestion-box {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    position: absolute; 
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 80%;
+}
+
+.suggestion-box div {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.suggestion-box div:hover {
+    background-color: #f0f0f0;
+}
+
+.suggestion-box div.selected {
+    background-color: #e0e0e0;
+}
+    </style>
+    <script>
+           async function fetchwilaya() {
+    const term = document.getElementById('wilayaInput').value;
+    if (term.length === 0) {
+        document.getElementById('wilayaSuggestions').innerHTML = '';
+        return;
+    }
+    const url = `/wilayas?term=${encodeURIComponent(term)}`;
+    console.log(`Fetching URL: ${url}`);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Erreur du serveur');
+        }
+        const wilayas = await response.json();
+        showsuggestions(wilayas, 'wilayaSuggestions', 'wilayaInput');
+    } catch (error) {
+        console.error('Erreur lors de la récupération des wilayas:', error.message);
+    }
+}
+function showsuggestions(suggestions, suggestionBoxId, inputId) {
+    const suggestionBox = document.getElementById(suggestionBoxId);
+    suggestionBox.innerHTML = '';
+
+    if (!Array.isArray(suggestions)) {
+        console.error('Suggestions should be an array');
+        return;
+    }
+
+    suggestions.forEach(suggestion => {
+        const div = document.createElement('div');
+        const displayText = suggestion.wilaya || suggestion.daira || suggestion.commune || 'Unknown';
+        div.textContent = displayText;
+          div.onclick = () => {
+            const input = document.getElementById(inputId);
+            input.value = div.textContent;
+            suggestionBox.innerHTML = '';
+        };
+        suggestionBox.appendChild(div);
+    });
+}
+    </script>
+</head>
+<body>
+   
+    <header class="header">
+       
+        <a href="/"><img class="logo" src="../bmsLogo.svg" alt="Logo" /></a>
+       
+    </header>
+    <% if (typeof message !== 'undefined') { %>
+        <p class="message"><%= message %></p>
+      <% } %>
+    <section class="signin">
+        <div class="content">
+            <h2>Réclamation</h2>
+            <div class="form">
+                <form id="multiStepForm" action="/reclamation" method="post" autocomplete="off">
+                    <!-- Step 1 -->
+                    <div class="step step-1 active">
+                        <h3>Informations relatives aux réclamations</h3>
+                        <div>
+                        <div class="inputBox">
+                            <label for="id">N° de réclamation:</label>
+                            <input type="number" name="id" id="id" readonly>
+                        </div>
+                        <div class="inputBox">
+                            <label for="bln">BLN°:</label>
+                            <input type="text" name="bln" id="bln" required>
+                        </div>
+                        <div class="inputBox">
+                            <label for="nom">Nom client:</label>
+                            <input type="text" id="nom" name="nom" required oninput="fetchNameSuggestions()">
+                            <div id="suggestions" class="suggestions"></div>
+                        </div>
+                        <div class="inputBox">
+                            <label for="telephone">Téléphone client:</label>
+                            <input type="tel" name="telephone" id="telephone" maxlength="10" required>
+                        </div>
+                        <div class="inputBox">
+                            <label for="date">Date de reclamation: </label>
+                            <input type="date" name="dateRec" id="Date"  required>
+                        </div>
+                        <div class="inputBox">
+                            <label for="date">Date de remplissage :</label>
+                            <input type="date" name="date" id="currentDate" readonly required>
+                        </div>
+                        <div class="inputBox">
+                            <label for="wilayaInput">Wilaya:</label>
+                            <input type="text" id="wilayaInput" name="wilaya"  oninput="fetchwilaya()" >
+                            <div id="wilayaSuggestions" class="suggestion-box"></div>
+                        </div>
+                       
+                    </div>
+                    <div>
+                       
+                       
+                        <div class="inputBox">
+                            <label for="nomR">Nom Réclamant:</label>
+                            <input type="text" name="nomR" id="nomR" required>
+                        </div>
+                        <div class="inputBox">
+                            <label for="telephoneR">Téléphone:</label>
+                            <input type="tel" name="telephoneR" id="telephoneR" required maxlength="10">
+                        </div>
+                        <div class="inputBox">
+                            <label for="reclamationTelephone">Mode de réception:</label>
+                            <select name="reclamationTelephone" id="reclamationTelephone" required>
+                                <option value="Telephone">Téléphone</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="email">Email</option>
+                                <option value="direct">Directement</option>
+                            </select>
+                        </div>
+                        <div class="inputBox">
+                            <label for="adresse">Adresse:</label>
+                            <input type="text" name="adresse" id="adresse" required  style="cursor: pointer;">
+                        </div>
+                  
+                    </div>
+                        <div class="buttons">
+                            <button type="button" class="nextBtn">Suivant</button>
+                        </div>
+                    </div>
+            
+                  
+                    <div class="step step-2">
+                        <h3>Étape 2/4</h3>
+                        <h4>Cause de retour:</h4>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox"  name="causeRetour[]" value="erreurLivraison"> Erreur de livraison</label>
+                            <label><input type="checkbox"  name="causeRetour[]" value="erreurCommande"> Erreur de commande</label>
+                            <label><input type="checkbox"  name="causeRetour[]" value="produitNonConforme"> Produit non conforme</label>
+                        </div>
+                        <input type="hidden" name="status" value="En Cours">
+
+                        <div class="table-container">
+                            <table id="productTable">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Code</th>
+                                        
+                                        <th rowspan="2">Désignation produit</th>
+                                        <th colspan="2">Quantité</th>
+                                        <th rowspan="2">État</th>
+                                        <th rowspan="2">Description</th>
+                                        <th rowspan="2">Actions</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Colis</th>
+                                        <th>Pièces</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <input type="text" class="code-input" name="code[]">
+                                            <div class="autocomplete-list"></div>
+                                        </td>
+                                        <td><input type="text" name="designation[]" readonly></td>
+                                       
+                                        <td><input type="number" name="colis[]" step="any"></td>
+                                        <td><input type="number" name="pieces[]" step="any"></td>
+                                        <td>
+                                            <select name="etat[]">
+                                                <option value="En plus">En Plus</option>
+                                                <option value="En moins">EN Moins</option>
+                                                <option value="Non Conforme">Non Conforme</option>
+                                            </select>
+                                        </td>
+                                        <td><textarea name="description[]" rows="5"></textarea></td>
+                                        <td><button type="button" onclick="removeRow(this)">Supprimer</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                           
+                        </div>
+                        <button type="button" onclick="addRow()">Ajouter une ligne</button>
+                        <div class="buttons">
+                            <button type="button" class="prevBtn">Précédent</button>
+                            <button type="submit" >Envoyer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    <script>
+ document.addEventListener('DOMContentLoaded', () => {
+    function attachAutocompleteListeners(input) {
+        const autocompleteList = input.nextElementSibling;
+
+        input.addEventListener('input', async () => {
+            const prefix = input.value.trim();
+
+            if (prefix.length === 0) {
+                autocompleteList.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/codes/${prefix}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    autocompleteList.innerHTML = '';
+                    if (data.codes.length > 0) {
+                        data.codes.forEach(code => {
+                            const item = document.createElement('div');
+                            item.classList.add('autocomplete-item');
+                            item.textContent = code;
+                            item.addEventListener('click', async () => {
+                                input.value = code;
+                                autocompleteList.innerHTML = '';
+
+                                // Récupérer la désignation du produit
+                                try {
+                                    const response = await fetch(`/designation/${code}`);
+                                    const data = await response.json();
+
+                                    if (response.ok) {
+                                        const designationInput = input.closest('tr').querySelector('input[name="designation[]"]');
+                                        designationInput.value = data.designation || '';
+                                    } else {
+                                        console.error('Error fetching designation:', data.error);
+                                    }
+                                } catch (error) {
+                                    console.error('Fetch Error:', error);
+                                }
+                            });
+                            autocompleteList.appendChild(item);
+                        });
+                    } else {
+                        const item = document.createElement('div');
+                        item.classList.add('autocomplete-item');
+                        item.textContent = 'No results found';
+                        autocompleteList.appendChild(item);
+                    }
+                } else {
+                    autocompleteList.innerHTML = '';
+                    console.error('Error fetching codes:', data.error);
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+            }
+        });
+
+        // Fermer la liste d'autocomplétion lors d'un clic en dehors
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.code-input') && !e.target.closest('.autocomplete-list')) {
+                autocompleteList.innerHTML = '';
+            }
+        });
+    }
+
+    function addRow() {
+        const tableBody = document.querySelector('#productTable tbody');
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td>
+                <input type="text" class="code-input" name="code[]">
+                <div class="autocomplete-list"></div>
+            </td>
+            <td><input type="text" name="designation[]" readonly></td>
+            <td><input type="number" name="colis[]" step="any"></td>
+            <td><input type="number" name="pieces[]" step="any"></td>
+            <td>
+                <select name="etat[]">
+                    <option value="En plus">EN Plus</option>
+                    <option value="En moins">En Moins</option>
+                    <option value="Non Conforme">Non Conforme</option>
+                </select>
+            </td>
+            <td><textarea name="description[]" rows="5"></textarea></td>
+            <td><button type="button" onclick="removeRow(this)">Supprimer</button></td>
+        `;
+
+        tableBody.appendChild(newRow);
+
+        // Attacher les écouteurs d'événements d'autocomplétion pour la nouvelle ligne
+        const codeInput = newRow.querySelector('.code-input');
+        attachAutocompleteListeners(codeInput);
+    }
+
+    document.querySelectorAll('.code-input').forEach(input => {
+        attachAutocompleteListeners(input);
+    });
+
+    document.querySelector('button[onclick="addRow()"]').addEventListener('click', addRow);
+});
+
+
+
+        async function fetchNextReclamationId() {
+            try {
+            
+                const response = await fetch('/api/next-reclamation-id');
+                const data = await response.json();
+        
+                if (data.nextId) {
+                    console.log(data.nextId);
+                    document.getElementById('id').value = data.nextId;
+                } else {
+                    console.error('Could not fetch next reclamation ID');
+                }
+            } catch (error) {
+                console.error('Error fetching next reclamation ID:', error);
+            }
+        }
+    
+        window.onload = fetchNextReclamationId;
+    </script>
+
+    <script>
+         async function fetchNameSuggestions() {
+      const input = document.getElementById('nom').value.trim();
+      const suggestionsBox = document.getElementById('suggestions');
+      
+      if (input.length >= 2) {
+        try {
+          const response = await fetch(`/getNameSuggestions?query=${encodeURIComponent(input)}`);
+          if (response.ok) {
+            const suggestions = await response.json();
+            suggestionsBox.innerHTML = '';
+            suggestions.forEach(name => {
+              const div = document.createElement('div');
+              div.classList.add('suggestion-item');
+              div.textContent = name;
+              div.onclick = () => selectSuggestion(name);
+              suggestionsBox.appendChild(div);
+            });
+          } else {
+            suggestionsBox.innerHTML = '';
+          }
+        } catch (err) {
+          console.error('Error fetching name suggestions', err);
+          suggestionsBox.innerHTML = '';
+        }
+      } else {
+        suggestionsBox.innerHTML = '';
+      }
+    }
+
+    function selectSuggestion(name) {
+      document.getElementById('nom').value = name;
+      document.getElementById('suggestions').innerHTML = '';
+      fetchClientInfo();
+    }
+
+    async function fetchClientInfo() {
+      const fullName = document.getElementById('nom').value.trim();
+      
+      if (fullName.length > 0) {
+        
+        try {
+          const response = await fetch(`/getClientInfo?Nom=${encodeURIComponent(fullName)}`);
+          console.log(response);
+          if (response.ok) {
+            const clientInfo = await response.json();
+            console.log(clientInfo);
+            document.getElementById('wilayaInput').value = clientInfo.wilaya;
+            document.getElementById('adresse').value = clientInfo.adresse;
+            document.getElementById('telephone').value = clientInfo.telephone;
+            document.getElementById('date').value = clientInfo.date;
+          } else {
+            document.getElementById('wilaya').value = '';
+            document.getElementById('adresse').value = '';
+            document.getElementById('telephone').value = '';
+          }
+        } catch (err) {
+          console.error('Error fetching client info', err);
+        }
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const adresseInput = document.getElementById('adresse');
+
+      adresseInput.addEventListener('click', () => {
+        const adresseValue = adresseInput.value;
+        if (adresseValue) {
+          window.open(adresseValue, '_blank');
+        }
+      });
+    });
+    </script>
+    <script>
+          
+   const currentDateInput = document.getElementById('currentDate');
+    
+    if (currentDateInput) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayFormatted = `${year}-${month}-${day}`;
+
+        currentDateInput.value = todayFormatted;
+    }
+   
+
+
+        // Fonction pour supprimer une ligne du tableau
+        function removeRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        const nextBtns = document.querySelectorAll('.nextBtn');
+        const prevBtns = document.querySelectorAll('.prevBtn');
+        const steps = document.querySelectorAll('.step');
+
+        let currentStep = 0;
+
+        function showStep(stepIndex) {
+            steps.forEach((step, index) => {
+                step.classList.toggle('active', index === stepIndex);
+            });
+            updateButtons();
+        }
+
+        function updateButtons() {
+            prevBtns.forEach(btn => btn.disabled = currentStep === 0);
+            nextBtns.forEach(btn => btn.disabled = currentStep === steps.length - 1);
+        }
+
+        nextBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            });
+        });
+
+        prevBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+        });
+
+        showStep(currentStep);
+    </script>
+</body>
+</html>

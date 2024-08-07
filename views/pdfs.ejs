@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Formulaire soumis avec succès</title>
+  <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+  <script>
+    alert("Formulaire soumis avec succès!");
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333;
+    }
+    a {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    a:hover {
+      background-color: #0056b3;
+    }
+    p {
+      margin-top: 20px;
+      color: #666;
+    }
+    .pdf-link {
+      background-color: #c92121;
+      color: wheat;
+    
+    }
+    .pdf-link:hover {
+      background-color: #950202;
+     
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+ <div class="container">
+  <h1>Formulaire soumis avec succès</h1>
+    <a href="<%= pdfPath %>" class="pdf-link" target="_blank"> voir la formulaire en format pdf</a>
+      <p><a href="/agent/forms">Voir tous les formulaires</a></p>
+    
+
+</body>
+</html>

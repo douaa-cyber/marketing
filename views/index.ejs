@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, target-densitydpi=device-dpi">
+    <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+    <title>Acceuil</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+@media (min-width:800px)  {
+* {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+ scroll-behavior: smooth;
+ font-family: "Poppins",sans-serif;
+ zoom: 0.9;
+}
+
+
+.user-icon-container {
+    position: absolute;
+    top: 35px;
+    right: 30px;
+    bottom: 35px;
+   
+    border-radius: 100%;
+}
+
+
+.user-icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    
+}
+
+
+.user-icon-button img {
+    width: 35px; 
+    height: 35px; 
+    border: 4px solid black;
+    border-radius: 50%; 
+}
+
+.login-message {
+    display: none;
+    position: absolute;
+    top: 70px; 
+    right: 10px;
+    background-color: #e9f2fe;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: 200px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.login-message h2 {
+    margin-top: 0;
+    font-size: 16px;
+}
+
+.user-info {
+    display: block;
+    width: 70%;
+    margin-right: auto;
+    margin-left: auto;
+    align-items: center;
+    margin-top: 10px;
+    padding-left: 15%;
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-left: 20%;
+}
+
+.user-info p {
+    margin: 0;
+    width: 400px;
+    padding-bottom: 10%;
+    padding-right: 50%;
+}
+.buttons{
+    display: flex;
+    justify-content: space-between;
+  
+}
+.signup-button{
+    margin-top: 60px;
+    background-color: #d87070;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size:22px;
+
+}
+.signup-button:hover{
+    background-color: red;
+    color: white;
+    font-weight: bold;
+}
+
+.close-button {
+    margin-top: 60px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size:22px;
+}
+
+.close-button:hover {
+    background-color: #0056b3;
+}
+
+body{
+    height: 100vh;
+    width: 80%;
+    zoom: 1;
+  background:linear-gradient(rgb(255, 255, 255,1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+    background-attachment: fixed;
+    background-size: cover;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center
+}
+.popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none; 
+        }
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10000;
+    
+}
+header .logo{
+height: 50px;
+}
+header ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+header ul li {
+    list-style: none;
+    margin-left: 20px;
+}
+header ul li a {
+    text-decoration: none;
+    padding: 6px 15px;
+    color: #2e2121;
+    border-radius: 20px;
+    font-size: x-large;
+}
+header ul li a:hover,
+header ul li a.active {
+    background: rgba(16, 46, 102, 0.753);
+    color: #fdfbfb;
+}
+.intro{
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    border-radius: 400px;
+    position: relative;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.intro .content {
+    max-width: 800px;
+}
+.intro::before{
+    content: '';
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+    box-shadow: 0 0 40px rgba(202, 72, 72, 0.5),
+                0 0 60px rgba(100, 255, 100, 0.145),
+                0 0 60px rgba(100, 100, 255, 0.3),
+                0 0 90px rgba(255, 255, 100, 0.2),
+                0 0 100px rgba(100, 255, 255, 0.1);
+}
+.intro h1{
+    font-size: 3em;
+    margin-bottom: 70px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    text-transform: capitalize;
+}
+.intro p {
+    font-size: 1.9em;
+    margin-bottom: 70px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+.intro .btn{
+    text-decoration: none;
+    background-color: #ff9800;
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-size: 1.3em;
+    transition: background 0.3s;
+
+}
+.intro .btn:hover {
+    background: #86e7ec;
+    color: black;
+}
+}
+header ul.show-menu {
+    display: flex; /* Show the menu when activated */
+    flex-direction: column;
+}
+.menu-icon {
+    display: none;
+    font-size: 2em;
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+header .logo{
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    
+}
+
+@media (max-width:800px){
+    
+body {
+    background: linear-gradient(rgb(255, 255, 255, 1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+    height: 100vh;
+    width: 100%;
+    font-family: "Poppins", sans-serif;
+    background-size: cover;
+    background-attachment: fixed;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo{
+    visibility: hidden;
+}
+
+
+.user-icon-container {
+    position: absolute;
+    top: 60px;
+    right: 70px;
+    padding: 0;
+    width: 10px;
+}
+
+.list {
+    position: absolute;
+    top:85px;
+    left: 20px;
+  
+    
+}
+
+
+.user-icon-button {
+    background: none;
+    border: none;
+   padding: 0;
+    cursor: pointer;
+    
+}
+
+
+.user-icon-button img {
+    width: 30px; 
+    height:30px; 
+    border-radius: 50%; 
+    border: 3px solid black;
+}
+
+.login-message {
+    display: none;
+    position: fixed; 
+    top: 88px; 
+    right: 3px; 
+    background-color: #e9f2fe;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000; 
+    margin: 0;
+    width: 150px !important;
+    height: 180px !important;
+}
+
+
+
+.login-message h2 {
+    margin-top: 0;
+    font-size: 12px;
+}
+
+.user-info {
+    display: block;
+    width: 40%;
+    margin-right: auto;
+    margin-left: auto;
+    align-items: center;
+    margin-top: 10px;
+    padding-left: 15%;
+}
+
+.user-info img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-left: 20%;
+}
+
+.user-info p {
+    margin: 0;
+    width: 400px;
+    padding-bottom: 10%;
+    padding-right: 50%;
+    font-size: 12px;
+}
+.buttons{
+    display: flex;
+    justify-content: space-between;
+  
+}
+.signup-button{
+    margin-top: 60px;
+    background-color: #d87070;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 5px;
+    padding: 5px ;
+    cursor: pointer;
+    font-weight: bold;
+    font-size:12px;
+    width: 42px;
+}
+
+.signup-button:hover{
+    background-color: red;
+    color: white;
+    font-weight: bold;
+}
+
+.close-button {
+    margin-top: 60px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+    font-size:12px;
+    width: 42px;
+}
+
+.close-button:hover {
+    background-color: #0056b3;
+}
+.intro {
+    width: 80vmin;
+    height: 80vmin; 
+    background: rgba(255, 255, 255, 0.466);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    transition: transform 0.3s ease; 
+    box-shadow: 0 8px 16px rgba(5, 49, 64, 0.881); 
+    z-index: 1; 
+        box-shadow: 0 0 40px rgba(202, 72, 72, 0.5),
+                    0 0 60px rgba(100, 255, 100, 0.145),
+                    0 0 60px rgba(100, 100, 255, 0.3),
+                    0 0 90px rgba(255, 255, 100, 0.2),
+                    0 0 100px rgba(100, 255, 255, 0.1);
+ }
+    
+
+
+
+.intro h1 {
+    text-align: center;
+    font-size: 1.3em;
+    padding: 10px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    text-transform: capitalize;
+}
+.intro p{
+    font-size: 0.8em;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    height: 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+    background-image: url(../bmsLogo.svg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
+   
+}
+.intro .btn{
+    text-decoration: none;
+    background-color: #ff9800;
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    transition: background 0.3s;
+
+}
+header ul li a {
+    text-decoration: none;
+    padding: 6px 15px;
+}
+
+header ul li {
+    margin: 5% 10px;
+    border-bottom:2px solid #000000;
+    padding: 3%;
+}
+
+
+header ul {
+    display: none; 
+    flex-direction: column;
+    width: 90%;
+    height: 60%;
+    margin-right: 5%;
+    background-color: rgba(128, 128, 128, 0.064); 
+    position: relative;
+    top: 0;
+    left: 0;
+    text-align: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); 
+    list-style-type: none;
+    margin-top: 20%;
+    padding: 0;
+    
+}
+
+.menu-icon {
+    display: block;
+    margin-right: 85%;
+    margin-top: 8%;
+}
+header .logo {
+   height: 50px;
+  margin-left: 50%;
+  
+} 
+
+
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+.contact-container {
+    width: 80%;
+    margin: 50px auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.contact-info, .contact-form {
+    width: 45%;
+}
+
+
+
+@media (max-width: 820px) {
+    .contact-container {
+        flex-direction: column; 
+        align-items: center;
+    }
+
+    .contact-info, .contact-form {
+        width: 100%; 
+        margin-bottom: 20px; 
+        text-align: center; 
+    }
+
+    .contact-info h1 {
+        font-size: 28px; 
+    }
+
+    .contact-info p {
+        font-size: 14px; 
+    }
+}
+
+.contact-info h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.contact-info p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    
+}
+
+.contact-details p {
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.contact-details i {
+    margin-right: 10px;
+}
+
+.contact-form form {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-form input, 
+contact-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.contact-form textarea {
+    height: 150px;
+    resize: none;
+}
+
+.contact-form button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.contact-form button:hover {
+    background-color: #0056b3;
+}
+
+@media (width:1024) and (height:600px){
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        scroll-behavior: smooth;
+        font-family: "Poppins",sans-serif;
+       }
+       
+       body{
+           height: 100vh;
+           width: 100%;
+           zoom: 0.5;
+           background:linear-gradient(rgb(255, 255, 255,1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+           background-attachment: fixed;
+           background-size: cover;
+           overflow-x: hidden;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center
+       }
+       
+       
+       header {
+           position: fixed;
+           top: 0;
+           left: 0;
+           width: 100%;
+           padding: 20px 100px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           z-index: 10000;
+       }
+       header .logo{
+           color: #000000;
+           font-weight: 700;
+           text-decoration: none;
+           font-size: 2em;
+           text-transform: uppercase;
+           letter-spacing: 2px;
+       }
+       header ul {
+           display: flex;
+           justify-content: center;
+           align-items: center;
+       }
+       header ul li {
+           list-style: none;
+           margin-left: 20px;
+       }
+       header ul li a {
+           text-decoration: none;
+           padding: 6px 15px;
+           color: #2e2121;
+           border-radius: 20px;
+           font-size: x-large;
+       }
+       header ul li a:hover,
+       header ul li a.active {
+           background: rgb(231, 231, 231);
+           color: #000000;
+       }
+       .intro{
+           margin-top: 30%;
+           height: 100vh;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           text-align: center;
+           
+           border-radius: 400px;
+           position: relative;
+           height: 100vh;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           text-align: center;
+       }
+       .intro .content {
+           max-width: 800px;
+       }
+       .intro::before{
+           content: '';
+           position: absolute;
+           width: 900px;
+           height: 900px;
+           background: rgba(255, 255, 255, 0.1);
+           border-radius: 50%;
+           z-index: -1;
+           box-shadow: 0 0 40px rgba(202, 72, 72, 0.5),
+                       0 0 60px rgba(100, 255, 100, 0.145),
+                       0 0 60px rgba(100, 100, 255, 0.3),
+                       0 0 90px rgba(255, 255, 100, 0.2),
+                       0 0 100px rgba(100, 255, 255, 0.1);
+       }
+       .intro h1{
+           font-size: 3em;
+           margin-bottom: 70px;
+           text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+           text-transform: capitalize;
+       }
+       .intro p {
+           font-size: 1.9em;
+           margin-bottom: 70px;
+           text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+       }
+       .intro .btn{
+           text-decoration: none;
+           background-color: #ff9800;
+           color: #fff;
+           padding: 15px 30px;
+           border-radius: 30px;
+           font-size: 1.3em;
+           transition: background 0.3s;
+       
+       }
+       .intro .btn:hover {
+           background: #86e7ec;
+           color: black;
+       }
+}
+@media(width:1024px) and (height:768px){
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        scroll-behavior: smooth;
+        font-family: "Poppins",sans-serif;
+       }
+       
+       body{
+           height: 100vh;
+           width: 100%;
+           zoom: 0.5;
+           background:linear-gradient(rgb(255, 255, 255,1) 0%, rgba(251, 251, 251, 0.1) 100%), linear-gradient(90deg, #84d2ff, #8d5acd);
+           background-attachment: fixed;
+           background-size: cover;
+           overflow-x: hidden;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center
+       }
+       
+       
+       header {
+           position: fixed;
+           top: 0;
+           left: 0;
+           width: 100%;
+           padding: 20px 100px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           z-index: 10000;
+       }
+       header .logo{
+           color: #000000;
+           font-weight: 700;
+           text-decoration: none;
+           font-size: 2em;
+           text-transform: uppercase;
+           letter-spacing: 2px;
+       }
+       header ul {
+           display: flex;
+           justify-content: center;
+           align-items: center;
+       }
+       header ul li {
+           list-style: none;
+           margin-left: 20px;
+       }
+       header ul li a {
+           text-decoration: none;
+           padding: 6px 15px;
+           color: #2e2121;
+           border-radius: 20px;
+           font-size: x-large;
+       }
+       header ul li a:hover,
+       header ul li a.active {
+           background: rgb(231, 231, 231);
+           color: #000000;
+       }
+       .intro{
+           margin-top: 30%;
+           height: 100vh;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           text-align: center;
+           
+           border-radius: 400px;
+           position: relative;
+           height: 100vh;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           text-align: center;
+       }
+       .intro .content {
+           max-width: 800px;
+       }
+       .intro::before{
+           content: '';
+           position: absolute;
+           width: 900px;
+           height: 900px;
+           background: rgba(255, 255, 255, 0.1);
+           border-radius: 50%;
+           z-index: -1;
+           box-shadow: 0 0 40px rgba(202, 72, 72, 0.5),
+                       0 0 60px rgba(100, 255, 100, 0.145),
+                       0 0 60px rgba(100, 100, 255, 0.3),
+                       0 0 90px rgba(255, 255, 100, 0.2),
+                       0 0 100px rgba(100, 255, 255, 0.1);
+       }
+       .intro h1{
+           font-size: 3em;
+           margin-bottom: 70px;
+           text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+           text-transform: capitalize;
+       }
+       .intro p {
+           font-size: 1.9em;
+           margin-bottom: 70px;
+           text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+       }
+       .intro .btn{
+           text-decoration: none;
+           background-color: #ff9800;
+           color: #fff;
+           padding: 15px 30px;
+           border-radius: 30px;
+           font-size: 1.3em;
+           transition: background 0.3s;
+       
+       }
+       .intro .btn:hover {
+           background: #86e7ec;
+           color: black;
+       }
+}
+
+
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5); 
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #d6d1d1d7; 
+    padding: 30px;
+    border-radius: 10px;
+    margin-top: 20%;
+    margin-left: 25%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); 
+    text-align: center;
+    max-width: 45%; 
+    position: relative; 
+    font-size: 1.4em;
+    text-transform: capitalize;
+}
+
+.modal h2 {
+    font-size: 2em;
+    margin-bottom: 20px; 
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); 
+}
+
+.modal p {
+    font-size: 1.2em;
+    margin-bottom: 20px; 
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+}
+
+
+@media (max-width: 800px) {
+    .modal-content {
+        max-width: 90%; 
+    }
+}
+
+    </style>
+</head>
+<body>
+  
+  <header>
+    <a href="#"><img class="logo" src="../bmsLogo.svg" /></a>
+         
+    <div class="menu-icon" id="menu-icon">&#9776;</div> 
+    <div class="list">
+    <ul id="nav-list">
+        <li><a href="#" class="active">Accueil</a></li>
+        <% if (username ==='YacineMed' ) {%> 
+            <li><a href="/reclamation">Reclamation_Client </a></li>
+            <li><a href="/viewreport">Rapport_Reclamation</a></li>
+            <li><a href="/rapports">Etat_Reclamation</a></li>
+        <% }  %> 
+        
+       
+        <% if (role!=='responsable' && role!=='admin'  ) {%>
+            <% if (username!=='YacineMed' ) {%>
+        <li><a href="/form">Formulaire</a></li>
+        <li><a href="/agent/forms">Rapport</a></li>
+
+        <% }  %>
+        <% } else { %>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/viewreport">Rapports_Reclamation</a></li>
+         <% } %>   
+        
+         <% if (role==='admin') {%>
+          
+            <li><a href="/dashboardcontact">Dashboard_Contact</a></li>
+            <li> <a href="/admin/users">Gerer utilisateur</a></li>
+         <% } %>   
+
+        <li><a href="contact.html">Contact</a></li>
+    </div>
+    </ul>
+    <div class="user-icon-container">
+        <% if (username) {%>
+            <button class="user-icon-button" onclick="toggleLoginMessage()">
+                <img src="user2.png" alt="User Icon" id="imageuser">
+            </button>
+          <% } else { %>
+            <button class="user-icon-button" onclick="toggleLoginMessage()">
+                <img src="user.PNG" alt="User Icon" id="imageuser">
+            </button>
+          <% } %>
+     
+  </div>
+  </header>
+          <div id="login-message" class="login-message" style="width: 15%;height:24%;">
+            <h2 style="text-align: center;border-bottom: 2px solid blue;padding-bottom: 10px;">Personne</h2>
+          <div class="user-info">
+            <% if (username) {%>
+                <img src="user2.png" alt="User Icon"  id="image" style="border: 3px solid black;">
+                <p id="user_status"> <%= username %></p>
+              <% } else { %>
+                <img src="user.PNG" alt="User Icon"  id="image" style="border: 3px solid black;">
+                <p id="user_status">Non connecté</p>
+              <% } %>
+             
+              
+            </div>
+  
+  <div class="buttons" id="buttons">
+      <% if (username) {%>
+        <button class="signup-button" id="logout-button">logout</button>
+        <button class="close-button" onclick="toggleLoginMessage()">Fermer</button>
+      <% } else { %>
+        <button class="signup-button" id="signup-button"><a href="/login" style="text-decoration: none;">Log in</a></button>
+        <button class="close-button" onclick="toggleLoginMessage()">Fermer</button>
+      <% } %>
+  </div>          
+</div>
+
+   <section class="intro">
+    <DIV class="content">
+          <h1>Bienvenue sur notre site de Service Marketing</h1>
+          <p>Dédiée aux agents de marketing, où la formulaire facilite  l'interaction  avec les clients, tandis que l'administrateur gère facilement les données via un tableau de bord centralisé.</p>
+          <a href="signup.html" class="btn">S'inscrire </a>
+     </DIV>
+   </section>
+  
+   <script >
+    document.addEventListener("DOMContentLoaded", function() {
+ 
+    document.getElementById('menu-icon').addEventListener('click', function() {
+        var navList = document.getElementById('nav-list');
+        navList.classList.toggle('show-menu');
+    });
+
+   
+    var modal = document.getElementById('myModal');
+    var span = document.getElementsByClassName('close')[0];
+
+    // Afficher la boîte modale
+    modal.style.display = 'block';
+
+    // Fermer la boîte modale si l'utilisateur clique sur le bouton de fermeture
+    span.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    // Fermer la boîte modale si l'utilisateur clique en dehors de celle-ci
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+});
+
+    function toggleLoginMessage() {
+    const loginMessage = document.getElementById('login-message');
+    if (loginMessage.style.display === 'none' || loginMessage.style.display === '') {
+        loginMessage.style.display = 'block';
+    } else {
+        loginMessage.style.display = 'none';
+    }
+}
+const logoutButton = document.getElementById('logout-button');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', function() {
+          window.location.href = '/logout';
+        });
+      }
+    
+
+        
+</script> 
+</body>
+</html>

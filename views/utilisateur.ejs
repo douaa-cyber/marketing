@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liste d'utilisateur</title>
+  <link rel="icon" href="../bms.jfif" type="image/x-icon" style="width:500px;height:500px"  />
+</head>
+<body>
+  <h1>Gérer Utilisateur</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(user => { %>
+        <tr>
+          <td><%= user.username %></td>
+          <td><%= user.role %></td>
+          <td>
+            <form action="/users/<%= user.id %>/update-role" method="post">
+              <select name="role">
+                <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                <option value="responsable" <%= user.role === 'responsable' ? 'selected' : '' %>>Responsable</option>
+              </select>
+              <button type="submit">Update Role</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>
