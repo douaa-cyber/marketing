@@ -15,11 +15,17 @@ const jwt =require('jsonwebtoken');
 const app = express();
 
 
+<<<<<<< HEAD
 const port = 3000;
 const hostname = '192.168.2.66';
 
 
 
+=======
+
+const port = 10000;
+const hostname = '0.0.0.0';
+>>>>>>> 644a82e01b6b37be708f1b0f6988079a98888b55
 app.use(express.static('public'));
 
 //VIRIFER SI LE DIRECTORY EXIST
