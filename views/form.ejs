@@ -669,7 +669,7 @@ body {
     });
 
     clientInput.addEventListener('blur', function () {
-  
+        // Ajoutez la valeur de l'input à la liste des tags lors de la perte du focus
         const inputValue = clientInput.value.trim();
         if (inputValue && !selectedSources.includes(inputValue)) {
             addTag(inputValue);
@@ -821,40 +821,9 @@ function submitForm() {
 
 
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function(err) {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
 
 
-    
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('multiStepForm');
-
-        if (!navigator.onLine) {
-       
-            form.style.display = 'block';
-        } else {
-         
-            form.style.display = 'none';
-        }
-
-    
-        window.addEventListener('online', () => {
-            form.style.display = 'none';
-        });
-
-        window.addEventListener('offline', () => {
-            form.style.display = 'block';
-        });
-    });
-</script>
-   
+      </script>
     
       
 </head>

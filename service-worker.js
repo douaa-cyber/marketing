@@ -1,8 +1,9 @@
 const CACHE_NAME = 'v1';
 const urlsToCache = [
   '/',
- '/form',
- '/bmsLogo.svg'
+  '/login' ,
+  'form'
+ 
   
 ];
 

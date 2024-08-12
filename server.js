@@ -14,13 +14,11 @@ const multer = require('multer');
 const jwt =require('jsonwebtoken');
 const app = express();
 
-<<<<<<< HEAD
+
 const port = 3000;
 const hostname = '192.168.2.66';
-=======
-const port = 10000;
-const hostname = '0.0.0.0';
->>>>>>> 7f2a87a7fff599d4841a86879819b2892e2f1932
+
+
 
 app.use(express.static('public'));
 
@@ -2460,6 +2458,6 @@ res.redirect('/');
 });
 });
 //POUR LANCER LE SERVER 
-app.listen(port,hostname, () => {
-  console.log(`Serveur démarré sur ${hostname}:${port}`);
+app.listen(port,() => {
+  console.log(`Serveur démarré sur localhost:${port}`);
 });
