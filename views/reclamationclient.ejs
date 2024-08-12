@@ -295,7 +295,7 @@ function showsuggestions(suggestions, suggestionBoxId, inputId) {
                         <div>
                         <div class="inputBox">
                             <label for="id">N° de réclamation:</label>
-                            <input type="number" name="id" id="id" readonly>
+                            <input type="number" name="num" id="id" required>
                         </div>
                         <div class="inputBox">
                             <label for="bln">BLN°:</label>
@@ -308,7 +308,7 @@ function showsuggestions(suggestions, suggestionBoxId, inputId) {
                         </div>
                         <div class="inputBox">
                             <label for="telephone">Téléphone client:</label>
-                            <input type="tel" name="telephone" id="telephone" maxlength="10" required>
+                            <input type="tel" name="telephone" id="telephone" maxlength="10" >
                         </div>
                         <div class="inputBox">
                             <label for="date">Date de reclamation: </label>
@@ -375,6 +375,7 @@ function showsuggestions(suggestions, suggestionBoxId, inputId) {
                                         
                                         <th rowspan="2">Désignation produit</th>
                                         <th colspan="2">Quantité</th>
+                                        <th rowspan="2">Valeur</th>
                                         <th rowspan="2">État</th>
                                         <th rowspan="2">Description</th>
                                         <th rowspan="2">Actions</th>
@@ -394,6 +395,7 @@ function showsuggestions(suggestions, suggestionBoxId, inputId) {
                                        
                                         <td><input type="number" name="colis[]" step="any"></td>
                                         <td><input type="number" name="pieces[]" step="any"></td>
+                                        <td><input type="text" name="valeurs[]" step="any"></td>
                                         <td>
                                             <select name="etat[]">
                                                 <option value="En plus">En Plus</option>
@@ -498,6 +500,7 @@ function showsuggestions(suggestions, suggestionBoxId, inputId) {
             <td><input type="text" name="designation[]" readonly></td>
             <td><input type="number" name="colis[]" step="any"></td>
             <td><input type="number" name="pieces[]" step="any"></td>
+            <td><input type="text" name="valeurs[]" step="any"></td>
             <td>
                 <select name="etat[]">
                     <option value="En plus">EN Plus</option>
@@ -525,27 +528,8 @@ function showsuggestions(suggestions, suggestionBoxId, inputId) {
 
 
 
-        async function fetchNextReclamationId() {
-            try {
-            
-                const response = await fetch('/api/next-reclamation-id');
-                const data = await response.json();
-        
-                if (data.nextId) {
-                    console.log(data.nextId);
-                    document.getElementById('id').value = data.nextId;
-                } else {
-                    console.error('Could not fetch next reclamation ID');
-                }
-            } catch (error) {
-                console.error('Error fetching next reclamation ID:', error);
-            }
-        }
-    
-        window.onload = fetchNextReclamationId;
-    </script>
-
-    <script>
+      
+   
          async function fetchNameSuggestions() {
       const input = document.getElementById('nom').value.trim();
       const suggestionsBox = document.getElementById('suggestions');

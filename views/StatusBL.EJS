@@ -14,7 +14,7 @@
 
 /* Container Styles */
 .container {
-    width: 100%;
+    width: 200%;
     max-width: 1200px;
     margin: 20px auto;
     background-color: #ffffff;
@@ -35,10 +35,13 @@ h1 {
 
 /* Table Styles */
 table {
-    width: 100%;
+    max-width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
+    overflow-y: hidden;
+    overflow-x: auto;
 }
+
 
 thead {
     background-color:rgb(46, 30, 80);
@@ -163,7 +166,7 @@ td[colspan="7"] {
                 <% if (reclamations.length > 0) { %>
                     <% reclamations.forEach(reclamation => { %>
                         <tr class="reclamation-row" data-status="<%= reclamation.status %>">
-                            <td><%= reclamation.id %></td>
+                            <td><%= reclamation.num %></td>
                             <td><%= reclamation.bln %></td>
                             <td><%= reclamation.date %></td>
                             <td><%= reclamation.NomClient %></td>
@@ -176,7 +179,7 @@ td[colspan="7"] {
                                     </form>
                                 <% } else if (reclamation.status === 'CQ') { %>
                                     <form action="/update-status/<%= reclamation.id %>/SVA" method="POST">
-                                        <button type="submit">Passer à SVA</button>
+                                        <button type="submit">Passer à SAV</button>
                                     </form>
                                 <% } else if (reclamation.status === 'SVA') { %>
                                     <form action="/update-status/<%= reclamation.id %>/DPF" method="POST">

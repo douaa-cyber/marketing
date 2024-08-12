@@ -10,12 +10,14 @@ const fs = require('fs');
 const stream = require('stream');
 const qrcode = require('qrcode');
 const exceljs = require('exceljs');
-
+const multer = require('multer');
+const jwt =require('jsonwebtoken');
 const app = express();
 
 const port = 3000;
-const hostname = '192.168.2.49';
+const hostname = '192.168.2.66';
 
+app.use(express.static('public'));
 
 //VIRIFER SI LE DIRECTORY EXIST
 const pdfDir = path.join(__dirname, 'pdfs');
@@ -53,10 +55,18 @@ resave: false,
 saveUninitialized: false,
 secret: "hhfiuzzzzffglklkqkzj",
 cookie: {
+  sameSite: 'lax', 
   maxAge: 1000 * 60 * 60 * 24 * 7, // RESTE TOUT LE TEMPS
   secure: false,
 },
 }));
+
+
+app.use(express.static(path.join(__dirname)));
+
+app.get('/service-worker.js', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'service-worker.js'));
+});
 
 
 app.get('/summary/:id/excel', async (req, res) => {
@@ -64,7 +74,6 @@ app.get('/summary/:id/excel', async (req, res) => {
     const pool = await sql.connect(bd);
 
     const agentId = parseInt(req.params.id, 10);
-    // Query to get total counts for electricians and hardware stores
     const result = await pool.request()
       .input('id', sql.Int, agentId)
       .query(`
@@ -88,27 +97,44 @@ app.get('/summary/:id/excel', async (req, res) => {
 
       // Title row
       const titleRow = worksheet.addRow(['Résumé des Électriciens et Quincailleries']);
-      worksheet.mergeCells('A1:E1');
+      worksheet.mergeCells('A1:I1');
+        
+      worksheet.addRow(['Télécharger le fichier complet ici:']);
+      worksheet.getCell(`A${worksheet.lastRow.number}`).value = {
+    text: 'Télécharger le fichier Micro',
+    hyperlink: `http://${hostname}:${port}/dashboard/${req.params.id}/excel` 
+    
+    };
+     worksheet.getCell(`A${worksheet.lastRow.number}`).font = {
+      color: { argb: 'FFFF0000' }, // Red color
+      size: 14, // Font size
+      underline: true // Optional: underline the text
+  };
+
       const mergedTitleCell = worksheet.getCell('A1');
       mergedTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
       mergedTitleCell.font = { size: 16, bold: true };
 
-      // Header rows
-      const headerRow = worksheet.addRow(['Wilaya', 'Daira', 'Commune', 'Total Électriciens', 'Total Quincailleries']);
+      // Header row
+      const headerRow = worksheet.addRow([
+        'Wilaya', 'Total Électriciens Wilaya', 'Total Quincailleries Wilaya',
+        'Daira', 'Total Électriciens Daira', 'Total Quincailleries Daira',
+        'Commune', 'Total Électriciens Commune', 'Total Quincailleries Commune'
+      ]);
 
       // Styling header rows
       headerRow.eachCell({ includeEmpty: true }, (cell) => {
         cell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'ADD8E6' } // Sky blue background
+          fgColor: { argb: 'ADD8E6' }
         };
         cell.font = {
           bold: true,
-          color: { argb: '000000' }, // Black text
-          size: 13 // Font size
+          color: { argb: '000000' },
+          size: 13
         };
-        cell.alignment = { horizontal: 'center' }; // Center align text
+        cell.alignment = { horizontal: 'center' };
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
@@ -116,27 +142,97 @@ app.get('/summary/:id/excel', async (req, res) => {
           bottom: { style: 'thin' }
         };
       });
-      
-      // Add data rows
-      result.recordset.forEach((row) => {
 
-        // Add data row to the worksheet
+      let lastWilaya = null;
+      let lastDaira = null;
+      let startRowWilaya = 3;  // Adjusted to start after the header row
+      let startRowDaira = 3;
+
+      result.recordset.forEach((row, index) => {
+        const { Wilaya, daira, Commune, total_electricians, total_quincailleries } = row;
+
+        // Add a new row for the Commune
         worksheet.addRow([
-          row.Wilaya || '',
-          row.daira || '',
-          row.Commune || '',
-          row.total_electricians || 0,
-          row.total_quincailleries || 0
+          Wilaya !== lastWilaya ? Wilaya : '',
+          Wilaya !== lastWilaya ? result.recordset.filter(r => r.Wilaya === Wilaya).reduce((sum, r) => sum + r.total_electricians, 0) : '',
+          Wilaya !== lastWilaya ? result.recordset.filter(r => r.Wilaya === Wilaya).reduce((sum, r) => sum + r.total_quincailleries, 0) : '',
+          daira !== lastDaira ? daira : '',
+          daira !== lastDaira ? result.recordset.filter(r => r.daira === daira).reduce((sum, r) => sum + r.total_electricians, 0) : '',
+          daira !== lastDaira ? result.recordset.filter(r => r.daira === daira).reduce((sum, r) => sum + r.total_quincailleries, 0) : '',
+          Commune,
+          total_electricians,
+          total_quincailleries
         ]);
+   
 
-       
+        // Handle merging of cells for Wilaya
+        if (Wilaya !== lastWilaya) {
+          if (lastWilaya !== null) {
+            worksheet.mergeCells(startRowWilaya, 1, worksheet.lastRow.number - 1, 1);
+            worksheet.mergeCells(startRowWilaya, 2, worksheet.lastRow.number - 1, 2);
+            worksheet.mergeCells(startRowWilaya, 3, worksheet.lastRow.number - 1, 3);
+          }
+          startRowWilaya = worksheet.lastRow.number;
+          lastWilaya = Wilaya;
+        }
+
+        // Handle merging of cells for Daira
+        if (daira !== lastDaira) {
+          if (lastDaira !== null) {
+            worksheet.mergeCells(startRowDaira, 4, worksheet.lastRow.number - 1, 4);
+            worksheet.mergeCells(startRowDaira, 5, worksheet.lastRow.number - 1, 5);
+            worksheet.mergeCells(startRowDaira, 6, worksheet.lastRow.number - 1, 6);
+          }
+          startRowDaira = worksheet.lastRow.number;
+          lastDaira = daira;
+        }
       });
 
-      // Auto-fit columns
-      worksheet.columns.forEach(column => {
-        column.width = 30; // Adjust the width as needed
-      });
+      // Merge cells for the last Wilaya and Daira
+      if (lastWilaya !== null) {
+        worksheet.mergeCells(startRowWilaya, 1, worksheet.lastRow.number, 1);
+        worksheet.mergeCells(startRowWilaya, 2, worksheet.lastRow.number, 2);
+        worksheet.mergeCells(startRowWilaya, 3, worksheet.lastRow.number, 3);
+      }
 
+      if (lastDaira !== null) {
+        worksheet.mergeCells(startRowDaira, 4, worksheet.lastRow.number, 4);
+        worksheet.mergeCells(startRowDaira, 5, worksheet.lastRow.number, 5);
+        worksheet.mergeCells(startRowDaira, 6, worksheet.lastRow.number, 6);
+      }
+  
+  
+     
+    
+      for (let rowIndex = 4; rowIndex <= worksheet.lastRow.number; rowIndex++) {
+        const row = worksheet.getRow(rowIndex);
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          const isOddRow = (rowIndex - 2) % 2 === 1;
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'ffffff' }
+          };
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thin' }
+          };
+          cell.alignment ={
+            horizontal: 'center',
+            vertical: 'middle'
+          };
+        });
+      }
+      worksheet.autoFilter = {
+        from: 'A3',
+        to: 'I3'
+      };
+
+  worksheet.columns.forEach(column => {
+    column.width = 30; 
+  });
       const excelFilename = 'Résumé_Electriciens_Quincailleries.xlsx';
       const excelFilePath = path.join(__dirname, 'exports', excelFilename);
 
@@ -160,7 +256,6 @@ app.get('/summary/:id/excel', async (req, res) => {
 });
 
 
-
 //VIRIFIER SI JE SUIS ADMIN
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -175,8 +270,106 @@ if (req.session.role === 'admin') {
 }
 };
 
+app.get('/missions', async (req, res) => {
+  try {
+      const pool = await sql.connect(bd);
+
+      // Fetch missions
+      const missionsResult = await pool.request().query(`
+          SELECT m.id, m.titre, m.date_deb, m.date_fin, m.region, m.wilaya, u.nom, u.prenom, m.status
+          FROM mission m
+          LEFT JOIN utilisateur u ON m.agent_id = u.id
+      `);
+      const missions = missionsResult.recordset;
+
+      // Define agents query
+      let agentsQuery = "SELECT id, nom, prenom, societe FROM utilisateur";
+      
+      // Filter agents based on session role and societe
+      if (req.session.role === 'responsable') {
+          if (req.session.societe === 'mono') {
+              agentsQuery += " WHERE societe = 'mono'";
+          } else {
+              agentsQuery += " WHERE societe = 'bms'";
+          }
+      } else {
+          agentsQuery += " WHERE societe = 'bms'"; // Default to 'bms' for all other roles
+      }
+
+      const agentsResult = await pool.request().query(agentsQuery);
+      const agents = agentsResult.recordset;
+
+      // Render the page, passing role and societe
+      res.render('createmission', { 
+          missions, 
+          agents, 
+          role: req.session.role, 
+          societe: req.session.societe 
+      });
+
+  } catch (err) {
+      console.error('Error fetching data:', err.message);
+      res.status(500).send('Internal server error');
+  }
+});
 
 
+// pour responsable
+app.post('/missions',async (req, res) => {
+  const { title, start_date, end_date, region, wilaya,agent_id} = req.body;
+
+  try {
+    const pool = await sql.connect(bd);
+    await pool.request()
+      .input('title', sql.VarChar, title)
+      .input('start_date', sql.Date, start_date)
+      .input('end_date', sql.Date, end_date)
+      .input('region', sql.VarChar, region)
+      .input('wilaya', sql.VarChar, wilaya)
+      .input('agent_id', sql.Int, agent_id) 
+      .query('INSERT INTO mission (titre, date_deb, date_fin, region, wilaya, agent_id) VALUES (@title, @start_date, @end_date, @region, @wilaya, @agent_id)');
+    
+  
+  } catch (err) {
+    console.error('Error creating mission:', err.message);
+    res.status(500).send('Internal server error');
+  }
+});
+
+
+
+app.get('/missions/:agentId', async (req, res) => {
+  const agentId = req.params.agentId;
+  
+  try {
+    const pool = await sql.connect(bd);
+   const result = await pool.request()
+      .input('agent_id', sql.Int, agentId)
+      .query('SELECT * FROM mission where agent_id =@agent_id');
+    res.render('agent_mission',{missions : result.recordset});
+     
+  } catch (err) {
+    console.error('Error fetching missions:', err.message);
+    res.status(500).send('Internal server error');
+  }
+});
+
+app.post('/missions/:id/complete', async (req, res) => {
+  const missionId = req.params.id;
+
+  try {
+    const pool = await sql.connect(bd);
+    await pool.request()
+      .input('id', sql.Int, missionId)
+      .input('status', sql.VarChar, 'Terminer') // Mark as completed
+      .query('UPDATE mission SET status = @status WHERE id = @id');
+
+    res.redirect('/missions'); 
+  } catch (err) {
+    console.error('Error updating mission status:', err.message);
+    res.status(500).send('Internal server error');
+  }
+});
 
 
 app.get('/agent/forms/excel', async (req, res) => {
@@ -195,7 +388,7 @@ app.get('/agent/forms/excel', async (req, res) => {
         .input('endDate', sql.Date, new Date(endDate))
         .input('id_a',sql.Int,id)
          .query(`
-            SELECT u.id AS agent_id, u.nom AS nom_agent, u.prenom AS prenom_agent, f.Wilaya AS wilaya,
+            SELECT u.id AS agent_id, u.nom AS nom_agent, u.prenom AS prenom_agent, f.Wilaya AS wilaya,f.plaque,f.espacepub,f.daira,
                    f.MissionObjective, f.MissionDate, f.Nom AS nom_client, f.Prenom AS prenom_client,
                    f.Commune, f.Activite, f.Tel, f.Distributeur,f.nom_magasin,
                    f.produitLampe, f.produitAppareillage, f.produitDisjoncteur,
@@ -220,7 +413,6 @@ app.get('/agent/forms/excel', async (req, res) => {
             for (const wilaya in groupedByWilaya) {
               const worksheet = workbook.addWorksheet(wilaya);
           
-              // Title row
               const titleRow = worksheet.addRow(['RAPPORT VISITE CLIENT']);
               worksheet.mergeCells('A1:R1');
               const mergedTitleCell = worksheet.getCell('A1');
@@ -234,24 +426,24 @@ app.get('/agent/forms/excel', async (req, res) => {
           
               // Header rows
               const headerRow1 = worksheet.addRow([
-                'Objectif de Mission', 'Activité', 'Commune', 'Date de Mission', 'Nom Magasin',
-                'Nom Client', 'Prenom Client', 'Téléphone', 'Produits Offerts', '', 
-                'Informations Produits', '', '', '', '', '', '', ''
+                'Objectif de Mission', 'Activité', 'Daira','Commune', 'Date de Mission', 'Nom Magasin',
+                'Nom Client', 'Prenom Client', 'Téléphone','EspacePub','Plaque', 'Produits Offerts', '', 
+                'Informations Produits', '', '', '', '', '', '', '',''
               ]);
           
               const headerRow2 = worksheet.addRow([
                 '', '', '', '', '',
-                '', '', '', 'Nom', 'Quantité', 
+                '', '', '','','','', 'Nom', 'Quantité', 
                 'Gamme Produits', '', '', 'Concurrent', '', '',
                 'Fournisseur', 'Commentaire','evaluation'
               ]);
           
               const headerRow3 = worksheet.addRow([
                 '', '', '', '', '',
-                '', '', '', '', '', 
+                '', '', '', '', '','','','', 
                 'Produit Lampe', 'Produit Appareillage', 'Produit Disjoncteur',
                 'Concurrent Lampe', 'Concurrent Appareillage', 'Concurrent Disjoncteur', 
-                '', ''
+                '', '',''
               ]);
           
               // Styling header rows
@@ -291,12 +483,13 @@ app.get('/agent/forms/excel', async (req, res) => {
               });
           
               // Merge cells for the multi-row headers
-              worksheet.mergeCells('I5:J5'); // "Articles"
-              worksheet.mergeCells('K5:Q5'); // "Informations Produits"
-              worksheet.mergeCells('K6:M6'); // "Gamme Produits"
-              worksheet.mergeCells('N6:P6'); // "Concurrent"
-              worksheet.mergeCells('Q6:Q7'); // "Distributeur"
-              worksheet.mergeCells('R6:R7'); // "Commentaire"
+              worksheet.mergeCells('L5:M5'); // "Articles"
+              worksheet.mergeCells('N5:V5'); // "Informations Produits"
+              worksheet.mergeCells('V6:V7'); // "Informations Produits"
+              worksheet.mergeCells('N6:P6'); // "Gamme Produits"
+              worksheet.mergeCells('Q6:S6'); // "Concurrent"
+              worksheet.mergeCells('T6:T7'); // "Distributeur"
+              worksheet.mergeCells('U6:U7'); // "Commentaire"
           
               worksheet.mergeCells('A5:A7');
               worksheet.mergeCells('B5:B7');
@@ -305,16 +498,18 @@ app.get('/agent/forms/excel', async (req, res) => {
               worksheet.mergeCells('E5:E7');
               worksheet.mergeCells('F5:F7');
               worksheet.mergeCells('G5:G7');
+              worksheet.mergeCells('L6:L7');
+              worksheet.mergeCells('M6:M7');
+              
               worksheet.mergeCells('H5:H7');
-              worksheet.mergeCells('I6:I7');
-              worksheet.mergeCells('J6:J7');
+              worksheet.mergeCells('I5:I7');
+              worksheet.mergeCells('J5:J7');
+              worksheet.mergeCells('K5:K7')
           
               // Apply alignment to merged cells
-              const mergeRanges = [
-                'I5:J5', 'K5:Q5', 'K6:M6', 'N6:P6', 'Q6:Q7', 'R6:R7', 
-                'A5:A7', 'B5:B7', 'C5:C7', 'D5:D7', 'E5:E7', 'F5:F7', 
-                'G5:G7', 'H5:H7', 'I6:I7', 'J6:J7'
-              ];
+              const mergeRanges = ['L5:M5','N5:V5','V6:V7','N6:P6','Q6:S6','T6:T7','U6:U7',
+              'A5:A7','B5:B7','C5:C7','D5:D7','E5:E7','F5:F7','G5:G7','L6:L7','M6:M7', 
+              'H5:H7','I5:I7','J5:J7','K5:K7'              ];
               // Center alignement 
               mergeRanges.forEach(range => {
                 const [startCell] = range.split(':');
@@ -330,12 +525,11 @@ app.get('/agent/forms/excel', async (req, res) => {
               for (const formulaire of groupedByWilaya[wilaya]) {
                 const clientName = `${formulaire.nom_client} ${formulaire.prenom_client}`;
                 console.log(clientName);
-                const reclamationsFileName = await generateClientReclamationsFile(clientName);
+              
                 app.use('/exports', express.static(path.join(__dirname, 'exports')));
 
-                  const filePath = path.join(__dirname, 'exports', reclamationsFileName);
-                  const reclamationsFileLink = `http://${hostname}:${port}/exports/${reclamationsFileName}`;
-      
+           
+                
                 //split article in two nom , quantite
                 const articlesResult = await pool.request()
                   .input('formId', sql.Int, formulaire.form_id)
@@ -356,11 +550,12 @@ app.get('/agent/forms/excel', async (req, res) => {
                 const concurrentsLampe = safeSplit(formulaire.concurrentLampe);
                 const concurrentsAppareillage = safeSplit(formulaire.concurrentAppareillage);
                 const concurrentsDisjoncteur = safeSplit(formulaire.concurrentDisjoncteur);
-          
+                const Fournisseur =safeSplit(formulaire.Distributeur);
+    
                 // Determine the maximum length of product/competitor lists
                 const maxLength = Math.max(produitsLampe.length, produitsAppareillage.length, produitsDisjoncteur.length,
                                            concurrentsLampe.length, concurrentsAppareillage.length, concurrentsDisjoncteur.length,
-                                           articles.length);
+                                           articles.length,Fournisseur.length);
           
                 let startRow = worksheet.rowCount + 1;
                 let endRow;
@@ -371,12 +566,15 @@ app.get('/agent/forms/excel', async (req, res) => {
                   const row = worksheet.addRow([
                     formulaire.MissionObjective,
                     formulaire.Activite,
+                    formulaire.daira,
                     formulaire.Commune,
                     formulaire.MissionDate,
                     formulaire.nom_magasin,
                     formulaire.nom_client,
                     formulaire.prenom_client,
                     formulaire.Tel,
+                    formulaire.espacepub,
+                    formulaire.plaque,
                     articles[i] ? articles[i].nom : '',
                     articles[i] ? articles[i].quantite : '',
                     produitsLampe[i] || '',
@@ -385,19 +583,16 @@ app.get('/agent/forms/excel', async (req, res) => {
                     concurrentsLampe[i] || '',
                     concurrentsAppareillage[i] || '',
                     concurrentsDisjoncteur[i] || '',
-                    formulaire.Distributeur,
+                    Fournisseur[i] || '',
                     formulaire.commentaire,
                     formulaire.evaluecli
                   ]);
       
-                  row.getCell(19).value = {
+                  row.getCell(23).value = {
                     text: 'Voir dans Map',
                     hyperlink: link
                   };
-                  row.getCell(20).value = {
-                    text: 'Télécharger les réclamations',
-                    hyperlink: reclamationsFileLink
-                  };
+                 
       
                 
                   //add borders
@@ -422,16 +617,24 @@ app.get('/agent/forms/excel', async (req, res) => {
                 worksheet.mergeCells(`F${startRow}:F${endRow}`);
                 worksheet.mergeCells(`G${startRow}:G${endRow}`);
                 worksheet.mergeCells(`H${startRow}:H${endRow}`);
-                worksheet.mergeCells(`Q${startRow}:Q${endRow}`);
-                worksheet.mergeCells(`R${startRow}:R${endRow}`);
-                worksheet.mergeCells(`S${startRow}:S${endRow}`);
+                worksheet.mergeCells(`I${startRow}:I${endRow}`);
+                worksheet.mergeCells(`J${startRow}:J${endRow}`);
+                worksheet.mergeCells(`K${startRow}:K${endRow}`);
+                
+              
+                worksheet.mergeCells(`U${startRow}:U${endRow}`);
+                worksheet.mergeCells(`V${startRow}:V${endRow}`);
+                worksheet.mergeCells(`W${startRow}:W${endRow}`);
           
                 // Apply alignment to merged cells
                 const mergedRanges = [
-                  `A${startRow}:A${endRow}`, `B${startRow}:B${endRow}`, `C${startRow}:C${endRow}`,
+                  `A${startRow}:A${endRow}`,`W${startRow}:W${endRow}`, `B${startRow}:B${endRow}`, `C${startRow}:C${endRow}`,
                   `D${startRow}:D${endRow}`, `E${startRow}:E${endRow}`, `F${startRow}:F${endRow}`,
                   `G${startRow}:G${endRow}`, `H${startRow}:H${endRow}`, `Q${startRow}:Q${endRow}`,
-                  `R${startRow}:R${endRow}`, `S${startRow}:S${endRow}`
+                  `R${startRow}:R${endRow}`, `S${startRow}:S${endRow}`,`T${startRow}:T${endRow}`
+                  ,`I${startRow}:I${endRow}`
+                  ,`J${startRow}:J${endRow}`
+                  ,`K${startRow}:K${endRow}`,`U${startRow}:U${endRow}`,`V${startRow}:V${endRow}`
                 ];
           
                 mergedRanges.forEach(range => {
@@ -697,13 +900,14 @@ app.get("/reclamation",checkUser,async(req,res)=>{
 });
 app.post('/reclamation', async (req, res) => {
  
-  const { id,telephone,dateRec,wilaya,adresse,status,date,nom, bln, nomR, telephoneR, reclamationTelephone } = req.body;
+  const { id,num,telephone,dateRec,wilaya,adresse,status,date,nom, bln, nomR, telephoneR, reclamationTelephone } = req.body;
   const causesRetour = req.body.causeRetour || [];
   const codes = req.body.code || [];
   const designations = req.body.designation || [];
   const colis = req.body.colis || [];
   const pieces = req.body.pieces || [];
   const etats = req.body.etat || [];
+  const valeurs = req.body.valeurs || [];
   const descriptions = req.body.description || [];
 
   // Log the received data for debugging
@@ -732,10 +936,12 @@ app.post('/reclamation', async (req, res) => {
     const designationsStr = designations.join(', ');
     const colisStr = colis.join(', ');
     const piecesStr = pieces.join(', ');
+    const valeursStr = valeurs.join(', ');
     const etatsStr = etats.join(', ');
     const descriptionsStr = descriptions.join(', ');
 
     await pool.request()
+      .input('num', sql.NVarChar, num)
       .input('bln', sql.NVarChar, bln)
       .input('nom', sql.VarChar, nom)
       .input('nomR', sql.VarChar, nomR)
@@ -746,6 +952,7 @@ app.post('/reclamation', async (req, res) => {
       .input('designation', sql.NVarChar, designationsStr)
       .input('colis', sql.NVarChar, colisStr)
       .input('pieces', sql.NVarChar, piecesStr)
+      .input('valeurs', sql.NVarChar,valeursStr)
       .input('dateR', sql.NVarChar, date)
       .input('etat', sql.NVarChar, etatsStr)
       .input('status',sql.VarChar,status)
@@ -755,8 +962,8 @@ app.post('/reclamation', async (req, res) => {
       .input('adresse',sql.VarChar,adresse)
       .input('description', sql.NVarChar, descriptionsStr)
       .query(`
-        INSERT INTO reclamation (bln, reclamant,status,telephone,date,wilaya,adresse, telephoneR, modalite,NomClient,dateR, cause,code,designation, colis, pieces, etat, description)
-        VALUES ( @bln, @nomR,@status,@telephone,@date,@wilaya,@adresse, @telephoneR, @reclamationTelephone,@nom,@dateR, @causeRetour,@code,@designation, @colis, @pieces, @etat, @description);
+        INSERT INTO reclamation (num,bln, reclamant,status,telephone,date,wilaya,adresse, telephoneR, modalite,NomClient,dateR, cause,code,designation, colis, pieces,valeurs, etat, description)
+        VALUES (@num,@bln, @nomR,@status,@telephone,@date,@wilaya,@adresse, @telephoneR, @reclamationTelephone,@nom,@dateR, @causeRetour,@code,@designation, @colis, @pieces,@valeurs, @etat, @description);
       `);
 
       res.render('reclamationclient', {message:'Réclamation enregistrée avec succès' });
@@ -800,7 +1007,7 @@ const generateAllReclamationsFile = async () => {
   `);
 
   const reclamations = result.recordset;
-
+console.log(reclamations);
   // Trier les réclamations par date
   reclamations.sort((a, b) => new Date(a.dateR) - new Date(b.dateR));
 
@@ -809,16 +1016,16 @@ const worksheet = workbook.addWorksheet('Réclamations');
 
 // Ajouter les en-têtes
 const headerRow1 = worksheet.addRow([
-  'N° de réclamation', 'BLN°', 'Date De reclamation','Date de traitement', 'Nom Client','Télephone', 'Réclamant', 'Téléphone',
-  'Modalité de réception', 'Cause de retour', 'Informations Articles'
+   'Bon Livraison','Wilaya', 'Date De reclamation','Date de traitement', 'Nom Client','Télephone', 
+  'Probleme', 'Informations Articles'
 ]);
 
 const headerRow2 = worksheet.addRow([
-  '', '', '', '', '', '', '', '','','', 'Code', 'Désignation', 'Quantité', '', 'État'
+  '', '', '', '', '', '', '', 'Code', 'Désignation', 'Quantité', '','Valeur', 'État'
 ]);
 
 const headerRow3 = worksheet.addRow([
-  '', '', '', '', '', '', '', '', '', '','','','Colis', 'Pièces', ''
+  '', '', '', '', '', '', '', '', '','Colis', 'Pièces', '',''
 ]);
 
 // Style pour les en-têtes
@@ -865,20 +1072,19 @@ worksheet.mergeCells('D1:D3'); // Fusionner D1:D3
 worksheet.mergeCells('E1:E3'); // Fusionner E1:E3
 worksheet.mergeCells('F1:F3'); // Fusionner F1:F3
 worksheet.mergeCells('G1:G3'); // Fusionner G1:G3
-worksheet.mergeCells('H1:H3'); // Fusionner H1:H3
-worksheet.mergeCells('I1:I3'); // Fusionner K2:L2
-worksheet.mergeCells('J1:J3'); // Fusionner I1:M1 pour "Informations Articles"
-worksheet.mergeCells('K1:O1'); // Fusionner I2:I3
-worksheet.mergeCells('K2:K3'); // Fusionner J2:J3
-worksheet.mergeCells('L2:L3'); // Fusionner M2:M3
-worksheet.mergeCells('M2:N2'); // Fusionner N1:N3
-worksheet.mergeCells('O2:O3');
+ 
+worksheet.mergeCells('H1:M1'); // Fusionner I2:I3
+worksheet.mergeCells('H2:H3'); // Fusionner J2:J3
+worksheet.mergeCells('I2:I3'); // Fusionner M2:M3
+worksheet.mergeCells('J2:K2'); // Fusionner N1:N3
+worksheet.mergeCells('L2:L3');
+
+worksheet.mergeCells('M2:M3');
+
 
 
 // Appliquer l'alignement aux cellules fusionnées
-const mergeRanges = [
-  'A1:A3','B1:B3','C1:C3','D1:D3','E1:E3','F1:F3','G1:G3','H1:H3',
-  'I1:I3','J1:J3','K1:P1','K2:K3','L2:L3','M2:N2','O2:O3',
+const mergeRanges = [ 'A1:A3', 'B1:B3', 'C1:C3', 'D1:D3', 'E1:E3', 'F1:F3', 'G1:G3', 'H1:M1', 'H2:H3', 'I2:I3', 'J2:K2', 'L2:L3', 'M2:M3', 'N1:N3'
 ];
 
 mergeRanges.forEach(range => {
@@ -900,28 +1106,36 @@ reclamations.forEach(reclamation => {
   const colis = safeSplit(reclamation.colis);
   const pieces = safeSplit(reclamation.pieces);
   const etat = safeSplit(reclamation.etat);
+  const valeurs =safeSplit(reclamation.valeurs);
 
   // Déterminer la longueur maximale des listes d'articles
   const maxLength = Math.max(cause.length, code.length, designation.length,
-                             colis.length, pieces.length, etat.length);
+                             colis.length, pieces.length, etat.length,valeurs.length);
   let startRow = worksheet.rowCount + 1;
   let endRow;
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    }).format(new Date(date));
+};
+
   for (let i = 0; i < maxLength; i++) {
     worksheet.addRow([
-      reclamation.id,
+      
       reclamation.bln,
-      reclamation.dateR,
-      reclamation.date,
+      reclamation.wilaya,
+      formatDate(reclamation.dateR), 
+      formatDate(reclamation.date), 
       reclamation.NomClient,
       reclamation.telephone,
-      reclamation.reclamant,
-      reclamation.telephoneR,
-      reclamation.modalite,
       cause[i] || '',
       code[i] || '',
       designation[i] || '',
       colis[i] || '',
       pieces[i] || '',
+      valeurs[i] || '',
       etat[i] || ''
     ]).eachCell({ includeEmpty: true }, (cell) => {
       cell.border = {
@@ -942,16 +1156,14 @@ reclamations.forEach(reclamation => {
   worksheet.mergeCells(`D${startRow}:D${endRow}`);
   worksheet.mergeCells(`E${startRow}:E${endRow}`);
   worksheet.mergeCells(`F${startRow}:F${endRow}`);
-  worksheet.mergeCells(`G${startRow}:G${endRow}`);
-  worksheet.mergeCells(`H${startRow}:H${endRow}`);
-  worksheet.mergeCells(`I${startRow}:I${endRow}`);
+  worksheet.mergeCells(`N${startRow}:N${endRow}`);
+  
 
   // Appliquer l'alignement aux cellules fusionnées
   const mergedRanges = [
     `A${startRow}:A${endRow}`, `B${startRow}:B${endRow}`, `C${startRow}:C${endRow}`,
     `D${startRow}:D${endRow}`, `E${startRow}:E${endRow}`, `F${startRow}:F${endRow}`,
-    `G${startRow}:G${endRow}`,`H${startRow}:H${endRow}`,
-    `I${startRow}:I${endRow}`
+    `N${startRow}:N${endRow}`
   ];
 
   mergedRanges.forEach(range => {
@@ -996,7 +1208,7 @@ try {
              f.Commune, f.Activite, f.Tel, f.Distributeur,f.nom_magasin,
              f.produitLampe, f.produitAppareillage, f.produitDisjoncteur,
              f.concurrentLampe, f.concurrentAppareillage, f.concurrentDisjoncteur,
-             f.evaluecli, f.evalueBms, f.evaluconcurrent, f.commentaire, f.id AS form_id,f.longitude AS longitude ,f.latitude AS latitude 
+             f.evaluecli, f.evalueBms,f.daira,f.espacepub,f.plaque, f.evaluconcurrent, f.commentaire, f.id AS form_id,f.longitude AS longitude ,f.latitude AS latitude 
       FROM formulaire f
       JOIN utilisateur u ON f.utilisateur_id = u.id
       WHERE u.id = @id
@@ -1017,263 +1229,268 @@ try {
     
         // Title row
         const titleRow = worksheet.addRow(['RAPPORT VISITE CLIENT']);
-        worksheet.mergeCells('A1:R1');
-        const mergedTitleCell = worksheet.getCell('A1');
-        mergedTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-        mergedTitleCell.font = { size: 16, bold: true };
-    
-        // Add gap rows
-        for (let i = 0; i < 3; i++) {
-          worksheet.addRow([]);
-        }
-    
-        // Header rows
-        const headerRow1 = worksheet.addRow([
-          'Objectif de Mission', 'Activité', 'Commune', 'Date de Mission', 'Nom Magasin',
-          'Nom Client', 'Prenom Client', 'Téléphone', 'Produits Offerts', '', 
-          'Informations Produits', '', '', '', '', '', '', ''
-        ]);
-    
-        const headerRow2 = worksheet.addRow([
-          '', '', '', '', '',
-          '', '', '', 'Nom', 'Quantité', 
-          'Gamme Produits', '', '', 'Concurrent', '', '',
-          'Fournisseur','Evaluation Client', 'Commentaire'
-        ]);
-    
-        const headerRow3 = worksheet.addRow([
-          '', '', '', '', '',
-          '', '', '', '', '', 
-          'Produit Lampe', 'Produit Appareillage', 'Produit Disjoncteur',
-          'Concurrent Lampe', 'Concurrent Appareillage', 'Concurrent Disjoncteur', 
-          '', '',''
-        ]);
-    
-        // Styling header rows
-        const addHeaderCellStyle = (cell, isFirstRow = true, colNumber) => {
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'ADD8E6' } // Sky blue background
-          };
-          cell.font = {
-            bold: true,
-            color: { argb: '000000' }, // Black text
-            size: 13 // Font size
-          };
-          cell.alignment = { horizontal: 'center' }; // Center align text
-          cell.border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            right: { style: 'thin' },
-            ...((!isFirstRow && (colNumber >= 1 && colNumber <= 8 || colNumber >= 15 && colNumber <= 17)) ? {} : { bottom: { style: 'thin' } })
-          };
-        };
-    
-        headerRow1.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          addHeaderCellStyle(cell, true, colNumber);
-          if (colNumber === 9 || colNumber === 11) {
-            cell.alignment = { horizontal: 'center', vertical: 'middle' };
-          }
-        });
-    
-        headerRow2.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          addHeaderCellStyle(cell, false, colNumber);
-        });
-    
-        headerRow3.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          addHeaderCellStyle(cell, false, colNumber);
-        });
-      
-        // Merge cells for the multi-row headers
-        worksheet.mergeCells('I5:J5'); // "Articles"
-        worksheet.mergeCells('K5:S5'); // "Informations Produits"
-        worksheet.mergeCells('K6:M6'); // "Gamme Produits"
-        worksheet.mergeCells('N6:P6'); // "Concurrent"
-        worksheet.mergeCells('Q6:Q7'); // "Distributeur"
-        worksheet.mergeCells('R6:R7'); // "Commentaire"
-        worksheet.mergeCells('S6:S7'); // "Commentaire"
-        worksheet.mergeCells('A5:A7');
-        worksheet.mergeCells('B5:B7');
-        worksheet.mergeCells('C5:C7');
-        worksheet.mergeCells('D5:D7');
-        worksheet.mergeCells('E5:E7');
-        worksheet.mergeCells('F5:F7');
-        worksheet.mergeCells('G5:G7');
-        worksheet.mergeCells('H5:H7');
-        worksheet.mergeCells('I6:I7');
-        worksheet.mergeCells('J6:J7');
-    
-        // Apply alignment to merged cells
-        const mergeRanges = [
-          'I5:J5', 'K5:Q5', 'K6:M6', 'N6:P6', 'Q6:Q7', 'R6:R7', 'S6:S7',
-          'A5:A7', 'B5:B7', 'C5:C7', 'D5:D7', 'E5:E7', 'F5:F7', 
-          'G5:G7', 'H5:H7', 'I6:I7', 'J6:J7'
-        ];
-        // Center alignement 
-        mergeRanges.forEach(range => {
-          const [startCell] = range.split(':');
-          const mergedCell = worksheet.getCell(startCell);
-          mergedCell.alignment = { vertical: 'middle', horizontal: 'center' };
-        });
-    
-        const safeSplit = (value) => {
-          return value ? value.split(',').map(v => v.trim()).filter(v => v) : [];
-        };
-        
-        app.use('/exports', express.static(path.join(__dirname, 'exports')));
-
-        for (const formulaire of groupedByWilaya[wilaya]) {
-          const clientName = `${formulaire.nom_client} ${formulaire.prenom_client}`;
-          console.log(clientName);
-          const reclamationsFileName = await generateClientReclamationsFile(clientName);
-
-          console.log(reclamationsFileName);
-          const filePath = path.join(__dirname, 'exports', reclamationsFileName);
-          const reclamationsFileLink = `http://${hostname}:${port}/exports/${reclamationsFileName}`;
-          console.log("link",reclamationsFileLink)
-
-          //split article in two nom , quantite
-          const articlesResult = await pool.request()
-            .input('formId', sql.Int, formulaire.form_id)
-            .query(`
-              SELECT nom_article, quantite
-              FROM articles
-              WHERE id_form = @formId
-            `);
-    
-          const articles = articlesResult.recordset.map(article => ({
-            nom: article.nom_article,
-            quantite: article.quantite
-          }));
-           
-          const produitsLampe = safeSplit(formulaire.produitLampe);
-          const produitsAppareillage = safeSplit(formulaire.produitAppareillage);
-          const produitsDisjoncteur = safeSplit(formulaire.produitDisjoncteur);
-          const concurrentsLampe = safeSplit(formulaire.concurrentLampe);
-          const concurrentsAppareillage = safeSplit(formulaire.concurrentAppareillage);
-          const concurrentsDisjoncteur = safeSplit(formulaire.concurrentDisjoncteur);
-    
-          // Determine the maximum length of product/competitor lists
-          const maxLength = Math.max(produitsLampe.length, produitsAppareillage.length, produitsDisjoncteur.length,
-                                     concurrentsLampe.length, concurrentsAppareillage.length, concurrentsDisjoncteur.length,
-                                     articles.length);
-    
-          let startRow = worksheet.rowCount + 1;
-          let endRow;
-    
-          // Create a row for each combination of products/competitors
-          for (let i = 0; i < maxLength; i++) {
-            const link = `https://www.google.com/maps/place/${formulaire.latitude},${formulaire.longitude}`;
-            const row = worksheet.addRow([
-              formulaire.MissionObjective,
-              formulaire.Activite,
-              formulaire.Commune,
-              formulaire.MissionDate,
-              formulaire.nom_magasin,
-              formulaire.nom_client,
-              formulaire.prenom_client,
-              formulaire.Tel,
-              articles[i] ? articles[i].nom : '',
-              articles[i] ? articles[i].quantite : '',
-              produitsLampe[i] || '',
-              produitsAppareillage[i] || '',
-              produitsDisjoncteur[i] || '',
-              concurrentsLampe[i] || '',
-              concurrentsAppareillage[i] || '',
-              concurrentsDisjoncteur[i] || '',
-              formulaire.Distributeur,
-              formulaire.evaluecli,
-              formulaire.commentaire
-              
-            ]);
-
-            row.getCell(20).value = {
-              text: 'Voir dans Map',
-              hyperlink: link
-            };
-            row.getCell(21).value = {
-              text: 'Télécharger les réclamations',
-              hyperlink: reclamationsFileLink
-            };
-
+              worksheet.mergeCells('A1:R1');
+              const mergedTitleCell = worksheet.getCell('A1');
+              mergedTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+              mergedTitleCell.font = { size: 16, bold: true };
           
-            //add borders
-            row.eachCell({ includeEmpty: true }, (cell) => {
-              cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                right: { style: 'thin' },
-                bottom: { style: 'thin' }
+              // Add gap rows
+              for (let i = 0; i < 3; i++) {
+                worksheet.addRow([]);
+              }
+          
+              // Header rows
+              const headerRow1 = worksheet.addRow([
+                'Objectif de Mission', 'Activité', 'Daira','Commune', 'Date de Mission', 'Nom Magasin',
+                'Nom Client', 'Prenom Client', 'Téléphone','EspacePub','Plaque', 'Produits Offerts', '', 
+                'Informations Produits', '', '', '', '', '', '', '',''
+              ]);
+          
+              const headerRow2 = worksheet.addRow([
+                '', '', '', '', '',
+                '', '', '','','','', 'Nom', 'Quantité', 
+                'Gamme Produits', '', '', 'Concurrent', '', '',
+                'Fournisseur', 'Commentaire','evaluation'
+              ]);
+          
+              const headerRow3 = worksheet.addRow([
+                '', '', '', '', '',
+                '', '', '', '', '','','','', 
+                'Produit Lampe', 'Produit Appareillage', 'Produit Disjoncteur',
+                'Concurrent Lampe', 'Concurrent Appareillage', 'Concurrent Disjoncteur', 
+                '', '',''
+              ]);
+          
+              // Styling header rows
+              const addHeaderCellStyle = (cell, isFirstRow = true, colNumber) => {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'ADD8E6' } // Sky blue background
+                };
+                cell.font = {
+                  bold: true,
+                  color: { argb: '000000' }, // Black text
+                  size: 13 // Font size
+                };
+                cell.alignment = { horizontal: 'center' }; // Center align text
+                cell.border = {
+                  top: { style: 'thin' },
+                  left: { style: 'thin' },
+                  right: { style: 'thin' },
+                  ...((!isFirstRow && (colNumber >= 1 && colNumber <= 8 || colNumber >= 15 && colNumber <= 17)) ? {} : { bottom: { style: 'thin' } })
+                };
               };
-            });
-    
-            endRow = worksheet.rowCount;
-          }
-    
-          // Merge cells for columns
-          worksheet.mergeCells(`A${startRow}:A${endRow}`);
-          worksheet.mergeCells(`B${startRow}:B${endRow}`);
-          worksheet.mergeCells(`C${startRow}:C${endRow}`);
-          worksheet.mergeCells(`D${startRow}:D${endRow}`);
-          worksheet.mergeCells(`E${startRow}:E${endRow}`);
-          worksheet.mergeCells(`F${startRow}:F${endRow}`);
-          worksheet.mergeCells(`G${startRow}:G${endRow}`);
-          worksheet.mergeCells(`H${startRow}:H${endRow}`);
-          worksheet.mergeCells(`Q${startRow}:Q${endRow}`);
-          worksheet.mergeCells(`R${startRow}:R${endRow}`);
-          worksheet.mergeCells(`S${startRow}:S${endRow}`);
-          worksheet.mergeCells(`T${startRow}:T${endRow}`);
-          worksheet.mergeCells(`Q${startRow}:Q${endRow}`);
-
-    
-          // Apply alignment to merged cells
-          const mergedRanges = [
-            `A${startRow}:A${endRow}`, `B${startRow}:B${endRow}`, `C${startRow}:C${endRow}`,
-            `D${startRow}:D${endRow}`, `E${startRow}:E${endRow}`, `F${startRow}:F${endRow}`,
-            `G${startRow}:G${endRow}`, `H${startRow}:H${endRow}`, `Q${startRow}:Q${endRow}`,
-            `R${startRow}:R${endRow}`, `S${startRow}:S${endRow}` ,`T${startRow}:T${endRow}`, `Q${startRow}:Q${endRow}`
-          ];
-    
           
-          mergedRanges.forEach(range => {
-            const [startCell] = range.split(':');
-            const mergedCell = worksheet.getCell(startCell);
-            mergedCell.alignment = { vertical: 'middle', horizontal: 'center' };
-          });
-        }
-         //apply width to cells
-        worksheet.columns.forEach(column => {
-          if (['Produit Lampe', 'Produit Appareillage', 'Produit Disjoncteur', 'Concurrent Lampe', 'Concurrent Appareillage', 'Concurrent Disjoncteur'].includes(column.header)) {
-            column.width = 60; 
+              headerRow1.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                addHeaderCellStyle(cell, true, colNumber);
+                if (colNumber === 9 || colNumber === 11) {
+                  cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                }
+              });
+          
+              headerRow2.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                addHeaderCellStyle(cell, false, colNumber);
+              });
+          
+              headerRow3.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                addHeaderCellStyle(cell, false, colNumber);
+              });
+          
+              // Merge cells for the multi-row headers
+              worksheet.mergeCells('L5:M5'); // "Articles"
+              worksheet.mergeCells('N5:V5'); // "Informations Produits"
+              worksheet.mergeCells('V6:V7'); // "Informations Produits"
+              worksheet.mergeCells('N6:P6'); // "Gamme Produits"
+              worksheet.mergeCells('Q6:S6'); // "Concurrent"
+              worksheet.mergeCells('T6:T7'); // "Distributeur"
+              worksheet.mergeCells('U6:U7'); // "Commentaire"
+          
+              worksheet.mergeCells('A5:A7');
+              worksheet.mergeCells('B5:B7');
+              worksheet.mergeCells('C5:C7');
+              worksheet.mergeCells('D5:D7');
+              worksheet.mergeCells('E5:E7');
+              worksheet.mergeCells('F5:F7');
+              worksheet.mergeCells('G5:G7');
+              worksheet.mergeCells('L6:L7');
+              worksheet.mergeCells('M6:M7');
+              
+              worksheet.mergeCells('H5:H7');
+              worksheet.mergeCells('I5:I7');
+              worksheet.mergeCells('J5:J7');
+              worksheet.mergeCells('K5:K7')
+          
+              // Apply alignment to merged cells
+              const mergeRanges = ['L5:M5','N5:V5','V6:V7','N6:P6','Q6:S6','T6:T7','U6:U7',
+              'A5:A7','B5:B7','C5:C7','D5:D7','E5:E7','F5:F7','G5:G7','L6:L7','M6:M7', 
+              'H5:H7','I5:I7','J5:J7','K5:K7'              ];
+              // Center alignement 
+              mergeRanges.forEach(range => {
+                const [startCell] = range.split(':');
+                const mergedCell = worksheet.getCell(startCell);
+                mergedCell.alignment = { vertical: 'middle', horizontal: 'center' };
+              });
+          
+              const safeSplit = (value) => {
+                return value ? value.split(',').map(v => v.trim()).filter(v => v) : [];
+              };
+              
+               
+              for (const formulaire of groupedByWilaya[wilaya]) {
+                const clientName = `${formulaire.nom_client} ${formulaire.prenom_client}`;
+                console.log(clientName);
+              
+                app.use('/exports', express.static(path.join(__dirname, 'exports')));
+
+           
+                
+                //split article in two nom , quantite
+                const articlesResult = await pool.request()
+                  .input('formId', sql.Int, formulaire.form_id)
+                  .query(`
+                    SELECT nom_article, quantite
+                    FROM articles
+                    WHERE id_form = @formId
+                  `);
+          
+                const articles = articlesResult.recordset.map(article => ({
+                  nom: article.nom_article,
+                  quantite: article.quantite
+                }));
+                 
+                const produitsLampe = safeSplit(formulaire.produitLampe);
+                const produitsAppareillage = safeSplit(formulaire.produitAppareillage);
+                const produitsDisjoncteur = safeSplit(formulaire.produitDisjoncteur);
+                const concurrentsLampe = safeSplit(formulaire.concurrentLampe);
+                const concurrentsAppareillage = safeSplit(formulaire.concurrentAppareillage);
+                const concurrentsDisjoncteur = safeSplit(formulaire.concurrentDisjoncteur);
+                const Fournisseur =safeSplit(formulaire.Distributeur);
+    
+                // Determine the maximum length of product/competitor lists
+                const maxLength = Math.max(produitsLampe.length, produitsAppareillage.length, produitsDisjoncteur.length,
+                                           concurrentsLampe.length, concurrentsAppareillage.length, concurrentsDisjoncteur.length,
+                                           articles.length,Fournisseur.length);
+          
+                let startRow = worksheet.rowCount + 1;
+                let endRow;
+          
+                // Create a row for each combination of products/competitors
+                for (let i = 0; i < maxLength; i++) {
+                  const link = `https://www.google.com/maps/place/${formulaire.latitude},${formulaire.longitude}`;
+                  const row = worksheet.addRow([
+                    formulaire.MissionObjective,
+                    formulaire.Activite,
+                    formulaire.daira,
+                    formulaire.Commune,
+                    formulaire.MissionDate,
+                    formulaire.nom_magasin,
+                    formulaire.nom_client,
+                    formulaire.prenom_client,
+                    formulaire.Tel,
+                    formulaire.espacepub,
+                    formulaire.plaque,
+                    articles[i] ? articles[i].nom : '',
+                    articles[i] ? articles[i].quantite : '',
+                    produitsLampe[i] || '',
+                    produitsAppareillage[i] || '',
+                    produitsDisjoncteur[i] || '',
+                    concurrentsLampe[i] || '',
+                    concurrentsAppareillage[i] || '',
+                    concurrentsDisjoncteur[i] || '',
+                    Fournisseur[i] || '',
+                    formulaire.commentaire,
+                    formulaire.evaluecli
+                  ]);
+      
+                  row.getCell(23).value = {
+                    text: 'Voir dans Map',
+                    hyperlink: link
+                  };
+                 
+      
+                
+                  //add borders
+                  row.eachCell({ includeEmpty: true }, (cell) => {
+                    cell.border = {
+                      top: { style: 'thin' },
+                      left: { style: 'thin' },
+                      right: { style: 'thin' },
+                      bottom: { style: 'thin' }
+                    };
+                  });
+          
+                  endRow = worksheet.rowCount;
+                }
+          
+                // Merge cells for columns
+                worksheet.mergeCells(`A${startRow}:A${endRow}`);
+                worksheet.mergeCells(`B${startRow}:B${endRow}`);
+                worksheet.mergeCells(`C${startRow}:C${endRow}`);
+                worksheet.mergeCells(`D${startRow}:D${endRow}`);
+                worksheet.mergeCells(`E${startRow}:E${endRow}`);
+                worksheet.mergeCells(`F${startRow}:F${endRow}`);
+                worksheet.mergeCells(`G${startRow}:G${endRow}`);
+                worksheet.mergeCells(`H${startRow}:H${endRow}`);
+                worksheet.mergeCells(`I${startRow}:I${endRow}`);
+                worksheet.mergeCells(`J${startRow}:J${endRow}`);
+                worksheet.mergeCells(`K${startRow}:K${endRow}`);
+                
+              
+                worksheet.mergeCells(`U${startRow}:U${endRow}`);
+                worksheet.mergeCells(`V${startRow}:V${endRow}`);
+                worksheet.mergeCells(`W${startRow}:W${endRow}`);
+          
+                // Apply alignment to merged cells
+                const mergedRanges = [
+                  `A${startRow}:A${endRow}`,`W${startRow}:W${endRow}`, `B${startRow}:B${endRow}`, `C${startRow}:C${endRow}`,
+                  `D${startRow}:D${endRow}`, `E${startRow}:E${endRow}`, `F${startRow}:F${endRow}`,
+                  `G${startRow}:G${endRow}`, `H${startRow}:H${endRow}`, `Q${startRow}:Q${endRow}`,
+                  `R${startRow}:R${endRow}`, `S${startRow}:S${endRow}`,`T${startRow}:T${endRow}`
+                  ,`I${startRow}:I${endRow}`
+                  ,`J${startRow}:J${endRow}`
+                  ,`K${startRow}:K${endRow}`,`U${startRow}:U${endRow}`,`V${startRow}:V${endRow}`
+                ];
+          
+                mergedRanges.forEach(range => {
+                  const [startCell] = range.split(':');
+                  const mergedCell = worksheet.getCell(startCell);
+                  mergedCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                });
+              }
+               //apply width to cells
+              worksheet.columns.forEach(column => {
+                if (['Produit Lampe', 'Produit Appareillage', 'Produit Disjoncteur', 'Concurrent Lampe', 'Concurrent Appareillage', 'Concurrent Disjoncteur'].includes(column.header)) {
+                  column.width = 60; 
+                } else {
+                  column.width = 30; 
+                }
+              });
+            }
+               //name of file with path
+            const agent = result.recordset[0];
+            const excelFilename = `Formulaires_${agent.nom_agent}_${agent.prenom_agent}.xlsx`;
+            const excelFilePath = path.join(__dirname, 'exports', excelFilename);
+          
+            await workbook.xlsx.writeFile(excelFilePath);
+          
+            res.download(excelFilePath, excelFilename, (err) => {
+              if (err) {
+                console.error('Erreur lors du téléchargement du fichier Excel :', err.message);
+                res.status(500).send('Erreur interne du serveur lors du téléchargement du fichier Excel');
+              } else {
+                fs.unlinkSync(excelFilePath);
+              }
+            });
           } else {
-            column.width = 30; 
+            res.status(404).send('Aucun formulaire trouvé pour cet agent');
           }
-        });
+      } catch (err) {
+        console.error('Erreur de récupération des détails du formulaire pour Excel :', err.message);
+        res.status(500).send('Erreur interne du serveur');
       }
-         //name of file with path
-      const agent = result.recordset[0];
-      const excelFilename = `Formulaires_${agent.nom_agent}_${agent.prenom_agent}.xlsx`;
-      const excelFilePath = path.join(__dirname, 'exports', excelFilename);
-    
-      await workbook.xlsx.writeFile(excelFilePath);
-    
-      res.download(excelFilePath, excelFilename, (err) => {
-        if (err) {
-          console.error('Erreur lors du téléchargement du fichier Excel :', err.message);
-          res.status(500).send('Erreur interne du serveur lors du téléchargement du fichier Excel');
-        } else {
-          fs.unlinkSync(excelFilePath);
-        }
-      });
-    } else {
-      res.status(404).send('Aucun formulaire trouvé pour cet agent');
-    }
-} catch (err) {
-  console.error('Erreur de récupération des détails du formulaire pour Excel :', err.message);
-  res.status(500).send('Erreur interne du serveur');
-}
-});
+    });
+
 
 
 
@@ -1287,12 +1504,46 @@ app.set('views', path.join(__dirname, 'views'));
 
 
 //SEnd response  WHEN YOU TAP /
-app.get('/', (req, res) => {
-  const societe =req.session.societe;
-const username = req.session.username || "";
-const role = req.session.role || "";
-res.render('index', { username , role ,societe});
+app.get('/', async (req, res) => {
+  const societe = req.session.societe;
+  const username = req.session.username || "";
+  const role = req.session.role || "";
+  let photo = `user.PNG`; // Default photo path
+  let iduse = null;
+
+  if (username) {
+    try {
+      const pool = await sql.connect(bd);
+
+      // Use a parameterized query to prevent SQL injection
+      const result = await pool.request()
+        .input('username', sql.VarChar, username)
+        .query('SELECT * FROM utilisateur WHERE username = @username');
+
+      if (result.recordset.length > 0) {
+        const user = result.recordset[0];
+        photo = user.photo || `user.PNG`; 
+         iduse=user.id
+        console.log(user.id);
+      
+      }
+    } catch (err) {
+      console.error('Erreur lors de la récupération des données de l\'utilisateur:', err.message);
+      res.status(500).send('Erreur interne du serveur');
+      return;
+    }
+  }
+
+  // Render the index page with the user data
+  res.render('index', {
+    username,
+    role,
+    societe,
+    photo,
+   iduse
+  });
 });
+
 
 //SEND RESPONSE WHEN YOU TAP THIS
 app.get('/dashboardcontact', async (req, res) => {
@@ -1692,6 +1943,7 @@ const {
   latitude,
   nom_magasin,
   region,
+  plaque,
   articles
 } = req.body;
    console.log(req.body);
@@ -1707,11 +1959,11 @@ try {
 
   const sqlq = `
     INSERT INTO formulaire (
-      utilisateur_id, MissionObjective, MissionDate, Wilaya, Commune,region, Activite,longitude,latitude,
-      daira,Nom,Prenom,Tel,email,nom_ach,espacepub,nom_magasin, Distributeur, produitLampe, produitAppareillage, produitDisjoncteur, concurrentLampe, concurrentAppareillage, concurrentDisjoncteur, evaluecli, evalueBms, evaluconcurrent,commentaire
+      utilisateur_id, MissionObjective, MissionDate, Wilaya, Commune,region, daira,email,nom_ach,plaque,espacepub, Activite,longitude,latitude,
+     Nom,Prenom,Tel,nom_magasin, Distributeur, produitLampe, produitAppareillage, produitDisjoncteur, concurrentLampe, concurrentAppareillage, concurrentDisjoncteur, evaluecli, evalueBms, evaluconcurrent,commentaire
     )OUTPUT INSERTED.id
      VALUES (
-      @userId, @missionObjective, @date, @wilaya, @commune,@region,@daira,@email,@nom_ach,@espacepub,
+      @userId, @missionObjective, @date, @wilaya, @commune,@region,@daira,@email,@nom_ach,@espacepub,@plaque,
       @activite,@longitude,@latitude, @nom, @prenom, @tel,@nom_magasin, @Distributeur, @produitLampe, @produitAppareillage, @produitDisjoncteur, @concurrentLampe, @concurrentAppareillage, @concurrentDisjoncteur, @evaluecli, @evalueBms, @evaluconcurrent,@commentaire
     )
   `;
@@ -1726,6 +1978,7 @@ try {
     .input('email', sql.VarChar, email)
     .input('nom_ach', sql.VarChar, nom_ach)
     .input('espacepub', sql.VarChar, espacepub)
+    .input('plaque', sql.VarChar, plaque)
     .input('region', sql.VarChar, region)
     .input('activite', sql.VarChar, activite)
     .input('nom', sql.VarChar, nom)
@@ -1968,6 +2221,91 @@ res.status(500).send(`
 sql.close();
 }
 });
+// Route pour afficher le profil
+app.get('/profile', async (req, res) => {
+  if (!req.session.username) {
+    return res.redirect('/login');
+  }
+
+  try {
+    const pool = await sql.connect(bd);
+    const result = await pool.request()
+      .input('username', sql.VarChar, req.session.username)
+      .query('SELECT * FROM utilisateur WHERE username = @username');
+
+    if (result.recordset.length > 0) {
+      const user = result.recordset[0];
+      res.render('profile', {user});
+   
+    } else {
+      res.redirect('/login');
+    }
+  } catch (err) {
+    console.error("Erreur lors de l'affichage du profil:", err.message);
+    res.status(500).send('Erreur interne du serveur');
+  }
+});
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads'); // Répertoire où les photos seront stockées
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Nom du fichier avec horodatage
+  }
+});
+
+const upload = multer({ storage });
+
+// Route pour télécharger la photo de profil
+app.post('/upload-profile-photo', upload.single('profile-photo'), async (req, res) => {
+  if (!req.session.username) {
+    return res.redirect('/login');
+  }
+
+  const photoPath = req.file.filename;
+  const username = req.session.username;
+
+  try {
+    const pool = await sql.connect(bd);
+    await pool.request()
+      .input('username', sql.VarChar, username)
+      .input('photo', sql.VarChar, photoPath)
+      .query('UPDATE utilisateur SET photo = @photo WHERE username = @username');
+
+    res.redirect('/profile');
+  } catch (err) {
+    console.error("Erreur lors du téléchargement de la photo de profil:", err.message);
+    res.status(500).send('Erreur interne du serveur');
+  }
+});
+// Route pour mettre à jour le profil
+app.post('/update-profile', async (req, res) => {
+  if (!req.session.username) {
+    return res.redirect('/login');
+  }
+
+  const { telephone, email, nom, prenom } = req.body;
+  const username = req.session.username;
+
+  try {
+    const pool = await sql.connect(bd);
+    await pool.request()
+      .input('username', sql.VarChar, username)
+      .input('telephone', sql.VarChar, telephone)
+      .input('email', sql.VarChar, email)
+      .input('nom', sql.VarChar, nom)
+      .input('prenom', sql.VarChar, prenom)
+      .query('UPDATE utilisateur SET telephone = @telephone, email = @email, nom = @nom, prenom = @prenom WHERE username = @username');
+
+    res.redirect('/profile');
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour du profil:", err.message);
+    res.status(500).send('Erreur interne du serveur');
+  }
+});
 
 // SEND RESPONSE WHEN YOU TAP /SIGNUP == VOUS TRANSFERER A CETTE PAGE
 app.get('/signup', (req, res) => {
@@ -2056,53 +2394,53 @@ res.render("login",{error});
 
 //COLLECTER INFO FROM LOGIN
 app.post('/login', async (req, res) => {
-const { username, password } = req.body;
-
-try {
-const pool = await sql.connect(bd);
-const result = await pool.request()
-  .input('username', sql.VarChar, username)
-  .query('SELECT * FROM utilisateur WHERE username = @username');
-
-if (result.recordset.length > 0) {
-  const user = result.recordset[0];
-  const passwordMatch = await bcrypt.compare(password, user.password);
-
-  if (passwordMatch) {
-    // SI PASSWORD MATCH SAUVEGARDER LE USERID ; USERNAME , role,societe ,region,type dagent commercial ou marketing
-   id= req.session.userId = user.id;
-    req.session.username = user.username;
-    req.session.role = user.roles;
-    req.session.societe = user.societe;
-    req.session.agent=user.agent;
-   
-    console.log("user session=" + req.session.username );
-    console.log("role="+req.session.role);
-    if (user.roles === 'admin') {
-      res.redirect('/');
-    } else  {
-      if(user.roles==='responsable'){
-      res.redirect('/');}
-      else{
-        if(user.username==='YacineMed'){
-          res.redirect('/');}
+  const { username, password } = req.body;
+  
+  try {
+  const pool = await sql.connect(bd);
+  const result = await pool.request()
+    .input('username', sql.VarChar, username)
+    .query('SELECT * FROM utilisateur WHERE username = @username');
+  
+  if (result.recordset.length > 0) {
+    const user = result.recordset[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
+  
+    if (passwordMatch) {
+      // SI PASSWORD MATCH SAUVEGARDER LE USERID ; USERNAME , role,societe ,region,type dagent commercial ou marketing
+     id= req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.roles;
+      req.session.societe = user.societe;
+      req.session.agent=user.agent;
+     
+      console.log("user session=" + req.session.username );
+      console.log("role="+req.session.role);
+      if (user.roles === 'admin') {
+        res.redirect('/');
+      } else  {
+        if(user.roles==='responsable'){
+        res.redirect('/');}
         else{
-        res.redirect('/form')
+          if(user.username==='YacineMed'){
+            res.redirect('/');}
+          else{
+          res.redirect('/form')
+        }
+        }
       }
-      }
+      
+    } else {
+      res.redirect('/login?error=Nom d\'utilisateur ou mot de passe incorrect');
     }
-    
   } else {
     res.redirect('/login?error=Nom d\'utilisateur ou mot de passe incorrect');
   }
-} else {
-  res.redirect('/login?error=Nom d\'utilisateur ou mot de passe incorrect');
-}
-} catch (err) {
-console.error("Erreur de connexion:", err.message);
-res.status(500).send('Erreur interne du serveur');
-}
-});
+  } catch (err) {
+  console.error("Erreur de connexion:", err.message);
+  res.status(500).send('Erreur interne du serveur');
+  }
+  });
 
 //QUAND TU LOG OUT DESTROY SESSION
 app.get('/logout', (req, res) => {

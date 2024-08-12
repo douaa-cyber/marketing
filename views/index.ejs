@@ -18,6 +18,11 @@
  zoom: 0.9;
 }
 
+.openbtn{
+            font-size: 30px;
+            font-weight: bolder;
+            cursor: pointer;
+        }
 
 .user-icon-container {
     position: absolute;
@@ -149,32 +154,29 @@ body{
             z-index: 1000;
             display: none; 
         }
-
-header {
+        header {
     position: fixed;
     top: 0;
-    left: 0;
+    right: -80%;
     width: 100%;
     padding: 20px 100px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 10000;
-    
 }
-header .logo{
-height: 50px;
-}
+
 header ul {
     display: flex;
     justify-content: center;
     align-items: center;
-    
 }
+
 header ul li {
     list-style: none;
     margin-left: 20px;
 }
+
 header ul li a {
     text-decoration: none;
     padding: 6px 15px;
@@ -182,13 +184,15 @@ header ul li a {
     border-radius: 20px;
     font-size: x-large;
 }
+
 header ul li a:hover,
 header ul li a.active {
     background: rgba(16, 46, 102, 0.753);
     color: #fdfbfb;
 }
+
 .intro{
-    height: 100vh;
+    height: 50vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -261,6 +265,7 @@ header .logo{
     text-decoration: none;
     color: black;
     font-weight: bold;
+    height: 100px;
     
 }
 
@@ -538,6 +543,32 @@ body {
         flex-direction: column; 
         align-items: center;
     }
+    .signup-button,
+        .close-button {
+            padding: 10px 10px;
+            width: 110PX;
+            margin: 5px;
+            font-size: 15PX;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            background: #3498db;
+        }
+
+        .close-button {
+            background: #e74c3c;
+        }
+
+        .signup-button a {
+            color: #fff;
+            text-decoration: none;
+        }
+    .openbtn{
+            font-size:10px;
+            font-weight: bolder;
+            cursor: pointer;
+            text-align: left !important;
+        }
 
     .contact-info, .contact-form {
         width: 100%; 
@@ -917,137 +948,349 @@ contact-form textarea {
     .modal-content {
         max-width: 90%; 
     }
-}
-
-    </style>
-</head>
-<body>
-  
-  <header>
-    <a href="#"><img class="logo" src="../bmsLogo.svg" /></a>
-         
-    <div class="menu-icon" id="menu-icon">&#9776;</div> 
-    <div class="list">
-    <ul id="nav-list">
-        <li><a href="#" class="active">Accueil</a></li>
-        <% if (username ==='YacineMed' ) {%> 
-            <li><a href="/reclamation">Reclamation_Client </a></li>
-            <li><a href="/viewreport">Rapport_Reclamation</a></li>
-            <li><a href="/rapports">Etat_Reclamation</a></li>
-        <% }  %> 
-        
-       
-        <% if (role!=='responsable' && role!=='admin'  ) {%>
-            <% if (username!=='YacineMed' ) {%>
-        <li><a href="/form">Formulaire</a></li>
-        <li><a href="/agent/forms">Rapport</a></li>
-
-        <% }  %>
-        <% } else { %>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/viewreport">Rapports_Reclamation</a></li>
-         <% } %>   
-        
-         <% if (role==='admin') {%>
-          
-            <li><a href="/dashboardcontact">Dashboard_Contact</a></li>
-            <li> <a href="/admin/users">Gerer utilisateur</a></li>
-         <% } %>   
-
-        <li><a href="contact.html">Contact</a></li>
-    </div>
-    </ul>
-    <div class="user-icon-container">
-        <% if (username) {%>
-            <button class="user-icon-button" onclick="toggleLoginMessage()">
-                <img src="user2.png" alt="User Icon" id="imageuser">
-            </button>
-          <% } else { %>
-            <button class="user-icon-button" onclick="toggleLoginMessage()">
-                <img src="user.PNG" alt="User Icon" id="imageuser">
-            </button>
-          <% } %>
-     
-  </div>
-  </header>
-          <div id="login-message" class="login-message" style="width: 15%;height:24%;">
-            <h2 style="text-align: center;border-bottom: 2px solid blue;padding-bottom: 10px;">Personne</h2>
-          <div class="user-info">
-            <% if (username) {%>
-                <img src="user2.png" alt="User Icon"  id="image" style="border: 3px solid black;">
-                <p id="user_status"> <%= username %></p>
-              <% } else { %>
-                <img src="user.PNG" alt="User Icon"  id="image" style="border: 3px solid black;">
-                <p id="user_status">Non connecté</p>
-              <% } %>
-             
-              
-            </div>
-  
-  <div class="buttons" id="buttons">
-      <% if (username) {%>
-        <button class="signup-button" id="logout-button">logout</button>
-        <button class="close-button" onclick="toggleLoginMessage()">Fermer</button>
-      <% } else { %>
-        <button class="signup-button" id="signup-button"><a href="/login" style="text-decoration: none;">Log in</a></button>
-        <button class="close-button" onclick="toggleLoginMessage()">Fermer</button>
-      <% } %>
-  </div>          
-</div>
-
-   <section class="intro">
-    <DIV class="content">
-          <h1>Bienvenue sur notre site de Service Marketing</h1>
-          <p>Dédiée aux agents de marketing, où la formulaire facilite  l'interaction  avec les clients, tandis que l'administrateur gère facilement les données via un tableau de bord centralisé.</p>
-          <a href="signup.html" class="btn">S'inscrire </a>
-     </DIV>
-   </section>
-  
-   <script >
-    document.addEventListener("DOMContentLoaded", function() {
- 
-    document.getElementById('menu-icon').addEventListener('click', function() {
-        var navList = document.getElementById('nav-list');
-        navList.classList.toggle('show-menu');
-    });
 
    
-    var modal = document.getElementById('myModal');
-    var span = document.getElementsByClassName('close')[0];
+}
 
-    // Afficher la boîte modale
-    modal.style.display = 'block';
-
-    // Fermer la boîte modale si l'utilisateur clique sur le bouton de fermeture
-    span.onclick = function() {
-        modal.style.display = 'none';
-    }
-
-    // Fermer la boîte modale si l'utilisateur clique en dehors de celle-ci
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
+ 
+.sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            top: 0;
+            right: 0; 
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            z-index: 1000;
         }
+
+        .sidebar a {
+            padding: 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            left: 25px; 
+            font-size: 36px;
+            margin-right: 50px;
+        }
+
+        .open-menu {
+            font-size: 20px;
+            cursor: pointer;
+            background: none; 
+            border: none; 
+            color: #111; 
+            font-family: Arial, sans-serif; 
+            padding: 10px;
+        }
+
+        #main {
+            transition: margin-right .5s; 
+            padding: 16px;
+        }
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Main container */
+        #main {
+            transition: margin-left 0.3s ease;
+            padding: 20px;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            width: 250px;
+            height: 100%;
+            background: #2c3e50;
+            color: #ecf0f1;
+            position: fixed;
+            top: 0;
+            left: -250px; /* Initially hidden */
+            transition: left 0.3s ease;
+            z-index: 1000; /* Ensure it stays above other content */
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            border: 3px solid #ecf0f1;
+        }
+
+        .username {
+            margin: 0;
+            font-size: 1.2em;
+            color: #ecf0f1;
+        }
+
+        .close-sidebar {
+            font-size: 1.5em;
+            background: none;
+            border: none;
+            color: #ecf0f1;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-menu li {
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-menu li a {
+            display: block;
+            color: #ecf0f1;
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: background 0.3s ease;
+        }
+
+        .sidebar-menu li a:hover {
+            background: #16a085;
+            color: #fff;
+        }
+
+        /* Menu toggle button */
+        .menu-toggle {
+            font-size: 1.5em;
+            padding: 10px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 999;
+        }
+
+        .overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Content styles */
+        .intro {
+            padding: 20px;
+        }
+
+        .login-message {
+            position: fixed;
+            top: 10%;
+            right: 10px;
+            width: 15%;
+            height: 24%;
+            background: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1002;
+            display: none; /* Initially hidden */
+        }
+
+        .login-message h2 {
+            text-align: center;
+            border-bottom: 2px solid blue;
+            padding-bottom: 10px;
+        }
+
+        .user-info {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .user-info img {
+            border: 3px solid black;
+        }
+
+        .buttons {
+            text-align: center;
+            padding: 10px;
+        }
+
+       
+    </style>
+   
+   <script>
+   
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
     }
+  
+  </script>
+  
+  
+</head>
+<body>
+    <header class="header">
+       
+        <a href="/"><img class="logo" src="../bmsLogo.svg" alt="Logo" /></a>  
+</header>
+    <button id="menu-toggle" class="menu-toggle">☰ Menu</button>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <img src="/uploads/<%= photo %>" alt="Photo de Profil" class="profile-photo">
+              <h2 class="username"><%= username %></h2>
+            <button id="close-sidebar" class="close-sidebar">×</button>
+        </div>
+        <ul id="nav-list" class="sidebar-menu">
+            <li><a href="/profile">Profile</a></li>
+            <% if (username === 'YacineMed') { %>
+                <li><a href="/reclamation">Reclamation_Client</a></li>
+                <li><a href="/viewreport">Rapport_Reclamation</a></li>
+                <li><a href="/rapports">Etat_Reclamation</a></li>
+            <% } %>
+            <% if (role !== 'responsable' && role !== 'admin') { %>
+                <% if (username !== 'YacineMed') { %>
+                    <li><a href="/missions/<%= iduse %>"">Missions</a></li>
+                    <li><a href="/form">Formulaire</a></li>
+                    <li><a href="/agent/forms">Rapport</a></li>
+                    
+                <% } %>
+            <% } else { %>
+                <li><a href="/missions">Missions</a></li>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/viewreport">Rapports_Reclamation</a></li>
+            <% } %>
+            <% if (role === 'admin') { %>
+                <li><a href="/dashboardcontact">Dashboard_Contact</a></li>
+                <li><a href="/admin/users">Gerer utilisateur</a></li>
+            <% } %>
+            <li><a href="contact.html">Contact</a></li>
+            <% if (username) { %>
+                <button class="signup-button" id="logout-button">Logout</button>
+                 <% } else { %>
+                <button class="signup-button" id="signup-button"><a href="/login">Login</a></button>
+               <% } %>
+        </ul>
+    </div>
+    <div id="overlay" class="overlay"></div>
+
+    <div id="main">
+       
+
+        <section class="intro">
+            <div class="content">
+                <h1>Bienvenue sur notre site de Service Marketing</h1>
+                <p>Dédiée aux agents de marketing, où la formulaire facilite l'interaction avec les clients, tandis que l'administrateur gère facilement les données via un tableau de bord centralisé.</p>
+                <a href="signup.html" class="btn">S'inscrire</a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+       document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const closeSidebar = document.getElementById('close-sidebar');
+    const overlay = document.getElementById('overlay');
+    const loginMessage = document.getElementById('login-message');
+    // Assurez-vous que ce sélecteur correspond à votre bouton de menu
+
+    menuToggle.addEventListener('click', function() {
+        const isOpen = sidebar.style.left === '0px';
+        sidebar.style.left = isOpen ? '-250px' : '0px';
+        overlay.classList.toggle('visible');
+        // Cacher ou montrer le bouton de menu
+        menuToggle.style.display = isOpen ? 'block' : 'none';
+    });
+
+    closeSidebar.addEventListener('click', function() {
+        sidebar.style.left = '-250px';
+        overlay.classList.remove('visible');
+        // Montrer le bouton de menu
+        menuToggle.style.display = 'block';
+    });
+
+    overlay.addEventListener('click', function() {
+        sidebar.style.left = '-250px';
+        overlay.classList.remove('visible');
+        // Montrer le bouton de menu
+        menuToggle.style.display = 'block';
+    });
+
+    document.querySelector('.openbtn').addEventListener('click', function() {
+        loginMessage.style.display = loginMessage.style.display === 'none' || loginMessage.style.display === '' ? 'block' : 'none';
+    });
 });
 
-    function toggleLoginMessage() {
-    const loginMessage = document.getElementById('login-message');
-    if (loginMessage.style.display === 'none' || loginMessage.style.display === '') {
-        loginMessage.style.display = 'block';
-    } else {
-        loginMessage.style.display = 'none';
-    }
-}
-const logoutButton = document.getElementById('logout-button');
-      if (logoutButton) {
+document.addEventListener("DOMContentLoaded", function() {
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
         logoutButton.addEventListener('click', function() {
-          window.location.href = '/logout';
+            window.location.href = '/logout';
         });
-      }
-    
-
-        
-</script> 
+    }
+});
+</script>
+<script>
+(function() {
+  if(window.localStorage)
+    console.log("Local Storage Supported")
+  else
+    console.log("Local Storage Not Supported")
+})();
+</script>
 </body>
 </html>
+       
+
+      

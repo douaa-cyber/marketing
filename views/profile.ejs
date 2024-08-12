@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil</title>
+<style>
+/* Style général du corps de la page */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: rgba(189, 171, 199, 0.521);
+}
+
+/* Style de l'en-tête */
+header {
+   
+    color: #fff;
+    padding: 10px 20px;
+    text-align: center;
+    height: 50px;
+    width: 200px;
+}
+
+/* Style du conteneur principal */
+main {
+    padding: 20px;
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Conteneur de profil */
+.profile-container {
+    text-align: center;
+}
+
+/* Photo de profil */
+.profile-photo {
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+/* Espace réservé pour la photo de profil si absente */
+.profile-photo.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ddd;
+    color: #666;
+    font-size: 1.2em;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin: 0 auto;
+}
+
+/* Style des labels et inputs */
+label {
+    display: block;
+   
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+input[type="file"] {
+    padding: 5px;
+}
+
+/* Style des boutons */
+button {
+    display: inline-block;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Style du formulaire */
+form {
+    margin-bottom: 20px;
+}
+
+/* Style du formulaire avec un bouton de soumission */
+form:last-of-type {
+    margin-top: 20px;
+}
+
+
+</style>
+</head>
+<body>
+    <header>
+       <a href="/"><img src="/bmsLogo.svg" alt=""></a>
+    </header>
+
+    <main>
+        <div class="profile-container">
+            <!-- Photo de profil -->
+            <% if (user.photo) { %>
+                <img src="/uploads/<%= user.photo %>" alt="Photo de profil" class="profile-photo">
+            <% } else { %>
+                <div class="profile-photo placeholder">Pas de photo</div>
+            <% } %>
+            <h2 ><%= user.username %></h2>
+            <!-- Formulaire de mise à jour du profil -->
+            <form action="/update-profile" method="POST">
+                 
+                <label for="nom">Nom:</label>
+                <input type="text" id="nom" name="nom" value="<%= user.nom %>">
+                
+                <label for="prenom">Prénom:</label>
+                <input type="text" id="prenom" name="prenom" value="<%= user.prenom %>">
+                
+                
+                <label for="telephone">Téléphone:</label>
+                <input type="text" id="telephone" name="telephone" value="<%= user.telephone %>">
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="<%= user.email %>">
+               <button type="submit">suavegarder</button>
+            </form>
+
+            <!-- Formulaire de téléchargement de photo -->
+            <form action="/upload-profile-photo" method="POST" enctype="multipart/form-data">
+                <label for="profile-photo">Ajouter une photo de profil:</label>
+                <input type="file" id="profile-photo" name="profile-photo">
+                <button type="submit">Ajouter</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

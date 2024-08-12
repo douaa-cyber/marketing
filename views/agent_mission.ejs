@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assigned Missions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    table th, table td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+      color: #333;
+    }
+
+    table th {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    table tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vos missions assignées</h1>
+  <table id="missions-table">
+    <thead>
+      <tr>
+      
+        <th>TITRE</th>
+        <th>DATE DEBUT </th>
+        <th>DATE FIN</th>
+        <th>REGION</th>
+        <th>WILAYA</th>
+        <th>status</th>
+      </tr>
+    </thead>
+    <tbody>
+        <% missions.forEach(function(mission) { %>
+            <tr>
+               
+                <td><%= mission.titre %></td>
+                <td><%= mission.date_deb %></td>
+                <td><%= mission.date_fin %></td>
+                <td><%= mission.region %></td>
+                <td><%= mission.wilaya %></td>
+                <td>
+                    <% if (mission.status !== 'Terminer') { %>
+                        <form action="/missions/<%= mission.id %>/complete" method="post">
+                          <button type="submit">Terminer</button>
+                        </form>
+                      <% } else { %>
+                        Terminé
+                      <% } %>
+                </td>
+            </tr>
+            <% }); %>
+    </tbody>
+  </table>
+</body>
+</html>

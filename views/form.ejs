@@ -506,7 +506,6 @@ body {
     width: 100px; 
     margin-left: 10px;
 }
-/* General style for suggestion boxes */
 .suggestion-box {
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -655,7 +654,7 @@ body {
         }
         </script>
        <script>
-   document.addEventListener('DOMContentLoaded', function () {
+ document.addEventListener('DOMContentLoaded', function () {
     const clientInput = document.getElementById('source');
     const suggestionsBox = document.getElementById('autocomplete-suggestions');
     const tagContainer = document.getElementById('tagContainer');
@@ -667,6 +666,15 @@ body {
         const query = this.value.toLowerCase();
         const filteredSources = sources.filter(source => source.toLowerCase().includes(query));
         updateAutocompleteSuggestions(filteredSources);
+    });
+
+    clientInput.addEventListener('blur', function () {
+  
+        const inputValue = clientInput.value.trim();
+        if (inputValue && !selectedSources.includes(inputValue)) {
+            addTag(inputValue);
+            clientInput.value = '';
+        }
     });
 
     function updateAutocompleteSuggestions(filteredSources) {
@@ -723,7 +731,8 @@ body {
     }
 
     function updateHiddenSources() {
-        hiddenSources.value = selectedSources.join(',');
+        const combinedValue = selectedSources.join(',');
+        hiddenSources.value = combinedValue;
     }
 
     document.addEventListener('click', function (event) {
@@ -755,6 +764,7 @@ body {
         }
     });
 });
+
 
 function toggleQuantityInput(checkbox) {
     const quantityInputId = `${checkbox.id}Quantity`;
@@ -811,9 +821,40 @@ function submitForm() {
 
 
 
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
 
 
-      </script>
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('multiStepForm');
+
+        if (!navigator.onLine) {
+       
+            form.style.display = 'block';
+        } else {
+         
+            form.style.display = 'none';
+        }
+
+    
+        window.addEventListener('online', () => {
+            form.style.display = 'none';
+        });
+
+        window.addEventListener('offline', () => {
+            form.style.display = 'block';
+        });
+    });
+</script>
+   
     
       
 </head>
@@ -888,7 +929,7 @@ function submitForm() {
                                 <% if(agents ==='marketing'){ %>
                                 <option value="distributeur">Distributeur</option>
                                 <option value="grossiste">Grossiste</option>
-                                <option value="elect">Electricité</option>
+                                <option value="electricien">Electricité</option>
                                 <option value="quincaillerie">Quincaillerie</option>
                                 <option value="Lighting">Lighting</option>
                                 <option value="Plomberie">Plomberie</option>
@@ -923,6 +964,241 @@ function submitForm() {
                         <div class="inputBox">
                             <input type="text" name="nom_ach" >
                             <i>Nom_Acheteur/Gérant</i>
+                        </div>
+                      
+                        
+                       
+                        <button type="button" class="btn prev" id="prevBtnStep2">Previous</button>
+                        <button type="button" class="btn next" id="nextBtnStep2">Next</button>
+                    </div>
+                    <div class="step step-3">
+                        <h3>Etape 3/4: Produits</h3>
+                        <div id="categoryDiv">
+                            <label>Produits disponible chez client:</label><br>
+                            <div  style="display: flex; margin-bottom: 10%;margin-top: 5%;font-size:14px;">
+                            <input type="radio" name="categorie" id="chkAppareillage" value="Appareillage"> 
+                            <label for="chkAppareillage">Appareillage</label><br>
+                            <input width="50px"  type="radio" name="categorie" id="chkDisjoncteur" value="Disjoncteur" >
+                            <label for="chkDisjoncteur"> Disjoncteur</label><br>
+                            <input width="50px" type="radio" name="categorie" id="chkLampe" value="Lampe"> 
+                            <label for="chkLampe">Lighting</label><br>
+                        </div>
+                        </div>
+                        <div class="inputBox" id="lampeProducts" style="display:none;">
+                            <label for="prodLampe">Produits:</label>
+                           
+                            <select id="prodLampe" name="produitLampe" multiple>
+                                <option value="default" disabled>Sélectionnez des produits</option>
+                                <% if(societe==='bms'){ %>
+                                <option value="Lampe filament">Lampe filament</option>
+                                <option value="Lampe led E27">Lampe led E27</option>
+                                <option value="Lampe led E14">Lampe led E14</option>
+                                <option value="spot3d">Spot 3D</option>
+                                <option value="spot3p">Spot 3P</option>
+                                <%} else { %>
+                                    
+                                    <option value="Lampe LED ">LAMPE LED</option>
+                                    <option value="SPOT"> SPOT</option>
+                                    <option value="TUBE LED"> TUBE LED</option>
+                                    <% } %>
+                                <option  value="autre" >autres</option>
+                            </select>
+                        </div>
+                        <div class="inputBox" id="appareillageProducts" style="display:none;">
+                            <label for="prodAppareillage">Produits:</label>
+                            <select id="prodAppareillage" name="produitAppareillage" multiple>
+                                <option value="default" disabled>Sélectionnez des produits</option>
+                                <% if(societe==='bms'){ %>
+                                <option value="Continuum">Continuum</option>
+                                <option value="Continuum Color">Continuum Color</option>
+                                <option value="eco">Eco</option>
+                                <option value="galaxie">Galaxie</option>
+                                <option value="karea">Karea</option>
+                                <option value="Boite d'encastrement">Boite d'encastrement</option>
+                                <option value="multiprise">Multiprise</option>
+                                <option value="douille">Douille</option>
+                                <option value="fiche multiprise">Fiche multiprise</option>
+                                <option value="Apolo">Apolo</option>
+                                <option value="fiche male/female">Fiche male/female</option>
+                                <option value="coupe courant">Coupe Courant</option>
+                                <option value="KBS">KBS</option>
+                                <option value="Adaptateur">Adaptateur</option>
+                                <option value="cadrecouleur">Cadre couleur</option>
+                                <option value="sokoy">Sokoy</option>
+                                <option value="soyouz">Soyouz</option>
+                                <option value="vortex">Vortex</option>
+                                <%} else { %>
+                                       <option value="CHROME">CHROME</option>
+                                       <option value="DISPINA">DISPINA</option>
+                                       <option value="DISPINA">DISPINA METALIC</option>
+                                       <option value="EVOLUTION">EVOLUTION</option>
+                                       <option value="EVOLUTION PLUS">EVOLUTION PLUS</option>
+                                       <option value="LARISSA">LARISSA</option>
+                                       <option value="OBERON">OBERON</option>
+                                       <option value="ORION">ORION</option>
+                                       <option value="TABLEAU DISTRIBUTION">TABLEAUX DISTRIBUTION</option>
+                                       <option value="MONO ACCESSOIRES">MONO ACCESSOIRES</option>
+                                       <option value="ICON">ICON</option>
+                                       <option value="LEON">LEON</option>
+                                      <option value="MODULE">MODULE</option> 
+                                      <option value="MOULURE">MOULURE</option> 
+                                      <option value="STYLE">STYle</option>
+
+
+                                 <% } %>
+                                <option  value="autre" >autres</option>
+                               
+                            </select>
+                        </div>
+                        <div class="inputBox" id="disjoncteurProducts" style="display:none;">
+                            <label for="prodDisjoncteur">Produits:</label>
+                            <select id="prodDisjoncteur" name="produitDisjoncteur" multiple>
+                                <option value="default" disabled>Sélectionnez des produits</option>
+                                <% if(societe==='bms'){ %>
+                                <option value="Disjoncteur">Disjoncteur</option>
+                               
+                                <option value="double phase neutre">Double phase +Neutre</option>
+                                <option value="télérupteur">Télérupteur</option>
+                                <option value="minuterie">Minuterie</option>
+                                <option value="marqueur">Marqueur</option>
+                                <option value="mini disjoncteur">mini disjoncteur</option>
+                                <option value="Disjoncteur differentiel ">Disjoncteur differentiel</option>
+                                <option value="Disjoncteur de branchement">Disjoncteur de branchement</option>
+                                <option  value="autre" >autres</option>
+                                <%} else { %>
+                                    <option value="double phase neutre">Double phase +Neutre</option>
+                                    <option value="mini disjoncteur">Mini disjoncteur</option>
+                                    <option value="Disjoncteur differentiel ">Disjoncteur differentiel</option>
+                                    <option value="Disjoncteur de branchement">Disjoncteur de branchement</option>
+                                    <option value="minuterie">Minuterie</option>
+                                    <option value="télérupteur">Télérupteur</option>
+                                    <option value="Marqueur">Marqueur</option>
+                                    <option value="Interupteur differentiel">Interrupteur differentiel</option>
+                                    <option  value="autre" >autres</option>
+                                <% } %>
+                               
+                               
+                            </select>
+                        </div>
+                    
+                        <div id="competitorSection" style="display:none;">
+                            
+                            <div class="inputBox" id="lampeConcurrent" style="display:none;">
+                                <label for="concurrentLampe"> Concurrent :</label>
+                                
+                                <select id="concurrentLampe" name="concurrentLampe" multiple>
+                                    <option value="default" disabled>Sélectionnez un concurrent</option>
+                                    <% if(societe==='bms'){ %>
+                                    <option value="MONO">MONO</option>
+                                    <% } else{ %>
+                                        <option value="BMS">BMS</option>
+                                    <% }  %>
+                                    <option value="ENERGICAL">ENERGICAL</option>
+                                    <option value="BEETRO">BEETRO</option>
+                                    <option value="TORCH">TORCH</option>
+                                    <option value="SPRINT">SPRINT</option>
+                                    <option value="WLMAX">WLMAX</option>
+                                    <option value="FOTONIX">FOTONIX</option>
+                                    <option  value="autre" >autres</option>
+                                </select>
+                               
+                              
+                            </div>
+                            <div class="inputBox" id="appareillageConcurrent" style="display:none;">
+                                <label for="concurrentAppareillage">Concurrent :</label>
+                                <select id="concurrentAppareillage" name="concurrentAppareillage" multiple>
+                                    <option value="default" disabled>Sélectionnez un concurrent</option>
+                                    <% if(societe==='bms'){ %>
+                                        <option value="MONO">MONO</option>
+                                        <% } else{ %>
+                                            <option value="BMS">BMS</option>
+                                        <% }  %>
+                                    <option value="LE GRAND">LE GRAND</option>
+                                    <option value="ENERGICAL">ENERGICAL</option>
+                                    <option value="SCHNEIDER">SCHNEIDER</option>
+                                    <option value="MAKEL">MAKEL</option>
+                                    <option value="OVIVO">OVIVO</option>
+                                    <option value="SOMEF">SOMEF</option>
+                                    <option value="GIMA">GIMA</option>
+                                    <option  value="autre" >autres</option>
+                                </select>
+                            </div>
+                            <div class="inputBox" id="disjoncteurConcurrent" style="display:none;">
+                                <label for="concurrentDisjoncteur">Concurrent :</label>
+                                <select id="concurrentDisjoncteur" name="concurrentDisjoncteur" multiple>
+                                    <option value="default" disabled>Sélectionnez un concurrent</option>
+                                    <% if(societe==='bms'){ %>
+                                        <option value="MONO">MONO</option>
+                                        <% } else{ %>
+                                            <option value="BMS">BMS</option>
+                                     <% }  %>
+                                    <option value="ENERGICAL">ENERGICAL</option>
+                                    <option value="LE GRAND">LE GRAND</option>
+                                    <option value="SCHNEIDER">SCHNEIDER</option>
+                                    <option value="CHINT">CHINT</option>
+                                    <option  value="autre" >autres</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="inputBox">
+                            <label for="source">Source d'approvisionnement:</label>
+                            <div class="tag-container" id="tagContainer"></div>
+                            <input type="text" id="source" name="sourceInput" autocomplete="off" placeholder="Type to select sources">
+                            <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+                            <input type="hidden" id="hiddenSources" name="Distributeur">
+                   </div>
+                        <div class="inputBox" style="display: flex;">
+                           <label >Disponibilité Plaque :</label>
+                         <label><input type="radio"  name="plaque" value="Non"> Non</label>
+                         <label><input type="radio"  name="plaque" value="Oui"> Oui</label>
+                        </div>
+                        <div class="inputBox" style="display: flex;">
+                           <label >Disponibilité Espace Publicitaire :</label>
+                         <label><input type="radio"  name="espacepub" value="Non"> Non</label>
+                         <label><input type="radio"  name="espacepub" value="Oui"> Oui</label>
+                        </div>
+                    
+                    
+                        <button type="button" class="btn prev" id="prevBtnStep3">Previous</button>
+                        <button type="button" class="btn next" id="nextBtnStep3">Next</button>
+                    </div>
+                    
+                    <div class="step step-4">
+                        <h3>Etape 4/4 : Évaluation</h3>
+                    
+                        <!-- Client Rating -->
+                        <div class="inputBox" style="display: flex;">
+                            <label for="clientRating">Évaluation de client :</label>
+                            <label><input type="radio"  name="evaluecli" value="Chaud"> Chaud</label>
+                            <label><input type="radio"  name="evaluecli" value="Froid"> Froid</label>
+                        </div>
+                    
+                        <!-- BMS Rating -->
+                        <div class="inputBox">
+                            <label for="bmsRating">Présentation du produit :</label>
+                            <div class="rating-container" id="bmsRating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <input type="hidden" id="hiddenBmsRating" name="evalueBms">
+                            </div>
+                         
+                        </div>
+                        
+                        <!-- Competitor Rating -->
+                        <div class="inputBox">
+                            <label for="competitorRating">Présence concurrent :</label>
+                            <div class="rating-container" id="competitorRating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <input type="hidden" id="hiddenCompetitorRating" name="evaluconcurrent">
+                            </div>
+                        
                         </div>
                         <div class="inputBox">
                             <label>Articles à distribuer:</label>
@@ -1227,234 +1503,6 @@ function submitForm() {
                                     <%} %>
                                 </div>
                             </div>
-                        </div>
-                       
-                        <button type="button" class="btn prev" id="prevBtnStep2">Previous</button>
-                        <button type="button" class="btn next" id="nextBtnStep2">Next</button>
-                    </div>
-                    <div class="step step-3">
-                        <h3>Etape 3/4: Produits</h3>
-                        <div id="categoryDiv">
-                            <label>Produits disponible chez client:</label><br>
-                            <div  style="display: flex; margin-bottom: 10%;margin-top: 5%;font-size:14px;">
-                            <input type="radio" name="categorie" id="chkAppareillage" value="Appareillage"> 
-                            <label for="chkAppareillage">Appareillage</label><br>
-                            <input width="50px"  type="radio" name="categorie" id="chkDisjoncteur" value="Disjoncteur" >
-                            <label for="chkDisjoncteur"> Disjoncteur</label><br>
-                            <input width="50px" type="radio" name="categorie" id="chkLampe" value="Lampe"> 
-                            <label for="chkLampe">Lighting</label><br>
-                        </div>
-                        </div>
-                        <div class="inputBox" id="lampeProducts" style="display:none;">
-                            <label for="prodLampe">Produits:</label>
-                           
-                            <select id="prodLampe" name="produitLampe" multiple>
-                                <option value="default" disabled>Sélectionnez des produits</option>
-                                <% if(societe==='bms'){ %>
-                                <option value="Lampe filament">Lampe filament</option>
-                                <option value="Lampe led E27">Lampe led E27</option>
-                                <option value="Lampe led E14">Lampe led E14</option>
-                                <option value="spot3d">Spot 3D</option>
-                                <option value="spot3p">Spot 3P</option>
-                                <%} else { %>
-                                    
-                                    <option value="Lampe LED ">LAMPE LED</option>
-                                    <option value="SPOT"> SPOT</option>
-                                    <option value="TUBE LED"> TUBE LED</option>
-                                    <% } %>
-                                <option  value="autre" >autres</option>
-                            </select>
-                        </div>
-                        <div class="inputBox" id="appareillageProducts" style="display:none;">
-                            <label for="prodAppareillage">Produits:</label>
-                            <select id="prodAppareillage" name="produitAppareillage" multiple>
-                                <option value="default" disabled>Sélectionnez des produits</option>
-                                <% if(societe==='bms'){ %>
-                                <option value="Continuum">Continuum</option>
-                                <option value="Continuum Color">Continuum Color</option>
-                                <option value="eco">Eco</option>
-                                <option value="galaxie">Galaxie</option>
-                                <option value="karea">Karea</option>
-                                <option value="Boite d'encastrement">Boite d'encastrement</option>
-                                <option value="multiprise">Multiprise</option>
-                                <option value="douille">Douille</option>
-                                <option value="fiche multiprise">Fiche multiprise</option>
-                                <option value="Apolo">Apolo</option>
-                                <option value="fiche male/female">Fiche male/female</option>
-                                <option value="coupe courant">Coupe Courant</option>
-                                <option value="KBS">KBS</option>
-                                <option value="Adaptateur">Adaptateur</option>
-                                <option value="cadrecouleur">Cadre couleur</option>
-                                <option value="sokoy">Sokoy</option>
-                                <option value="soyouz">Soyouz</option>
-                                <option value="vortex">Vortex</option>
-                                <%} else { %>
-                                       <option value="CHROME">CHROME</option>
-                                       <option value="DISPINA">DISPINA</option>
-                                       <option value="DISPINA">DISPINA METALIC</option>
-                                       <option value="EVOLUTION">EVOLUTION</option>
-                                       <option value="EVOLUTION PLUS">EVOLUTION PLUS</option>
-                                       <option value="LARISSA">LARISSA</option>
-                                       <option value="OBERON">OBERON</option>
-                                       <option value="ORION">ORION</option>
-                                       <option value="TABLEAU DISTRIBUTION">TABLEAUX DISTRIBUTION</option>
-                                       <option value="MONO ACCESSOIRES">MONO ACCESSOIRES</option>
-                                       <option value="ICON">ICON</option>
-                                       <option value="LEON">LEON</option>
-                                      <option value="MODULE">MODULE</option> 
-                                      <option value="MOULURE">MOULURE</option> 
-                                      <option value="STYLE">STYle</option>
-
-
-                                 <% } %>
-                                <option  value="autre" >autres</option>
-                               
-                            </select>
-                        </div>
-                        <div class="inputBox" id="disjoncteurProducts" style="display:none;">
-                            <label for="prodDisjoncteur">Produits:</label>
-                            <select id="prodDisjoncteur" name="produitDisjoncteur" multiple>
-                                <option value="default" disabled>Sélectionnez des produits</option>
-                                <% if(societe==='bms'){ %>
-                                <option value="Disjoncteur">Disjoncteur</option>
-                               
-                                <option value="double phase neutre">Double phase +Neutre</option>
-                                <option value="télérupteur">Télérupteur</option>
-                                <option value="minuterie">Minuterie</option>
-                                <option value="marqueur">Marqueur</option>
-                                <option value="mini disjoncteur">mini disjoncteur</option>
-                                <option value="Disjoncteur differentiel ">Disjoncteur differentiel</option>
-                                <option value="Disjoncteur de branchement">Disjoncteur de branchement</option>
-                                <option  value="autre" >autres</option>
-                                <%} else { %>
-                                    <option value="double phase neutre">Double phase +Neutre</option>
-                                    <option value="mini disjoncteur">Mini disjoncteur</option>
-                                    <option value="Disjoncteur differentiel ">Disjoncteur differentiel</option>
-                                    <option value="Disjoncteur de branchement">Disjoncteur de branchement</option>
-                                    <option value="minuterie">Minuterie</option>
-                                    <option value="télérupteur">Télérupteur</option>
-                                    <option value="Marqueur">Marqueur</option>
-                                    <option value="Interupteur differentiel">Interrupteur differentiel</option>
-                                    <option  value="autre" >autres</option>
-                                <% } %>
-                               
-                               
-                            </select>
-                        </div>
-                    
-                        <div id="competitorSection" style="display:none;">
-                            
-                            <div class="inputBox" id="lampeConcurrent" style="display:none;">
-                                <label for="concurrentLampe"> Concurrent :</label>
-                                
-                                <select id="concurrentLampe" name="concurrentLampe" multiple>
-                                    <option value="default" disabled>Sélectionnez un concurrent</option>
-                                    <% if(societe==='bms'){ %>
-                                    <option value="MONO">MONO</option>
-                                    <% } else{ %>
-                                        <option value="BMS">BMS</option>
-                                    <% }  %>
-                                    <option value="ENERGICAL">ENERGICAL</option>
-                                    <option value="BEETRO">BEETRO</option>
-                                    <option value="TORCH">TORCH</option>
-                                    <option value="SPRINT">SPRINT</option>
-                                    <option value="WLMAX">WLMAX</option>
-                                    <option value="FOTONIX">FOTONIX</option>
-                                    <option  value="autre" >autres</option>
-                                </select>
-                               
-                              
-                            </div>
-                            <div class="inputBox" id="appareillageConcurrent" style="display:none;">
-                                <label for="concurrentAppareillage">Concurrent :</label>
-                                <select id="concurrentAppareillage" name="concurrentAppareillage" multiple>
-                                    <option value="default" disabled>Sélectionnez un concurrent</option>
-                                    <% if(societe==='bms'){ %>
-                                        <option value="MONO">MONO</option>
-                                        <% } else{ %>
-                                            <option value="BMS">BMS</option>
-                                        <% }  %>
-                                    <option value="LE GRAND">LE GRAND</option>
-                                    <option value="ENERGICAL">ENERGICAL</option>
-                                    <option value="SCHNEIDER">SCHNEIDER</option>
-                                    <option value="MAKEL">MAKEL</option>
-                                    <option value="OVIVO">OVIVO</option>
-                                    <option value="SOMEF">SOMEF</option>
-                                    <option value="GIMA">GIMA</option>
-                                    <option  value="autre" >autres</option>
-                                </select>
-                            </div>
-                            <div class="inputBox" id="disjoncteurConcurrent" style="display:none;">
-                                <label for="concurrentDisjoncteur">Concurrent :</label>
-                                <select id="concurrentDisjoncteur" name="concurrentDisjoncteur" multiple>
-                                    <option value="default" disabled>Sélectionnez un concurrent</option>
-                                    <% if(societe==='bms'){ %>
-                                        <option value="MONO">MONO</option>
-                                        <% } else{ %>
-                                            <option value="BMS">BMS</option>
-                                        <% }  %>
-                                    <option value="ENERGICAL">ENERGICAL</option>
-                                    <option value="LE GRAND">LE GRAND</option>
-                                    <option value="SCHNEIDER">SCHNEIDER</option>
-                                    <option value="CHINT">CHINT</option>
-                                    <option  value="autre" >autres</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="inputBox">
-                            <label for="source">Source d'approvisionnement:</label>
-                            <div class="tag-container" id="tagContainer"></div>
-                            <input type="text" id="source" name="sourceInput" autocomplete="off" placeholder="Type to select sources">
-                            <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
-                            <input type="hidden" id="hiddenSources" name="Distributeur">
-         </div>
-                        <div class="inputBox">
-                           <label >Disponibilité Espace Publicitaire</label>
-                         <label><input type="checkbox"  name="espacepub" value="Non"> Non</label>
-                         <label><input type="checkbox"  name="espacepub" value="Oui"> Oui</label>
-                        </div>
-                    
-                    
-                        <button type="button" class="btn prev" id="prevBtnStep3">Previous</button>
-                        <button type="button" class="btn next" id="nextBtnStep3">Next</button>
-                    </div>
-                    
-                    <div class="step step-4">
-                        <h3>Etape 4/4 : Évaluation</h3>
-                    
-                        <!-- Client Rating -->
-                        <div class="inputBox">
-                            <label for="clientRating">Évaluation de client :</label>
-                            <label><input type="radio"  name="evaluecli" value="Chaud"> Chaud</label>
-                            <label><input type="radio"  name="evaluecli" value="Froid"> Froid</label>
-                        </div>
-                    
-                        <!-- BMS Rating -->
-                        <div class="inputBox">
-                            <label for="bmsRating">Présentation du produit :</label>
-                            <div class="rating-container" id="bmsRating">
-                                <span class="star" data-value="1">&#9733;</span>
-                                <span class="star" data-value="2">&#9733;</span>
-                                <span class="star" data-value="3">&#9733;</span>
-                                <span class="star" data-value="4">&#9733;</span>
-                                <span class="star" data-value="5">&#9733;</span>
-                                <input type="hidden" id="hiddenBmsRating" name="evalueBms">
-                            </div>
-                         
-                        </div>
-                        
-                        <!-- Competitor Rating -->
-                        <div class="inputBox">
-                            <label for="competitorRating">Présence concurrent :</label>
-                            <div class="rating-container" id="competitorRating">
-                                <span class="star" data-value="1">&#9733;</span>
-                                <span class="star" data-value="2">&#9733;</span>
-                                <span class="star" data-value="3">&#9733;</span>
-                                <span class="star" data-value="4">&#9733;</span>
-                                <span class="star" data-value="5">&#9733;</span>
-                                <input type="hidden" id="hiddenCompetitorRating" name="evaluconcurrent">
-                            </div>
-                        
                         </div>
                        
                         <div class="inputBox">

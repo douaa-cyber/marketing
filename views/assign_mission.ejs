@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+       h1, h2 {
+            text-align: center;
+            color: #333;
+          
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 400px; /* Reduce the width of the form */
+            margin: 0 auto; /* Center the form horizontally */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: calc(100% - 22px); /* Adjust input width to match the form */
+            padding: 8px; /* Reduce padding for a smaller appearance */
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px; /* Reduce font size */
+            color: #333;
+        }
+
+        button {
+            display: inline-block;
+            background-color: #5cb85c;
+            color: #fff;
+            padding: 8px 16px; /* Reduce button size */
+            font-size: 14px; /* Reduce font size */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+            color: #333;
+        }
+
+        table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body>
+  
+
+    <form id="assign-mission-form" action="/assignments" method="post">
+        <label for="agent_id">Nom_agent:</label>
+        <input type="text" id="agent_nom" name="agent_Nom" required>
+      
+        <label for="mission_id">Mission ID:</label>
+        <input type="number" id="mission_id" name="mission_id" required>
+      
+        <button type="submit">Assigner Mission</button>
+      </form>
+      <hr style="width: 100%;height: 20px; background-color: rgb(49, 80, 63);">
+    <h2>Liste d'affectations</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom Agent</th>
+                <th>ID Mission</th>
+                <th>Status</th>
+              
+            </tr>
+        </thead>
+        <tbody>
+            <% assignments.forEach(function(assignment) { %>
+            <tr>
+                <td><%= assignment.agent_nom %></td>
+                <td><%= assignment.missions_id %></td>
+                <td><%= assignment.status %></td>
+               
+            </tr>
+            <% }); %>
+        </tbody>
+    </table>
+</body>
+</html>
