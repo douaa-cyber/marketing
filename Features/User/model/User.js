@@ -23,22 +23,18 @@ const User = sequelize.define(
 
     password: {
       type: DataTypes.STRING(300),
-      allowNull: false,
     },
-
-    roles: {
-      type: DataTypes.ENUM("marketeur", "responsable"),
-      allowNull: false,
-    },
-
-    societe: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
+    role: {
+      type: DataTypes.ENUM("admin", "marketeur", "responsable"),
+      defaultValue: "marketeur",
     },
   },
   {
     timestamps: true,
     freezeTableName: true,
+    defaultScope: {
+      attributes: { exclude: ["password"] },
+    },
   }
 );
 
