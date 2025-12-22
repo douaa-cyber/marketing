@@ -8,7 +8,7 @@ const hostname = "localhost";
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync();
+    return db.sync({ force: true });
   })
   .then(() => {
     app.listen(port, hostname, () => {
