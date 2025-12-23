@@ -1,0 +1,16 @@
+const ProdConcurrentAppareillage = require("../../model/ProdConcurrentAppareillage");
+
+const deleteProdConcurrentAppareillage = async (req, res) => {
+  try {
+    const item = await ProdConcurrentAppareillage.findByPk(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: "Not found" });
+    }
+    await item.destroy();
+    res.status(200).json({ message: "Deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = deleteProdConcurrentAppareillage;
