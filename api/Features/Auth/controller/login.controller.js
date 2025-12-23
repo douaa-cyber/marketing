@@ -9,6 +9,7 @@ const login = async (req, res) => {
     const user = await User.unscoped().findOne({
       where: { username },
     });
+    console.log(user);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -22,15 +23,24 @@ const login = async (req, res) => {
     const token = jwt.sign(
       {
         sub: user.id,
-        role: user.roles,
+        role: user.role,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
+    // 🔹 crée le cookie httpOnly
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 3600000,
+    });
+
+    // 🔹 tu peux juste renvoyer l'utilisateur, pas besoin de renvoyer le token
     res.status(200).json({
-      token,
-      expiresIn: 3600,
+      message: "Login successful",
+      user: { id: user.id, username: user.username, role: user.role },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
