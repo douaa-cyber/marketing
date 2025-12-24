@@ -1,7 +1,11 @@
 const addUser = require("./addUser.controller");
 const UpdateUser = require("./updateUser.controller");
 const DeleteUser = require("./deleteUser.controller");
-const { getAllUsers, getUserById } = require("./getUser.controller");
+const {
+  getAllUsers,
+  getUserById,
+  getAllUsersFullnameAndUsername,
+} = require("./getUser.controller");
 const { getProfile } = require("./getProfile.controller");
 
 module.exports = {
@@ -11,4 +15,5 @@ module.exports = {
   getAllUsers,
   getUserById,
   getProfile,
+  getAllUsersFullnameAndUsername,
 };

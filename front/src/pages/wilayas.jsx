@@ -8,16 +8,10 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -26,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -34,34 +27,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-// ===== Role Badge =====
-const roleStyle = {
-  admin: "bg-red-100 text-red-700",
-  marketeur: "bg-blue-100 text-blue-700",
-  responsable: "bg-green-100 text-green-700",
-};
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 // ===== Columns =====
 const columns = (onEdit, onDelete) => [
-  { accessorKey: "fullname", header: "Full name" },
-  {
-    accessorKey: "username",
-    header: "Username",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.username}</span>
-    ),
-  },
-
-  {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => (
-      <Badge className={`${roleStyle[row.original.role]} capitalize`}>
-        {row.original.role}
-      </Badge>
-    ),
-  },
+  { accessorKey: "Commune", header: "Commune" },
+  { accessorKey: "Daira", header: "Daira" },
+  { accessorKey: "wilaya", header: "Wilaya" },
   {
     id: "actions",
     header: "",
@@ -86,90 +63,82 @@ const columns = (onEdit, onDelete) => [
   },
 ];
 
-export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+export default function WilayasPage() {
+  const [wilayas, setWilayas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(null);
+  const [filterWilaya, setFilterWilaya] = useState(null);
+  const [filterDaira, setFilterDaira] = useState(null);
 
-  // ===== Dialog states =====
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    fullname: "",
-    role: "marketeur",
-  });
+  const [selectedWilaya, setSelectedWilaya] = useState(null);
+  const [form, setForm] = useState({ Commune: "", Daira: "", wilaya: "" });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteUserTarget, setDeleteUserTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // ===== Fetch API =====
-  const fetchUsers = async () => {
+  const fetchWilayas = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/user/all", {
+      const res = await fetch("http://localhost:3000/api/location/", {
         credentials: "include",
       });
       const data = await res.json();
-      setUsers(data);
+      setWilayas(data);
     } catch (err) {
       console.error(err);
-      setUsers([]);
+      setWilayas([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchWilayas();
   }, []);
 
   // ===== Handlers =====
-  const handleEdit = (user) => {
-    if (user) {
-      setSelectedUser(user);
+  const handleEdit = (wilaya) => {
+    if (wilaya) {
+      setSelectedWilaya(wilaya);
       setForm({
-        username: user.username,
-        password: user.password,
-        fullname: user.fullname,
-        role: user.role,
+        Commune: wilaya.Commune,
+        Daira: wilaya.Daira,
+        wilaya: wilaya.wilaya,
       });
     } else {
-      setSelectedUser(null);
-      setForm({ username: "", fullname: "", password: "", role: "marketeur" });
+      setSelectedWilaya(null);
+      setForm({ Commune: "", Daira: "", wilaya: "" });
     }
     setOpenDialog(true);
   };
 
-  const handleDelete = (user) => {
-    setDeleteUserTarget(user);
+  const handleDelete = (wilaya) => {
+    setDeleteTarget(wilaya);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (!deleteUserTarget) return;
-    await fetch(`http://localhost:3000/api/user/${deleteUserTarget.id}`, {
+    if (!deleteTarget) return;
+    await fetch(`http://localhost:3000/api/wilaya/${deleteTarget.id}`, {
       method: "DELETE",
       credentials: "include",
     });
     setOpenDeleteDialog(false);
-    fetchUsers();
+    fetchWilayas();
   };
 
   const handleSubmit = async () => {
-    if (selectedUser) {
-      // Update
-      await fetch(`http://localhost:3000/api/user/${selectedUser.id}`, {
+    if (selectedWilaya) {
+      await fetch(`http://localhost:3000/api/wilaya/${selectedWilaya.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(form),
       });
     } else {
-      // Create
-      await fetch("http://localhost:3000/api/user", {
+      await fetch("http://localhost:3000/api/wilaya", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -177,65 +146,87 @@ export default function UsersPage() {
       });
     }
     setOpenDialog(false);
-    fetchUsers();
+    fetchWilayas();
   };
 
   // ===== Table =====
   const table = useReactTable({
-    data: users,
+    data: wilayas,
     columns: columns(handleEdit, handleDelete),
     state: { globalFilter },
     globalFilterFn: (row, _, value) =>
-      row.original.username.toLowerCase().includes(value.toLowerCase()) ||
-      row.original.fullname.toLowerCase().includes(value.toLowerCase()),
+      row.original.Commune.toLowerCase().includes(value.toLowerCase()) ||
+      row.original.Daira.toLowerCase().includes(value.toLowerCase()) ||
+      row.original.wilaya.toLowerCase().includes(value.toLowerCase()),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const rows = roleFilter
-    ? table.getRowModel().rows.filter((r) => r.original.role === roleFilter)
-    : table.getRowModel().rows;
+  // ===== Apply dropdown filters =====
+  const rows = table.getRowModel().rows.filter((r) => {
+    return (
+      (!filterWilaya || r.original.wilaya === filterWilaya) &&
+      (!filterDaira || r.original.Daira === filterDaira)
+    );
+  });
+
+  // ===== Unique values for filters =====
+  const wilayaOptions = Array.from(new Set(wilayas.map((w) => w.wilaya)));
+  const dairaOptions = Array.from(
+    new Set(
+      filterWilaya
+        ? wilayas.filter((w) => w.wilaya === filterWilaya).map((w) => w.Daira)
+        : wilayas.map((w) => w.Daira)
+    )
+  );
 
   if (loading) return <p className="p-6">Loading...</p>;
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
-        <Button onClick={() => handleEdit(null)}>
-          <Pencil className="w-4 h-4 mr-2" /> Créer
-        </Button>
+        <h1 className="text-2xl font-bold">Gestion des Wilayas</h1>
+        <Button onClick={() => handleEdit(null)}>Créer</Button>
       </div>
 
-      {/* Toolbar */}
+      {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <Input
-          placeholder="Rechercher utilisateur..."
+          placeholder="Rechercher..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Filtrer par rôle <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
+            <Button variant="outline">Filtrer Wilaya</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setRoleFilter(null)}>
+            <DropdownMenuItem onClick={() => setFilterWilaya(null)}>
               Tous
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("admin")}>
-              Admin
+            {wilayaOptions.map((w) => (
+              <DropdownMenuItem key={w} onClick={() => setFilterWilaya(w)}>
+                {w}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">Filtrer Daira</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setFilterDaira(null)}>
+              Tous
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("marketeur")}>
-              Marketeur
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("responsable")}>
-              Responsable
-            </DropdownMenuItem>
+            {dairaOptions.map((d) => (
+              <DropdownMenuItem key={d} onClick={() => setFilterDaira(d)}>
+                {d}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -247,7 +238,7 @@ export default function UsersPage() {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-center">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -274,7 +265,7 @@ export default function UsersPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-10">
-                  Aucun utilisateur trouvé
+                  Aucun Wilaya trouvé
                 </TableCell>
               </TableRow>
             )}
@@ -302,50 +293,39 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {/* Dialog Création / Edition */}
+      {/* Dialogs */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedUser ? "Modifier utilisateur" : "Créer utilisateur"}
+              {selectedWilaya ? "Modifier Wilaya" : "Créer Wilaya"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <Input
-              placeholder="Full name"
-              value={form.fullname}
-              onChange={(e) => setForm({ ...form, fullname: e.target.value })}
+              placeholder="Commune"
+              value={form.Commune}
+              onChange={(e) => setForm({ ...form, Commune: e.target.value })}
             />
             <Input
-              placeholder="Username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              placeholder="Daira"
+              value={form.Daira}
+              onChange={(e) => setForm({ ...form, Daira: e.target.value })}
             />
             <Input
-              placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Wilaya"
+              value={form.wilaya}
+              onChange={(e) => setForm({ ...form, wilaya: e.target.value })}
             />
-
-            <select
-              className="border rounded p-2 w-full"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-            >
-              <option value="admin">Admin</option>
-              <option value="marketeur">Marketeur</option>
-              <option value="responsable">Responsable</option>
-            </select>
           </div>
           <DialogFooter>
             <Button onClick={handleSubmit}>
-              {selectedUser ? "Modifier" : "Créer"}
+              {selectedWilaya ? "Modifier" : "Créer"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Confirmation Suppression */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
@@ -353,7 +333,7 @@ export default function UsersPage() {
           </DialogHeader>
           <p className="py-4">
             Voulez-vous vraiment supprimer{" "}
-            <strong>{deleteUserTarget?.username}</strong> ?
+            <strong>{deleteTarget?.wilaya}</strong> ?
           </p>
           <DialogFooter>
             <Button

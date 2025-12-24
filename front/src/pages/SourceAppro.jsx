@@ -8,16 +8,10 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -26,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -34,34 +27,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-// ===== Role Badge =====
-const roleStyle = {
-  admin: "bg-red-100 text-red-700",
-  marketeur: "bg-blue-100 text-blue-700",
-  responsable: "bg-green-100 text-green-700",
-};
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 // ===== Columns =====
 const columns = (onEdit, onDelete) => [
-  { accessorKey: "fullname", header: "Full name" },
-  {
-    accessorKey: "username",
-    header: "Username",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.username}</span>
-    ),
-  },
-
-  {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => (
-      <Badge className={`${roleStyle[row.original.role]} capitalize`}>
-        {row.original.role}
-      </Badge>
-    ),
-  },
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "Surname", header: "Surname" },
+  { accessorKey: "tel", header: "Tel" },
+  { accessorKey: "region", header: "Region" },
+  { accessorKey: "type", header: "Type" },
   {
     id: "actions",
     header: "",
@@ -86,90 +65,87 @@ const columns = (onEdit, onDelete) => [
   },
 ];
 
-export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+export default function SourcesPage() {
+  const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(null);
+  const [typeFilter, setTypeFilter] = useState(null);
 
-  // ===== Dialog states =====
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedSource, setSelectedSource] = useState(null);
   const [form, setForm] = useState({
-    username: "",
-    password: "",
-    fullname: "",
-    role: "marketeur",
+    name: "",
+    Surname: "",
+    tel: "",
+    region: "",
+    type: "Exist",
   });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteUserTarget, setDeleteUserTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // ===== Fetch API =====
-  const fetchUsers = async () => {
+  const fetchSources = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/user/all", {
+      const res = await fetch("http://localhost:3000/api/sourceAppro/all", {
         credentials: "include",
       });
       const data = await res.json();
-      setUsers(data);
+      console.log(data);
+      setSources(data);
     } catch (err) {
       console.error(err);
-      setUsers([]);
+      setSources([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchSources();
   }, []);
 
   // ===== Handlers =====
-  const handleEdit = (user) => {
-    if (user) {
-      setSelectedUser(user);
-      setForm({
-        username: user.username,
-        password: user.password,
-        fullname: user.fullname,
-        role: user.role,
-      });
+  const handleEdit = (source) => {
+    if (source) {
+      setSelectedSource(source);
+      setForm({ ...source });
     } else {
-      setSelectedUser(null);
-      setForm({ username: "", fullname: "", password: "", role: "marketeur" });
+      setSelectedSource(null);
+      setForm({ name: "", Surname: "", tel: "", region: "", type: "Exist" });
     }
     setOpenDialog(true);
   };
 
-  const handleDelete = (user) => {
-    setDeleteUserTarget(user);
+  const handleDelete = (source) => {
+    setDeleteTarget(source);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (!deleteUserTarget) return;
-    await fetch(`http://localhost:3000/api/user/${deleteUserTarget.id}`, {
+    if (!deleteTarget) return;
+    await fetch(`http://localhost:3000/api/sourceAppro/${deleteTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
     setOpenDeleteDialog(false);
-    fetchUsers();
+    fetchSources();
   };
 
   const handleSubmit = async () => {
-    if (selectedUser) {
-      // Update
-      await fetch(`http://localhost:3000/api/user/${selectedUser.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+    if (selectedSource) {
+      await fetch(
+        `http://localhost:3000/api/sourceAppro/${selectedSource.ID}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(form),
+        }
+      );
     } else {
-      // Create
-      await fetch("http://localhost:3000/api/user", {
+      await fetch("http://localhost:3000/api/sourceAppro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -177,25 +153,27 @@ export default function UsersPage() {
       });
     }
     setOpenDialog(false);
-    fetchUsers();
+    fetchSources();
   };
 
   // ===== Table =====
   const table = useReactTable({
-    data: users,
+    data: sources,
     columns: columns(handleEdit, handleDelete),
     state: { globalFilter },
     globalFilterFn: (row, _, value) =>
-      row.original.username.toLowerCase().includes(value.toLowerCase()) ||
-      row.original.fullname.toLowerCase().includes(value.toLowerCase()),
+      row.original.name.toLowerCase().includes(value.toLowerCase()) ||
+      row.original.Surname.toLowerCase().includes(value.toLowerCase()) ||
+      row.original.tel.toLowerCase().includes(value.toLowerCase()) ||
+      row.original.region.toLowerCase().includes(value.toLowerCase()),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const rows = roleFilter
-    ? table.getRowModel().rows.filter((r) => r.original.role === roleFilter)
-    : table.getRowModel().rows;
+  const rows = table
+    .getRowModel()
+    .rows.filter((r) => !typeFilter || r.original.type === typeFilter);
 
   if (loading) return <p className="p-6">Loading...</p>;
 
@@ -203,38 +181,31 @@ export default function UsersPage() {
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
-        <Button onClick={() => handleEdit(null)}>
-          <Pencil className="w-4 h-4 mr-2" /> Créer
-        </Button>
+        <h1 className="text-2xl font-bold">Sources d’approvisionnement</h1>
+        <Button onClick={() => handleEdit(null)}>Créer</Button>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center">
         <Input
-          placeholder="Rechercher utilisateur..."
+          placeholder="Rechercher..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Filtrer par rôle <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
+            <Button variant="outline">Filtrer Type</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setRoleFilter(null)}>
+            <DropdownMenuItem onClick={() => setTypeFilter(null)}>
               Tous
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("admin")}>
-              Admin
+            <DropdownMenuItem onClick={() => setTypeFilter("Exist")}>
+              Exist
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("marketeur")}>
-              Marketeur
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("responsable")}>
-              Responsable
+            <DropdownMenuItem onClick={() => setTypeFilter("ExistNot")}>
+              ExistNot
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -247,7 +218,7 @@ export default function UsersPage() {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-center">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -273,8 +244,8 @@ export default function UsersPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
-                  Aucun utilisateur trouvé
+                <TableCell colSpan={6} className="text-center py-10">
+                  Aucun source trouvé
                 </TableCell>
               </TableRow>
             )}
@@ -307,39 +278,43 @@ export default function UsersPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedUser ? "Modifier utilisateur" : "Créer utilisateur"}
+              {selectedSource ? "Modifier Source" : "Créer Source"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <Input
-              placeholder="Full name"
-              value={form.fullname}
-              onChange={(e) => setForm({ ...form, fullname: e.target.value })}
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <Input
-              placeholder="Username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              placeholder="Surname"
+              value={form.Surname}
+              onChange={(e) => setForm({ ...form, Surname: e.target.value })}
             />
             <Input
-              placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Tel"
+              maxlength={10}
+              value={form.tel}
+              onChange={(e) => setForm({ ...form, tel: e.target.value })}
             />
-
+            <Input
+              placeholder="Region"
+              value={form.region}
+              onChange={(e) => setForm({ ...form, region: e.target.value })}
+            />
             <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
               className="border rounded p-2 w-full"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
             >
-              <option value="admin">Admin</option>
-              <option value="marketeur">Marketeur</option>
-              <option value="responsable">Responsable</option>
+              <option value="Exist">Exist</option>
+              <option value="ExistNot">ExistNot</option>
             </select>
           </div>
           <DialogFooter>
             <Button onClick={handleSubmit}>
-              {selectedUser ? "Modifier" : "Créer"}
+              {selectedSource ? "Modifier" : "Créer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -352,8 +327,8 @@ export default function UsersPage() {
             <DialogTitle>Confirmation</DialogTitle>
           </DialogHeader>
           <p className="py-4">
-            Voulez-vous vraiment supprimer{" "}
-            <strong>{deleteUserTarget?.username}</strong> ?
+            Voulez-vous vraiment supprimer <strong>{deleteTarget?.name}</strong>{" "}
+            ?
           </p>
           <DialogFooter>
             <Button

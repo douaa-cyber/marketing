@@ -40,10 +40,6 @@ app.use("/api/product", ProductRoute);
 app.use("/api/productConcu", ProductConcuRoute);
 app.use("/api/sourceAppro", SourceApproRoute);
 app.use("/api/user", UserRoute);
-app.get("/api/test", authMiddleware, (req, res) => {
-  console.log("Middleware executed!");
-  res.send("OK");
-});
 
 db.authenticate()
   .then(() => {

@@ -7,7 +7,7 @@ export default function Accueil() {
 
   useEffect(() => {
     const fetchMissions = async () => {
-      const res = await fetch("http://localhost:3000/api/missions", {
+      const res = await fetch("http://localhost:3000/api/mission", {
         credentials: "include",
       });
       if (res.ok) setMissions(await res.json());
