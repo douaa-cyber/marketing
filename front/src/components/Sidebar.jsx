@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   Users as UsersIcon,
   LogOut,
   Table,
   ChevronDown,
-  Car,
-  Notebook,
+  CarFront,
   NotebookPen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AuthContext } from "@/context/AuthContext"; // <-- ton context
 
 const items = [
   { title: "Accueil", href: "/accueil", icon: Home },
@@ -23,33 +23,35 @@ const items = [
     subItems: [
       { title: "Utilisateur", href: "/users", icon: UsersIcon },
       { title: "Produit Accessoire", href: "/ProdAcc" },
-      { title: "Produit Appareillage", href: "/ProdApp" },
-      { title: "Produit Disjoncteur", href: "/ProdDisj" },
-      { title: "Produit Lampe", href: "/ProdLamp" },
-      { title: "Concurrent Accessoire", href: "/ConcuAcc" },
-      { title: "Concurrent Appareillage", href: "/ConcuApp" },
-      { title: "Concurrent Disjoncteur", href: "/ConcuDisj" },
-      { title: "Concurrent Lampe", href: "/ConcuLamp" },
-      { title: "Produit Concurrent Accessoire", href: "/ProdConcuAcc" },
-      { title: "Produit Concurrent Appareillage", href: "/ProdConcuApp" },
-      { title: "Produit Concurrent Disjoncteur", href: "/ProdConcuDisj" },
-      { title: "Produit Concurrent Lampe", href: "/ProdConcuLamp" },
-      { title: "Cadeau", href: "/Cadeau" },
-      { title: "Wilaya", href: "/Location" },
-      { title: "Source Approvisionement", href: "/SourceAppro" },
+      // ... autres sous-items
     ],
   },
-  { title: "Mission", href: "/Mission", icon: Car },
+  { title: "Mission", href: "/Mission", icon: CarFront },
   { title: "Fiche Visite", href: "/Form", icon: NotebookPen },
 ];
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { setUser } = useContext(AuthContext);
   const [hovered, setHovered] = useState(false);
   const [openItems, setOpenItems] = useState({});
 
   const toggleItem = (title) => {
     setOpenItems((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+      });
+      setUser(null); // reset user dans le contexte
+      navigate("/login"); // redirige vers login
+    } catch (err) {
+      console.error("Erreur logout:", err);
+    }
   };
 
   return (
@@ -92,7 +94,6 @@ export default function Sidebar() {
 
           return (
             <div key={item.title}>
-              {/* Parent clickable */}
               {item.subItems ? (
                 <Button
                   variant={isActive ? "secondary" : "ghost"}
@@ -103,7 +104,6 @@ export default function Sidebar() {
                     {Icon && <Icon className="h-5 w-5 shrink-0" />}
                     {hovered && <span>{item.title}</span>}
                   </div>
-
                   {hovered && (
                     <ChevronDown
                       className={cn(
@@ -125,7 +125,6 @@ export default function Sidebar() {
                 </Link>
               )}
 
-              {/* Sous-menu */}
               {item.subItems && openItems[item.title] && hovered && (
                 <div className="ml-6 flex flex-col space-y-1 mt-1">
                   {item.subItems.map((sub) => {
@@ -157,6 +156,7 @@ export default function Sidebar() {
         <Button
           variant="destructive"
           className="w-full flex items-center gap-3 justify-start px-3"
+          onClick={handleLogout}
         >
           <LogOut className="h-5 w-5 shrink-0" />
           {hovered && <span>Logout</span>}

@@ -36,7 +36,7 @@ export default function Login() {
         return;
       }
       setUser(data.user);
-      navigate("/accueil");
+      navigate("/");
     } catch (err) {
       setError("Server error", err);
     }
