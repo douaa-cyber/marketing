@@ -3,6 +3,7 @@ import Login from "./pages/login";
 import PrivateRoute from "./components/PrivateRoute";
 import User from "./pages/Users";
 import Accueil from "./pages/acceuil";
+import Layout from "./components/Layout";
 
 function App() {
   return (
@@ -13,7 +14,9 @@ function App() {
           path="/accueil"
           element={
             <PrivateRoute>
-              <Accueil />
+              <Layout>
+                <Accueil />
+              </Layout>
             </PrivateRoute>
           }
         />
@@ -21,7 +24,9 @@ function App() {
           path="/Users"
           element={
             <PrivateRoute>
-              <User />
+              <Layout>
+                <User />
+              </Layout>
             </PrivateRoute>
           }
         />
