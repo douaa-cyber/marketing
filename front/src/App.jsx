@@ -19,7 +19,8 @@ import ProdConcuLamp from "./pages/ProdConcuLamp";
 import Cadeau from "./pages/cadeau";
 import Location from "./pages/wilayas";
 import SourceAppro from "./pages/SourceAppro";
-
+import MissionsPage from "./pages/mission";
+import Form from "./pages/Form";
 function App() {
   return (
     <Router>
@@ -191,6 +192,26 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <SourceAppro />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/Mission"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <MissionsPage />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/Form"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Form />
               </Layout>
             </PrivateRoute>
           }

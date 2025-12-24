@@ -8,6 +8,9 @@ import {
   LogOut,
   Table,
   ChevronDown,
+  Car,
+  Notebook,
+  NotebookPen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +39,8 @@ const items = [
       { title: "Source Approvisionement", href: "/SourceAppro" },
     ],
   },
+  { title: "Mission", href: "/Mission", icon: Car },
+  { title: "Fiche Visite", href: "/Form", icon: NotebookPen },
 ];
 
 export default function Sidebar() {
@@ -88,24 +93,37 @@ export default function Sidebar() {
           return (
             <div key={item.title}>
               {/* Parent clickable */}
-              <Button
-                variant={isActive ? "secondary" : "ghost"}
-                className="w-full flex items-center justify-between gap-3 px-3"
-                onClick={() => (item.subItems ? toggleItem(item.title) : null)}
-              >
-                <div className="flex items-center gap-3">
-                  {Icon && <Icon className="h-5 w-5 shrink-0" />}
-                  {hovered && <span>{item.title}</span>}
-                </div>
-                {item.subItems && hovered && (
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform",
-                      openItems[item.title] ? "rotate-180" : "rotate-0"
-                    )}
-                  />
-                )}
-              </Button>
+              {item.subItems ? (
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className="w-full flex items-center justify-between gap-3 px-3"
+                  onClick={() => toggleItem(item.title)}
+                >
+                  <div className="flex items-center gap-3">
+                    {Icon && <Icon className="h-5 w-5 shrink-0" />}
+                    {hovered && <span>{item.title}</span>}
+                  </div>
+
+                  {hovered && (
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform",
+                        openItems[item.title] ? "rotate-180" : "rotate-0"
+                      )}
+                    />
+                  )}
+                </Button>
+              ) : (
+                <Link to={item.href}>
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    className="w-full flex items-center gap-3 px-3 justify-start"
+                  >
+                    {Icon && <Icon className="h-5 w-5 shrink-0" />}
+                    {hovered && <span>{item.title}</span>}
+                  </Button>
+                </Link>
+              )}
 
               {/* Sous-menu */}
               {item.subItems && openItems[item.title] && hovered && (
