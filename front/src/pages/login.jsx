@@ -30,13 +30,12 @@ export default function Login() {
         credentials: "include",
         body: JSON.stringify({ username, password }),
       });
-
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setError(data.message || "Login failed");
         return;
       }
-
+      setUser(data.user);
       navigate("/accueil");
     } catch (err) {
       setError("Server error", err);

@@ -35,32 +35,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// ===== Role Badge =====
-const roleStyle = {
-  admin: "bg-red-100 text-red-700",
-  marketeur: "bg-blue-100 text-blue-700",
-  responsable: "bg-green-100 text-green-700",
-};
-
 // ===== Columns =====
 const columns = (onEdit, onDelete) => [
-  { accessorKey: "fullname", header: "Full name" },
   {
-    accessorKey: "username",
-    header: "Username",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.username}</span>
-    ),
-  },
-
-  {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => (
-      <Badge className={`${roleStyle[row.original.role]} capitalize`}>
-        {row.original.role}
-      </Badge>
-    ),
+    accessorKey: "name",
+    header: "Nom",
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
     id: "actions",
@@ -86,90 +66,92 @@ const columns = (onEdit, onDelete) => [
   },
 ];
 
-export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+export default function ProductsPage() {
+  const [Products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState(null);
 
   // ===== Dialog states =====
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [form, setForm] = useState({
-    username: "",
-    password: "",
-    fullname: "",
-    role: "marketeur",
+    name: "",
   });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteUserTarget, setDeleteUserTarget] = useState(null);
+  const [deleteProductTarget, setDeleteProductTarget] = useState(null);
 
   // ===== Fetch API =====
-  const fetchUsers = async () => {
+  const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/user/all", {
-        credentials: "include",
-      });
+      const res = await fetch(
+        "http://localhost:3000/api/product/appareillage",
+        {
+          credentials: "include",
+        }
+      );
       const data = await res.json();
-      setUsers(data);
+      setProducts(data);
     } catch (err) {
       console.error(err);
-      setUsers([]);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchProducts();
   }, []);
 
   // ===== Handlers =====
-  const handleEdit = (user) => {
-    if (user) {
-      setSelectedUser(user);
+  const handleEdit = (Product) => {
+    if (Product) {
+      setSelectedProduct(Product);
       setForm({
-        username: user.username,
-        password: user.password,
-        fullname: user.fullname,
-        role: user.role,
+        name: Product.name,
       });
     } else {
-      setSelectedUser(null);
-      setForm({ username: "", fullname: "", password: "", role: "marketeur" });
+      setSelectedProduct(null);
+      setForm({ name: "" });
     }
     setOpenDialog(true);
   };
 
-  const handleDelete = (user) => {
-    setDeleteUserTarget(user);
+  const handleDelete = (Product) => {
+    setDeleteProductTarget(Product);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (!deleteUserTarget) return;
-    await fetch(`http://localhost:3000/api/user/${deleteUserTarget.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    if (!deleteProductTarget) return;
+    await fetch(
+      `http://localhost:3000/api/product/appareillage/${deleteProductTarget.id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
     setOpenDeleteDialog(false);
-    fetchUsers();
+    fetchProducts();
   };
 
   const handleSubmit = async () => {
-    if (selectedUser) {
+    if (selectedProduct) {
       // Update
-      await fetch(`http://localhost:3000/api/user/${selectedUser.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+      await fetch(
+        `http://localhost:3000/api/product/appareillage/${selectedProduct.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(form),
+        }
+      );
     } else {
-      // Create
-      await fetch("http://localhost:3000/api/user", {
+      await fetch("http://localhost:3000/api/product/appareillage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -177,25 +159,22 @@ export default function UsersPage() {
       });
     }
     setOpenDialog(false);
-    fetchUsers();
+    fetchProducts();
   };
 
   // ===== Table =====
   const table = useReactTable({
-    data: users,
+    data: Products,
     columns: columns(handleEdit, handleDelete),
     state: { globalFilter },
     globalFilterFn: (row, _, value) =>
-      row.original.username.toLowerCase().includes(value.toLowerCase()) ||
-      row.original.fullname.toLowerCase().includes(value.toLowerCase()),
+      row.original.name.toLowerCase().includes(value.toLowerCase()),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const rows = roleFilter
-    ? table.getRowModel().rows.filter((r) => r.original.role === roleFilter)
-    : table.getRowModel().rows;
+  const rows = table.getRowModel().rows;
 
   if (loading) return <p className="p-6">Loading...</p>;
 
@@ -203,7 +182,9 @@ export default function UsersPage() {
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
+        <h1 className="text-2xl font-bold">
+          Gestion des Produits Appareillages
+        </h1>
         <Button onClick={() => handleEdit(null)}>
           <Pencil className="w-4 h-4 mr-2" /> Créer
         </Button>
@@ -212,32 +193,11 @@ export default function UsersPage() {
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center">
         <Input
-          placeholder="Rechercher utilisateur..."
+          placeholder="Rechercher Produits..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Filtrer par rôle <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setRoleFilter(null)}>
-              Tous
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("admin")}>
-              Admin
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("marketeur")}>
-              Marketeur
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRoleFilter("responsable")}>
-              Responsable
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Table */}
@@ -247,7 +207,7 @@ export default function UsersPage() {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-center">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -274,7 +234,7 @@ export default function UsersPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-10">
-                  Aucun utilisateur trouvé
+                  Aucun Produit trouvé
                 </TableCell>
               </TableRow>
             )}
@@ -307,39 +267,19 @@ export default function UsersPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedUser ? "Modifier utilisateur" : "Créer utilisateur"}
+              {selectedProduct ? "Modifier Produit" : "Créer Produit"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <Input
-              placeholder="Full name"
-              value={form.fullname}
-              onChange={(e) => setForm({ ...form, fullname: e.target.value })}
+              placeholder="name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
-            <Input
-              placeholder="Username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-            />
-            <Input
-              placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-
-            <select
-              className="border rounded p-2 w-full"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-            >
-              <option value="admin">Admin</option>
-              <option value="marketeur">Marketeur</option>
-              <option value="responsable">Responsable</option>
-            </select>
           </div>
           <DialogFooter>
             <Button onClick={handleSubmit}>
-              {selectedUser ? "Modifier" : "Créer"}
+              {selectedProduct ? "Modifier" : "Créer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -353,7 +293,7 @@ export default function UsersPage() {
           </DialogHeader>
           <p className="py-4">
             Voulez-vous vraiment supprimer{" "}
-            <strong>{deleteUserTarget?.username}</strong> ?
+            <strong>{deleteProductTarget?.name}</strong> ?
           </p>
           <DialogFooter>
             <Button
