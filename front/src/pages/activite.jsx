@@ -9,7 +9,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pencil, Trash2, ChevronDown } from "lucide-react";
-import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { URL } from "@/api";
 
 // ===== Columns =====
 const columns = (onEdit, onDelete) => [
@@ -87,7 +87,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/product/accessoire`, {
+      const res = await fetch(`${URL}/api/activite/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -125,7 +125,7 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(`${URL}/api/product/accessoire/${deleteProductTarget.id}`, {
+    await fetch(`${URL}/api/activite/${deleteProductTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -136,14 +136,14 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(`${URL}/api/product/accessoire/${selectedProduct.id}`, {
+      await fetch(`http://localhost:3000/api/activite/${selectedProduct.ID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(form),
       });
     } else {
-      await fetch(`${URL}/api/product/accessoire`, {
+      await fetch(`${URL}/api/activite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -174,7 +174,7 @@ export default function ProductsPage() {
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Produits Accessoires</h1>
+        <h1 className="text-2xl font-bold">Gestion des Activites</h1>
         <Button onClick={() => handleEdit(null)}>
           <Pencil className="w-4 h-4 mr-2" /> Créer
         </Button>
@@ -183,7 +183,7 @@ export default function ProductsPage() {
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center">
         <Input
-          placeholder="Rechercher Produits..."
+          placeholder="Rechercher Activite..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
@@ -224,7 +224,7 @@ export default function ProductsPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-10">
-                  Aucun Produit trouvé
+                  Aucun Activite trouvé
                 </TableCell>
               </TableRow>
             )}
@@ -257,7 +257,7 @@ export default function ProductsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedProduct ? "Modifier Produit" : "Créer Produit"}
+              {selectedProduct ? "Modifier Activite" : "Créer Activite"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">

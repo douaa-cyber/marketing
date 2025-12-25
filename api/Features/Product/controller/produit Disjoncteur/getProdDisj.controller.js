@@ -2,7 +2,7 @@ const ProduitDisjoncteur = require("../../model/ProduitDisjoncteur");
 
 const getProduitDisjoncteur = async (req, res) => {
   try {
-    const item = await ProduitDisjoncteur.findByPk(req.params.id);
+    const item = await ProduitDisjoncteur.findAll();
     if (!item) {
       return res.status(404).json({ message: "ProduitDisjoncteur not found" });
     }

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 
 import FormDialog from "../components/FormDialog";
+import { URL } from "@/api";
 
 export default function FormulairesPage() {
   const [formulaires, setFormulaires] = useState([]);
@@ -45,7 +46,7 @@ export default function FormulairesPage() {
   const fetchFormulaires = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/formulaire/all", {
+      const res = await fetch(`${URL}/api/formulaire/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -60,7 +61,7 @@ export default function FormulairesPage() {
 
   const fetchMissions = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/mission/all", {
+      const res = await fetch(`${URL}/api/mission/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -89,7 +90,7 @@ export default function FormulairesPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`http://localhost:3000/api/formulaire/${deleteTarget.id}`, {
+    await fetch(`${URL}/api/formulaire/${deleteTarget.id}`, {
       method: "DELETE",
       credentials: "include",
     });

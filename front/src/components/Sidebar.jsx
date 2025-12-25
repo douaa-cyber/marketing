@@ -16,14 +16,28 @@ import { cn } from "@/lib/utils";
 import { AuthContext } from "@/context/AuthContext"; // <-- ton context
 
 const items = [
-  { title: "Accueil", href: "/accueil", icon: Home },
+  { title: "Accueil", href: "/", icon: Home },
   {
     title: "Donnes de base",
     icon: Table,
     subItems: [
       { title: "Utilisateur", href: "/users", icon: UsersIcon },
       { title: "Produit Accessoire", href: "/ProdAcc" },
-      // ... autres sous-items
+      { title: "Produit Appareillage", href: "/ProdApp" },
+      { title: "Produit Disjoncteur", href: "/ProdDisj" },
+      { title: "Produit Lampe", href: "/ProdLamp" },
+      { title: "Concurrent Accessoire", href: "/ConcuAcc" },
+      { title: "Concurrent Appareillage", href: "/ConcuApp" },
+      { title: "Concurrent Disjoncteur", href: "/ConcuDisj" },
+      { title: "Concurrent Lampe", href: "/ConcuLamp" },
+      { title: "Produit Concurrent Accessoire", href: "/ProdConcuAcc" },
+      { title: "Produit Concurrent Appareillage", href: "/ProdConcuApp" },
+      { title: "Produit Concurrent Disjoncteur", href: "/ProdConcuDisj" },
+      { title: "Produit Concurrent Lampe", href: "/ProdConcuLamp" },
+      { title: "Source Approvisionement", href: "/SourceAppro" },
+      { title: "Activite", href: "/Activite" },
+      { title: "Cadeau", href: "/Cadeau" },
+      { title: "Wilaya", href: "/Location" },
     ],
   },
   { title: "Mission", href: "/Mission", icon: CarFront },

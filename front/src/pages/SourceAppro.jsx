@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
+import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +89,7 @@ export default function SourcesPage() {
   const fetchSources = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/sourceAppro/all", {
+      const res = await fetch(`${URL}/api/sourceAppro/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -125,7 +126,7 @@ export default function SourcesPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`http://localhost:3000/api/sourceAppro/${deleteTarget.ID}`, {
+    await fetch(`${URL}/api/sourceAppro/${deleteTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -135,17 +136,14 @@ export default function SourcesPage() {
 
   const handleSubmit = async () => {
     if (selectedSource) {
-      await fetch(
-        `http://localhost:3000/api/sourceAppro/${selectedSource.ID}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(form),
-        }
-      );
+      await fetch(`${URL}/api/sourceAppro/${selectedSource.ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
     } else {
-      await fetch("http://localhost:3000/api/sourceAppro", {
+      await fetch(`${URL}/api/sourceAppro`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

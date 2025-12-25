@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +110,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/user/all", {
+      const res = await fetch(`${URL}/api/user/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -169,7 +170,7 @@ export default function UsersPage() {
       });
     } else {
       // Create
-      await fetch("http://localhost:3000/api/user", {
+      await fetch(`${URL}/api/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

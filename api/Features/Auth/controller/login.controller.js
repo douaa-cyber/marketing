@@ -33,6 +33,7 @@ const login = async (req, res) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
+      domain: "10.88.134.193",
       maxAge: 3600000,
     });
 

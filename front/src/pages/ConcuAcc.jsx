@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { URL } from "@/api";
 
 // ===== Columns =====
 const columns = (onEdit, onDelete) => [
@@ -86,12 +87,9 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/concurrent/accessoire",
-        {
-          credentials: "include",
-        }
-      );
+      const res = await fetch(`${URL}/api/concurrent/accessoire `, {
+        credentials: "include",
+      });
       const data = await res.json();
       setProducts(data);
     } catch (err) {
@@ -127,13 +125,10 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(
-      `http://localhost:3000/api/concurrent/accessoire/${deleteProductTarget.id}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    await fetch(`${URL}/api/concurrent/accessoire/${deleteProductTarget.ID}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     setOpenDeleteDialog(false);
     fetchProducts();
   };
@@ -141,17 +136,14 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(
-        `http://localhost:3000/api/concurrent/accessoire/${selectedProduct.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(form),
-        }
-      );
+      await fetch(`${URL}/api/concurrent/accessoire/${selectedProduct.ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
     } else {
-      await fetch("http://localhost:3000/api/concurrent/accessoire", {
+      await fetch(`${URL}/api/concurrent/accessoire `, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

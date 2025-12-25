@@ -20,6 +20,7 @@ import Cadeau from "./pages/cadeau";
 import Location from "./pages/wilayas";
 import SourceAppro from "./pages/SourceAppro";
 import MissionsPage from "./pages/mission";
+import Activite from "./pages/activite";
 import Form from "./pages/Form";
 function App() {
   return (
@@ -212,6 +213,16 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <Form />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/Activite"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Activite />
               </Layout>
             </PrivateRoute>
           }

@@ -8,6 +8,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { URL } from "@/api";
 import { Pencil, Trash2, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/concurrent/lampe", {
+      const res = await fetch(`${URL}/api/concurrent/lampe`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -124,13 +125,10 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(
-      `http://localhost:3000/api/concurrent/lampe/${deleteProductTarget.id}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    await fetch(`${URL}/api/concurrent/lampe/${deleteProductTarget.ID}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     setOpenDeleteDialog(false);
     fetchProducts();
   };
@@ -138,17 +136,14 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(
-        `http://localhost:3000/api/concurrent/lampe/${selectedProduct.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(form),
-        }
-      );
+      await fetch(`${URL}/api/concurrent/lampe/${selectedProduct.ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
     } else {
-      await fetch("http://localhost:3000/api/concurrent/lampe", {
+      await fetch(`${URL}/api/concurrent/lampe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

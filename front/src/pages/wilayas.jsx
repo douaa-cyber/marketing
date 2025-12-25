@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
+import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +82,7 @@ export default function WilayasPage() {
   const fetchWilayas = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/location/", {
+      const res = await fetch(`${URL}/api/location/`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -138,7 +139,7 @@ export default function WilayasPage() {
         body: JSON.stringify(form),
       });
     } else {
-      await fetch("http://localhost:3000/api/wilaya", {
+      await fetch(`${URL}/api/wilaya`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

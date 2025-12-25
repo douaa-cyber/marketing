@@ -12,15 +12,15 @@ const ProductRoute = require("./Features/Product/route/Product.route");
 const ProductConcuRoute = require("./Features/Product_Concurrent/route/ProdConcurrent.route");
 const SourceApproRoute = require("./Features/SourceAppro/route/source.route");
 const UserRoute = require("./Features/User/route/User.route");
-const authMiddleware = require("./middleware/Auth");
+const ActiviteRoute = require("./Features/Activite/route/Activite.route");
 
 const app = express();
-const port = 3000;
-const hostname = "localhost";
+const port = process.env.PORT;
+const hostname = process.env.hostname;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://10.88.134.193:5173"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"],
@@ -33,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", AuthRoute);
 app.use("/api/cadeau", CadeauRoute);
+app.use("/api/activite", ActiviteRoute);
 app.use("/api/concurrent", ConcurrentRoute);
 app.use("/api/location", LocationRoute);
 app.use("/api/mission", MissionRoute);
