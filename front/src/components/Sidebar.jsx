@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { AuthContext } from "@/context/AuthContext"; // <-- ton context
 
 const items = [
-  { title: "Accueil", href: "/accueil", icon: Home },
+  { title: "Accueil", href: "/", icon: Home },
   {
     title: "Donnes de base",
     icon: Table,
@@ -34,9 +34,10 @@ const items = [
       { title: "Produit Concurrent Appareillage", href: "/ProdConcuApp" },
       { title: "Produit Concurrent Disjoncteur", href: "/ProdConcuDisj" },
       { title: "Produit Concurrent Lampe", href: "/ProdConcuLamp" },
+      { title: "Source Approvisionement", href: "/SourceAppro" },
+      { title: "Activite", href: "/Activite" },
       { title: "Cadeau", href: "/Cadeau" },
       { title: "Wilaya", href: "/Location" },
-      { title: "Source Approvisionement", href: "/SourceAppro" },
     ],
   },
   { title: "Mission", href: "/Mission", icon: CarFront },

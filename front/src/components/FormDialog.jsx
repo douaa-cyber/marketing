@@ -23,6 +23,17 @@ import {
   CommandGroup,
   CommandEmpty,
 } from "@/components/ui/command";
+import {
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Upload,
+  MapPin,
+  ListChecks,
+  Search,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { URL } from "@/api";
 
 const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
 
@@ -31,6 +42,12 @@ export default function FormDialog({ open, onOpenChange }) {
   const [step, setStep] = useState(1);
   const [cities, setCities] = useState([]);
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
+  const [sourcePopoverOpen, setSourcePopoverOpen] = useState(false);
+  const [sourceSearch, setSourceSearch] = useState("");
+  const [cadeauxOpen, setCadeauxOpen] = useState(false);
+  const [cadeauxSearch, setCadeauxSearch] = useState("");
+
+  const [activites, setActivites] = useState([]);
   const [citySearch, setCitySearch] = useState("");
   const [missions, setMissions] = useState([]);
   const [sourcesList, setSourcesList] = useState([]);
@@ -54,6 +71,7 @@ export default function FormDialog({ open, onOpenChange }) {
     evalueBms: 0,
     SatisfactionCli: 0,
     evaluconcurrent: 0,
+    commentaire: "",
   });
 
   const [activeCategory, setActiveCategory] = useState("lampe");
@@ -73,39 +91,46 @@ export default function FormDialog({ open, onOpenChange }) {
 
   const [cadeauxList, setCadeauxList] = useState([]);
 
-  // User id
+  // --- LOGIQUE EXISTANTE ---
   useEffect(() => {
     if (user) setForm((prev) => ({ ...prev, utilisateur_id: user.id }));
   }, [user]);
 
-  // Fetch cities and cadeaux
   useEffect(() => {
-    fetch("http://localhost:3000/api/location/ville", {
+    fetch(`${URL}/api/location/ville`, {
       credentials: "include",
     })
       .then((r) => r.json())
       .then(setCities)
       .catch(() => setCities([]));
-
-    fetch("http://localhost:3000/api/cadeau/all", { credentials: "include" })
+    fetch(`${URL}/api/cadeau/all`, { credentials: "include" })
       .then((r) => r.json())
       .then(setCadeauxList)
       .catch(() => setCadeauxList([]));
+    fetch(`${URL}/api/sourceAppro/all`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then(setSourcesList)
+      .catch(() => setSourcesList([]));
+    fetch(`${URL}/api/activite/all`, { credentials: "include" })
+      .then((res) => res.json())
+      .then(setActivites)
+      .catch(() => setActivites([]));
   }, []);
 
-  // Fetch active category data when it changes
   useEffect(() => {
     const fetchCategoryData = async (cat) => {
       try {
         const [produitsRes, concurrentsRes, prodConcurrentsRes] =
           await Promise.all([
-            fetch(`http://localhost:3000/api/product/${cat}`, {
+            fetch(`${URL}/api/product/${cat}`, {
               credentials: "include",
             }),
-            fetch(`http://localhost:3000/api/concurrent/${cat}`, {
+            fetch(`${URL}/api/concurrent/${cat}`, {
               credentials: "include",
             }),
-            fetch(`http://localhost:3000/api/productConcu/${cat}`, {
+            fetch(`${URL}/api/productConcu/${cat}`, {
               credentials: "include",
             }),
           ]);
@@ -114,56 +139,36 @@ export default function FormDialog({ open, onOpenChange }) {
           concurrentsRes.json(),
           prodConcurrentsRes.json(),
         ]);
-
         setData((prev) => ({
           ...prev,
           [cat]: { produits, concurrents, prodConcurrents },
         }));
       } catch (err) {
-        console.error(`Erreur fetch ${cat}:`, err);
-        setData((prev) => ({
-          ...prev,
-          [cat]: { produits: [], concurrents: [], prodConcurrents: [] },
-        }));
+        console.error(err);
       }
     };
-
     fetchCategoryData(activeCategory);
   }, [activeCategory]);
 
-  // Geolocation
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) =>
         setForm((prev) => ({
           ...prev,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
+          latitude: pos.coords.latitude.toString(),
+          longitude: pos.coords.longitude.toString(),
         }))
       );
     }
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/sourceAppro/all", {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setSourcesList(data))
-      .catch(() => setSourcesList([]));
-  }, []);
-
-  useEffect(() => {
     if (!user) return;
-
-    fetch(`http://localhost:3000/api/mission/${user.id}`, {
+    fetch(`${URL}/api/mission/${user.id}`, {
       credentials: "include",
     })
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setMissions(data);
-        else setMissions([]);
-      })
+      .then((data) => setMissions(Array.isArray(data) ? data : []))
       .catch(() => setMissions([]));
   }, [user]);
 
@@ -178,25 +183,21 @@ export default function FormDialog({ open, onOpenChange }) {
         formData.append("Image", payload.Image);
       else formData.append(k, JSON.stringify(payload[k]));
     });
-
-    await fetch("http://localhost:3000/api/formulaire", {
+    await fetch(`${URL}/api/formulaire`, {
       method: "POST",
       body: formData,
       credentials: "include",
     });
-
     setStep(1);
     onOpenChange(false);
   };
 
-  if (userLoading) return <p>Loading...</p>;
-
   const renderStars = (value, onChange) => (
-    <div className="flex gap-1">
+    <div className="flex gap-2 py-2 justify-center">
       {[1, 2, 3, 4, 5].map((i) => (
         <span
           key={i}
-          className={`cursor-pointer text-xl ${
+          className={`cursor-pointer text-4xl transition-colors ${
             i <= value ? "text-yellow-400" : "text-gray-300"
           }`}
           onClick={() => onChange(i)}
@@ -207,344 +208,518 @@ export default function FormDialog({ open, onOpenChange }) {
     </div>
   );
 
+  if (userLoading) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[650px] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Formulaire Multi-Step</DialogTitle>
+      <DialogContent className="w-[95vw] sm:max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden bg-white">
+        <DialogHeader className="px-6 py-4 border-b shrink-0 bg-white z-10">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+            <ListChecks className="w-5 h-5 text-blue-600" />
+            Nouvelle Visite({step}/4)
+          </DialogTitle>
+          <div className="flex w-full gap-2 mt-2">
+            {[1, 2, 3, 4].map((s) => (
+              <div
+                key={s}
+                className={`h-1.5 flex-1 rounded-full transition-all ${
+                  step >= s ? "bg-blue-600" : "bg-gray-100"
+                }`}
+              />
+            ))}
+          </div>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-          {/* STEP 1 */}
-          {step === 1 && (
-            <div className="space-y-2">
-              <select
-                className="border rounded p-2 w-full"
-                onChange={(e) =>
-                  setForm({ ...form, mission_id: Number(e.target.value) })
-                }
-              >
-                <option value="">Selectionner Mission</option>
-                {missions.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.Objectif}
-                  </option>
-                ))}
-              </select>
-              <Input
-                placeholder="Fullname"
-                value={form.Fullname}
-                onChange={(e) => setForm({ ...form, Fullname: e.target.value })}
-              />
-              <Input
-                placeholder="Tel"
-                value={form.Tel}
-                onChange={(e) => setForm({ ...form, Tel: e.target.value })}
-              />
-              <Input
-                placeholder="Nom Magasin"
-                value={form.nom_magasin}
-                onChange={(e) =>
-                  setForm({ ...form, nom_magasin: e.target.value })
-                }
-              />
-              <Input placeholder="Longitude" value={form.longitude} readOnly />
-              <Input placeholder="Latitude" value={form.latitude} readOnly />
-              <Input
-                placeholder="Activité"
-                value={form.Activite}
-                onChange={(e) => setForm({ ...form, Activite: e.target.value })}
-              />
 
-              {/* Popover Ville */}
-              <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    {form.algeriaCitiesId
-                      ? cities.find((c) => c.id === form.algeriaCitiesId)?.name
-                      : "Sélectionner Ville"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 max-h-60 overflow-y-auto">
-                  <Command>
-                    <CommandInput
-                      placeholder="Rechercher ville..."
-                      value={citySearch}
-                      onValueChange={setCitySearch}
-                      className="h-9"
+        <div className="flex-1 overflow-y-auto px-6 py-4 bg-slate-50/30">
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* STEP 1 */}
+            {step === 1 && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="text-sm font-medium">Mission</label>
+                    <select
+                      className="w-full border rounded-md p-2 bg-white"
+                      value={form.mission_id || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, mission_id: Number(e.target.value) })
+                      }
+                    >
+                      <option value="">Sélectionner Mission</option>
+                      {missions.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.Objectif}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Nom Client</label>
+                    <Input
+                      value={form.Fullname}
+                      onChange={(e) =>
+                        setForm({ ...form, Fullname: e.target.value })
+                      }
                     />
-                    <CommandEmpty>Aucune ville trouvée.</CommandEmpty>
-                    <CommandGroup>
-                      {cities
-                        .filter((c) =>
-                          c.name
-                            .toLowerCase()
-                            .includes(citySearch.toLowerCase())
-                        )
-                        .map((c) => (
-                          <CommandItem
-                            key={c.id}
-                            value={c.name}
-                            onSelect={() => {
-                              setForm({ ...form, algeriaCitiesId: c.id });
-                              setCityPopoverOpen(false);
-                              setCitySearch("");
-                            }}
-                          >
-                            {c.name}
-                          </CommandItem>
-                        ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          )}
-
-          {/* STEP 2 */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="flex justify-center gap-6">
-                {categories.map((cat) => (
-                  <label
-                    key={cat}
-                    className={`flex items-center gap-2 capitalize cursor-pointer ${
-                      activeCategory === cat ? "font-bold text-blue-600" : ""
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="categorie"
-                      checked={activeCategory === cat}
-                      onChange={() => setActiveCategory(cat)}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Téléphone</label>
+                    <Input
+                      value={form.Tel}
+                      onChange={(e) =>
+                        setForm({ ...form, Tel: e.target.value })
+                      }
                     />
-                    {cat}
-                  </label>
-                ))}
+                  </div>
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="text-sm font-medium">Nom Magasin</label>
+                    <Input
+                      value={form.nom_magasin}
+                      onChange={(e) =>
+                        setForm({ ...form, nom_magasin: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  {/* AJOUT LATITUDE ET LONGITUDE */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Latitude</label>
+                    <Input
+                      value={form.latitude}
+                      onChange={(e) =>
+                        setForm({ ...form, latitude: e.target.value })
+                      }
+                      placeholder="Géo-localisation..."
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Longitude</label>
+                    <Input
+                      value={form.longitude}
+                      onChange={(e) =>
+                        setForm({ ...form, longitude: e.target.value })
+                      }
+                      placeholder="Géo-localisation..."
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Ville</label>
+                    <Popover
+                      open={cityPopoverOpen}
+                      onOpenChange={setCityPopoverOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between bg-white"
+                        >
+                          {form.algeriaCitiesId
+                            ? cities.find((c) => c.id === form.algeriaCitiesId)
+                                ?.name
+                            : "Choisir ville"}
+                          <MapPin className="w-4 h-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Rechercher..."
+                            onValueChange={setCitySearch}
+                          />
+                          <CommandGroup className="max-h-60 overflow-y-auto">
+                            {cities
+                              .filter((c) =>
+                                c.name
+                                  .toLowerCase()
+                                  .includes(citySearch.toLowerCase())
+                              )
+                              .map((c) => (
+                                <CommandItem
+                                  key={c.id}
+                                  onSelect={() => {
+                                    setForm({ ...form, algeriaCitiesId: c.id });
+                                    setCityPopoverOpen(false);
+                                  }}
+                                >
+                                  {c.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Activité</label>
+                    <select
+                      className="w-full border rounded-md p-2 bg-white"
+                      value={form.Activite}
+                      onChange={(e) =>
+                        setForm({ ...form, Activite: e.target.value })
+                      }
+                    >
+                      <option value="">Sélectionner</option>
+                      {activites.map((act) => (
+                        <option key={act.id} value={act.name}>
+                          {act.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
+            )}
 
-              <div className="space-y-4">
-                {["produits", "concurrents", "prodConcurrents"].map((key) => {
-                  const labelMap = {
-                    produits: "Produits",
-                    concurrents: "Concurrents",
-                    prodConcurrents: "Produits concurrents",
-                  };
-
-                  return (
-                    <div key={key} className="space-y-1">
-                      <label className="font-medium">{labelMap[key]}</label>
-                      <select
-                        multiple
-                        className="w-full border rounded p-2"
-                        value={selected[activeCategory][key]}
-                        onChange={(e) =>
-                          setSelected((prev) => ({
-                            ...prev,
-                            [activeCategory]: {
-                              ...prev[activeCategory],
-                              [key]: [...e.target.selectedOptions].map(
-                                (o) => o.value
-                              ),
-                            },
-                          }))
-                        }
-                      >
-                        {data[activeCategory][key].map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3 */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="font-bold">Source d'approvisionnement</label>
-                <select
-                  multiple
-                  className="w-full border rounded p-2"
-                  value={form.sourceAppro}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      sourceAppro: [...e.target.selectedOptions].map((o) =>
-                        Number(o.value)
-                      ),
-                    })
-                  }
-                >
-                  {sourcesList?.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ( {""}
-                      {s.Surname} {""})
-                    </option>
+            {/* STEP 2 */}
+            {step === 2 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b">
+                  {categories.map((cat) => (
+                    <Button
+                      key={cat}
+                      variant={activeCategory === cat ? "default" : "outline"}
+                      onClick={() => setActiveCategory(cat)}
+                      className="capitalize shrink-0"
+                    >
+                      {cat}
+                    </Button>
                   ))}
-                </select>
+                </div>
+
+                {["produits", "concurrents", "prodConcurrents"].map((key) => (
+                  <div key={key} className="space-y-3">
+                    <h3 className="font-bold text-xs uppercase text-slate-400 tracking-wider">
+                      {key === "produits"
+                        ? "Nos Produits"
+                        : key === "concurrents"
+                        ? "Concurrents"
+                        : "Produits Concurrents"}
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {data[activeCategory][key].map((item) => {
+                        const isSelected = selected[activeCategory][
+                          key
+                        ].includes(String(item.id));
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              const list = selected[activeCategory][key];
+                              const next = isSelected
+                                ? list.filter((id) => id !== String(item.id))
+                                : [...list, String(item.id)];
+                              setSelected({
+                                ...selected,
+                                [activeCategory]: {
+                                  ...selected[activeCategory],
+                                  [key]: next,
+                                },
+                              });
+                            }}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                              isSelected
+                                ? "bg-blue-50 border-blue-500 text-blue-700"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
+                            }`}
+                          >
+                            <div
+                              className={`w-4 h-4 rounded border flex items-center justify-center ${
+                                isSelected
+                                  ? "bg-blue-600 border-blue-600"
+                                  : "bg-white"
+                              }`}
+                            >
+                              {isSelected && (
+                                <Check className="w-3 h-3 text-white" />
+                              )}
+                            </div>
+                            <span className="text-sm font-medium">
+                              {item.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <p className="font-bold">Cadeaux :</p>
+            )}
+
+            {/* STEP 3 */}
+            {step === 3 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-3">
+                  <label className="font-bold text-sm text-slate-600">
+                    Source d'approvisionnement
+                  </label>
+
+                  {/* SOURCE APPRO COMBOBOX */}
+                  <Popover
+                    open={sourcePopoverOpen}
+                    onOpenChange={setSourcePopoverOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between bg-white h-auto min-h-[40px] text-left"
+                      >
+                        <div className="flex flex-wrap gap-1">
+                          {form.sourceAppro.length > 0 ? (
+                            form.sourceAppro.map((id) => (
+                              <Badge
+                                key={id}
+                                variant="secondary"
+                                className="font-normal"
+                              >
+                                {sourcesList.find((s) => s.ID === id)?.name}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-slate-500">
+                              Sélectionner source(s)
+                            </span>
+                          )}
+                        </div>
+                        <Search className="w-4 h-4 opacity-50 ml-2 shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[350px] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Rechercher une source..."
+                          onValueChange={setSourceSearch}
+                        />
+                        <CommandEmpty>Aucune source trouvée.</CommandEmpty>
+                        <CommandGroup className="max-h-60 overflow-y-auto">
+                          {sourcesList
+                            .filter((s) =>
+                              s.name
+                                .toLowerCase()
+                                .includes(sourceSearch.toLowerCase())
+                            )
+                            .map((s) => (
+                              <CommandItem
+                                key={s.ID}
+                                onSelect={() => {
+                                  const isSelected = form.sourceAppro.includes(
+                                    s.ID
+                                  );
+                                  setForm({
+                                    ...form,
+                                    sourceAppro: isSelected
+                                      ? form.sourceAppro.filter(
+                                          (id) => id !== s.ID
+                                        )
+                                      : [...form.sourceAppro, s.ID],
+                                  });
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    form.sourceAppro.includes(s.ID)
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  }`}
+                                />
+                                {s.name}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="font-bold text-sm text-slate-600">
+                    Cadeaux & Marketing
+                  </label>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between h-12 bg-white"
+                    onClick={() => setCadeauxOpen(true)}
+                  >
+                    <span>{form.cadeaux.length} cadeau(x) sélectionnés</span>
+                    <ChevronRight className="w-4 h-4 opacity-50" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {["plaques", "espacepub", "packDetaillant"].map((k) => (
+                    <label
+                      key={k}
+                      className={`flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
+                        form[k] ? "bg-blue-50 border-blue-500" : "bg-white"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form[k]}
+                        onChange={(e) =>
+                          setForm({ ...form, [k]: e.target.checked })
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span className="text-[10px] font-bold uppercase text-slate-500">
+                        {k.replace("espacepub", "Pub")}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="border-2 border-dashed rounded-xl p-8 bg-white text-center hover:bg-slate-50 transition-colors">
+                  <input
+                    type="file"
+                    id="image-up"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setForm({ ...form, Image: e.target.files[0] })
+                    }
+                  />
+                  <label
+                    htmlFor="image-up"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Upload className="w-8 h-8 text-blue-500" />
+                    <span className="text-sm font-medium text-slate-600">
+                      {form.Image
+                        ? form.Image.name
+                        : "Cliquez pour uploader une photo"}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4 */}
+            {/* STEP 4 */}
+            {step === 4 && (
+              <div className="space-y-6 animate-in zoom-in-95 duration-300">
+                <div className="grid grid-cols-1 gap-4">
+                  {[
+                    { l: "Satisfaction Client", k: "SatisfactionCli" },
+                    { l: "Évaluation BMS", k: "evalueBms" },
+                    { l: "Produit Concurrent", k: "evaluconcurrent" },
+                  ].map((item) => (
+                    <div
+                      key={item.k}
+                      className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-center"
+                    >
+                      <p className="font-bold text-slate-700 text-sm mb-1">
+                        {item.l}
+                      </p>
+                      {renderStars(form[item.k], (val) =>
+                        setForm({ ...form, [item.k]: val })
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* CHAMP COMMENTAIRE */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-600">
+                    Commentaires ou observations
+                  </label>
+                  <textarea
+                    className="w-full min-h-[120px] p-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm shadow-sm"
+                    placeholder="Rédigez vos remarques ici..."
+                    value={form.commentaire}
+                    onChange={(e) =>
+                      setForm({ ...form, commentaire: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="px-6 py-4 border-t bg-white shrink-0 flex flex-row items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={handlePrev}
+            disabled={step === 1}
+            className={step === 1 ? "invisible" : "flex items-center"}
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" /> Précédent
+          </Button>
+
+          {step < 4 ? (
+            <Button
+              onClick={handleNext}
+              className="bg-blue-600 hover:bg-blue-700 px-10 shadow-md text-white"
+            >
+              Suivant <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              className="bg-green-600 hover:bg-green-700 px-10 shadow-md text-white"
+            >
+              Valider
+            </Button>
+          )}
+        </DialogFooter>
+
+        {/* MODAL CADEAUX */}
+        <Dialog open={cadeauxOpen} onOpenChange={setCadeauxOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Sélectionner Cadeaux</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto p-1">
               {cadeauxList.map((c) => {
-                const cadeauSelected = form.cadeaux.find(
-                  (item) => item.id === c.id
-                );
+                const sel = form.cadeaux.find((i) => i.id === c.id);
                 return (
                   <div
                     key={c.id}
-                    className="flex items-center gap-2 cursor-pointer"
-                    onClick={(e) => {
-                      if (e.target.tagName === "INPUT") return;
-
-                      const isChecked = !!cadeauSelected;
-                      if (!isChecked) {
-                        setForm((prev) => ({
-                          ...prev,
-                          cadeaux: [...prev.cadeaux, { id: c.id, qty: 1 }],
-                        }));
-                      } else {
-                        setForm((prev) => ({
-                          ...prev,
-                          cadeaux: prev.cadeaux.filter(
-                            (item) => item.id !== c.id
-                          ),
-                        }));
-                      }
-                    }}
+                    className="flex items-center justify-between p-3 border rounded-lg"
                   >
-                    <input
-                      type="checkbox"
-                      checked={!!cadeauSelected}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        if (isChecked) {
-                          setForm((prev) => ({
-                            ...prev,
-                            cadeaux: [...prev.cadeaux, { id: c.id, qty: 1 }],
-                          }));
-                        } else {
-                          setForm((prev) => ({
-                            ...prev,
-                            cadeaux: prev.cadeaux.filter(
-                              (item) => item.id !== c.id
-                            ),
-                          }));
-                        }
-                      }}
-                    />
-                    <span>{c.name}</span>
-                    {cadeauSelected && (
+                    <div className="flex items-center gap-3">
                       <input
+                        type="checkbox"
+                        checked={!!sel}
+                        onChange={() => {
+                          setForm((p) => ({
+                            ...p,
+                            cadeaux: sel
+                              ? p.cadeaux.filter((i) => i.id !== c.id)
+                              : [...p.cadeaux, { id: c.id, qty: 1 }],
+                          }));
+                        }}
+                      />
+                      <span className="text-sm font-medium">{c.name}</span>
+                    </div>
+                    {sel && (
+                      <Input
                         type="number"
-                        min={1}
-                        className="w-16 border rounded p-1"
-                        value={cadeauSelected.qty}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            cadeaux: prev.cadeaux.map((item) =>
-                              item.id === c.id
-                                ? { ...item, qty: Number(e.target.value) }
-                                : item
+                        className="w-20 h-8"
+                        min="1"
+                        value={sel.qty}
+                        onChange={(e) => {
+                          setForm((p) => ({
+                            ...p,
+                            cadeaux: p.cadeaux.map((i) =>
+                              i.id === c.id
+                                ? { ...i, qty: Number(e.target.value) }
+                                : i
                             ),
-                          }))
-                        }
+                          }));
+                        }}
                       />
                     )}
                   </div>
                 );
               })}
-
-              <select
-                multiple
-                className="w-full border rounded p-2"
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    sourceAppro: [...e.target.selectedOptions].map((o) =>
-                      Number(o.value)
-                    ),
-                  })
-                }
-              >
-                {sourcesList?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nom}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex gap-4">
-                {["plaques", "espacepub", "packDetaillant"].map((key) => (
-                  <label key={key} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={form[key]}
-                      onChange={(e) =>
-                        setForm({ ...form, [key]: e.target.checked })
-                      }
-                    />
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </label>
-                ))}
-              </div>
-
-              <div>
-                <label className="font-bold">Image : </label> <br />
-                <br />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) =>
-                    setForm({ ...form, Image: e.target.files[0] })
-                  }
-                />
-              </div>
             </div>
-          )}
-
-          {/* STEP 4 */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <div>
-                <p>Satisfaction Client :</p>
-                {renderStars(form.SatisfactionCli, (val) =>
-                  setForm({ ...form, SatisfactionCli: val })
-                )}
-              </div>
-              <div>
-                <p>Évaluation BMS :</p>
-                {renderStars(form.evalueBms, (val) =>
-                  setForm({ ...form, evalueBms: val })
-                )}
-              </div>
-              <div>
-                <p>Évaluation Produit Concurrent :</p>
-                {renderStars(form.evaluconcurrent, (val) =>
-                  setForm({ ...form, evaluconcurrent: val })
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* FOOTER */}
-        <DialogFooter className="flex justify-between border-t pt-3">
-          {step > 1 && (
-            <Button variant="outline" onClick={handlePrev}>
-              Précédent
+            <Button onClick={() => setCadeauxOpen(false)} className="w-full">
+              Confirmer
             </Button>
-          )}
-          {step < 4 ? (
-            <Button onClick={handleNext}>Suivant</Button>
-          ) : (
-            <Button onClick={handleSubmit}>Submit</Button>
-          )}
-        </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

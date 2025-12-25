@@ -12,6 +12,8 @@ import { Pencil, Trash2, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { URL } from "@/api";
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -86,7 +88,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/product/disjoncteur", {
+      const res = await fetch(`${URL}/api/product/disjoncteur`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -124,13 +126,10 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(
-      `http://localhost:3000/api/product/disjoncteur/${deleteProductTarget.ID}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    await fetch(`${URL}/api/product/disjoncteur/${deleteProductTarget.ID}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     setOpenDeleteDialog(false);
     fetchProducts();
   };
@@ -138,17 +137,14 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(
-        `http://localhost:3000/api/product/disjoncteur/${selectedProduct.ID}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(form),
-        }
-      );
+      await fetch(`${URL}/api/product/disjoncteur/${selectedProduct.ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
     } else {
-      await fetch("http://localhost:3000/api/product/disjoncteur", {
+      await fetch(`${URL}/api/product/disjoncteur`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

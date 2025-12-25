@@ -12,7 +12,7 @@ const UpdateCadeau = async (req, res) => {
       return res.status(404).json({ message: "cadeau introuvable." });
     }
 
-    await cad.update(name);
+    await cad.update({ name });
     res.status(200).json({
       message: "Cadeau mise à jour avec succès.",
       data: cad,

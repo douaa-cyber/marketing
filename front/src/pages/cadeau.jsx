@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { URL } from "@/api";
 
 // ===== Columns =====
 const columns = (onEdit, onDelete) => [
@@ -86,7 +87,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/cadeau/all", {
+      const res = await fetch(`${URL}/api/cadeau/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -142,7 +143,7 @@ export default function ProductsPage() {
         body: JSON.stringify(form),
       });
     } else {
-      await fetch("http://localhost:3000/api/cadeau", {
+      await fetch(`${URL}/api/cadeau`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -256,7 +257,7 @@ export default function ProductsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedProduct ? "Modifier Produit" : "Créer Produit"}
+              {selectedProduct ? "Modifier Cadeau" : "Créer Cadeau"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">

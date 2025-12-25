@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,12 +87,9 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/product/appareillage",
-        {
-          credentials: "include",
-        }
-      );
+      const res = await fetch(`${URL}/api/product/appareillage`, {
+        credentials: "include",
+      });
       const data = await res.json();
       setProducts(data);
     } catch (err) {
@@ -127,13 +125,10 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(
-      `http://localhost:3000/api/product/appareillage/${deleteProductTarget.id}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    await fetch(`${URL}/api/product/appareillage/${deleteProductTarget.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     setOpenDeleteDialog(false);
     fetchProducts();
   };
@@ -141,17 +136,14 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(
-        `http://localhost:3000/api/product/appareillage/${selectedProduct.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(form),
-        }
-      );
+      await fetch(`${URL}/api/product/appareillage/${selectedProduct.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
     } else {
-      await fetch("http://localhost:3000/api/product/appareillage", {
+      await fetch(`${URL}/api/product/appareillage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

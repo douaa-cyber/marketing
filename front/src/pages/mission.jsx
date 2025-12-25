@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Pencil, Trash2, ChevronDown, Check } from "lucide-react";
+import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +107,7 @@ export default function MissionsPage() {
   const fetchMissions = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/mission/all", {
+      const res = await fetch(`${URL}/api/mission/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -121,7 +122,7 @@ export default function MissionsPage() {
 
   const fetchAgents = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/user/agents", {
+      const res = await fetch(`${URL}/api/user/agents`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -164,8 +165,8 @@ export default function MissionsPage() {
 
   const handleSubmit = async () => {
     const url = selectedMission
-      ? `http://localhost:3000/api/mission/${selectedMission.id}`
-      : "http://localhost:3000/api/mission";
+      ? `${URL}/api/mission/${selectedMission.id}`
+      : `${URL}/api/mission`;
 
     await fetch(url, {
       method: selectedMission ? "PUT" : "POST",
@@ -184,7 +185,7 @@ export default function MissionsPage() {
   };
 
   const confirmDelete = async () => {
-    await fetch(`http://localhost:3000/api/mission/${deleteTarget.id}`, {
+    await fetch(`${URL}/api/mission/${deleteTarget.id}`, {
       method: "DELETE",
       credentials: "include",
     });
