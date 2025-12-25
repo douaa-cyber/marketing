@@ -29,7 +29,27 @@ const GetLocationById = async (req, res) => {
   }
 };
 
+const GetLocationForForm = async (req, res) => {
+  try {
+    const locations = await Location.findAll();
+
+    if (!locations || locations.length === 0) {
+      return res.status(404).json({ message: "Location introuvable." });
+    }
+
+    const ville = locations.map((v) => ({
+      name: `${v.wilaya} - ${v.Daira} - ${v.Commune}`,
+      id: v.id,
+    }));
+
+    res.status(200).json(ville);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   GetAllLocation,
   GetLocationById,
+  GetLocationForForm,
 };

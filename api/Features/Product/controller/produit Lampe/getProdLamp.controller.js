@@ -2,7 +2,7 @@ const ProduitLampe = require("../../model/ProduitLampe");
 
 const getProduitLampe = async (req, res) => {
   try {
-    const item = await ProduitLampe.findByPk(req.params.id);
+    const item = await ProduitLampe.findAll();
     if (!item) {
       return res.status(404).json({ message: "ProduitLampe not found" });
     }

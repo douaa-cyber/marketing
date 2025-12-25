@@ -125,7 +125,7 @@ export default function ProductsPage() {
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
     await fetch(
-      `http://localhost:3000/api/product/disjoncteur/${deleteProductTarget.id}`,
+      `http://localhost:3000/api/product/disjoncteur/${deleteProductTarget.ID}`,
       {
         method: "DELETE",
         credentials: "include",
@@ -139,7 +139,7 @@ export default function ProductsPage() {
     if (selectedProduct) {
       // Update
       await fetch(
-        `http://localhost:3000/api/product/disjoncteur/${selectedProduct.id}`,
+        `http://localhost:3000/api/product/disjoncteur/${selectedProduct.ID}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

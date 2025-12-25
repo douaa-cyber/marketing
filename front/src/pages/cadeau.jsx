@@ -124,7 +124,7 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(`http://localhost:3000/api/cadeau/${deleteProductTarget.id}`, {
+    await fetch(`http://localhost:3000/api/cadeau/${deleteProductTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -135,7 +135,7 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(`http://localhost:3000/api/cadeau/${selectedProduct.id}`, {
+      await fetch(`http://localhost:3000/api/cadeau/${selectedProduct.ID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

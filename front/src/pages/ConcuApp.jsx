@@ -128,7 +128,7 @@ export default function ProductsPage() {
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
     await fetch(
-      `http://localhost:3000/api/concurrent/appareillage/${deleteProductTarget.id}`,
+      `http://localhost:3000/api/concurrent/appareillage/${deleteProductTarget.ID}`,
       {
         method: "DELETE",
         credentials: "include",
@@ -142,7 +142,7 @@ export default function ProductsPage() {
     if (selectedProduct) {
       // Update
       await fetch(
-        `http://localhost:3000/api/concurrent/appareillage/${selectedProduct.id}`,
+        `http://localhost:3000/api/concurrent/appareillage/${selectedProduct.ID}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
