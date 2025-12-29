@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { AuthContext } from "@/context/AuthContext";
@@ -15,31 +15,47 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 export default function Login() {
-  const { setUser } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     try {
       const res = await fetch(`${URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // important for cookies
         body: JSON.stringify({ username, password }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
         setError(data.message || "Login failed");
         return;
       }
-      setUser(data.user);
+
+      // **Update the user context**
+      setUser(data.user || data); // depends on backend response structure
+
+      // Navigate after login
       navigate("/");
     } catch (err) {
-      setError("Server error", err);
+      console.error(err);
+      setError("Server error. Please try again.");
     }
   };
 

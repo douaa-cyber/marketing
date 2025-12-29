@@ -61,7 +61,7 @@ export default function FormDialog({ open, onOpenChange }) {
     latitude: "",
     longitude: "",
     algeriaCitiesId: null,
-    Activite: "",
+    ActiviteId: null,
     plaques: false,
     espacepub: false,
     packDetaillant: false,
@@ -174,20 +174,70 @@ export default function FormDialog({ open, onOpenChange }) {
 
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
+  const normalizeSelections = (sel) => {
+    const out = {};
+
+    Object.keys(sel).forEach((cat) => {
+      out[cat] = {
+        produits: sel[cat].produits.map((id) => ({
+          produitId: Number(id),
+        })),
+        concurrents: sel[cat].concurrents.map((id) => ({
+          concurrentId: Number(id),
+        })),
+        prodConcurrents: sel[cat].prodConcurrents.map((id) => ({
+          prodConcurrentId: Number(id),
+        })),
+      };
+    });
+    console.log(out);
+    return out;
+  };
+
+  const normalizeCadeaux = (cadeaux) =>
+    cadeaux.map((c) => ({
+      cadeauId: c.id,
+      quantite: Number(c.qty),
+    }));
 
   const handleSubmit = async () => {
-    const payload = { ...form, selections: selected };
     const formData = new FormData();
-    Object.keys(payload).forEach((k) => {
-      if (k === "Image" && payload.Image)
+
+    const cleanValue = (value) => {
+      if (value === null || value === undefined) return null;
+
+      if (value instanceof File) return value;
+
+      if (typeof value === "object") return JSON.stringify(value);
+
+      if (value === true || value === false) return value;
+
+      if (!isNaN(value) && value !== "") return Number(value);
+
+      return value;
+    };
+
+    const payload = {
+      ...form,
+      cadeaux: normalizeCadeaux(form.cadeaux),
+      selections: normalizeSelections(selected),
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (key === "Image" && payload.Image) {
         formData.append("Image", payload.Image);
-      else formData.append(k, JSON.stringify(payload[k]));
+      } else {
+        const val = cleanValue(payload[key]);
+        if (val !== null) formData.append(key, val);
+      }
     });
-    await fetch(`${URL}/api/formulaire`, {
+
+    await fetch(`${URL}/api/form`, {
       method: "POST",
       body: formData,
       credentials: "include",
     });
+
     setStep(1);
     onOpenChange(false);
   };
@@ -355,14 +405,14 @@ export default function FormDialog({ open, onOpenChange }) {
                     <label className="text-sm font-medium">Activité</label>
                     <select
                       className="w-full border rounded-md p-2 bg-white"
-                      value={form.Activite}
+                      value={form.ActiviteId || ""}
                       onChange={(e) =>
-                        setForm({ ...form, Activite: e.target.value })
+                        setForm({ ...form, ActiviteId: Number(e.target.value) })
                       }
                     >
                       <option value="">Sélectionner</option>
                       {activites.map((act) => (
-                        <option key={act.id} value={act.name}>
+                        <option key={act.ID} value={act.ID}>
                           {act.name}
                         </option>
                       ))}
@@ -401,15 +451,15 @@ export default function FormDialog({ open, onOpenChange }) {
                       {data[activeCategory][key].map((item) => {
                         const isSelected = selected[activeCategory][
                           key
-                        ].includes(String(item.id));
+                        ].includes(String(item.ID));
                         return (
                           <div
-                            key={item.id}
+                            key={item.ID}
                             onClick={() => {
                               const list = selected[activeCategory][key];
                               const next = isSelected
-                                ? list.filter((id) => id !== String(item.id))
-                                : [...list, String(item.id)];
+                                ? list.filter((id) => id !== String(item.ID))
+                                : [...list, String(item.ID)];
                               setSelected({
                                 ...selected,
                                 [activeCategory]: {
@@ -672,10 +722,10 @@ export default function FormDialog({ open, onOpenChange }) {
             </DialogHeader>
             <div className="space-y-3 max-h-[50vh] overflow-y-auto p-1">
               {cadeauxList.map((c) => {
-                const sel = form.cadeaux.find((i) => i.id === c.id);
+                const sel = form.cadeaux.find((i) => i.id === c.ID);
                 return (
                   <div
-                    key={c.id}
+                    key={c.ID}
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
@@ -686,8 +736,8 @@ export default function FormDialog({ open, onOpenChange }) {
                           setForm((p) => ({
                             ...p,
                             cadeaux: sel
-                              ? p.cadeaux.filter((i) => i.id !== c.id)
-                              : [...p.cadeaux, { id: c.id, qty: 1 }],
+                              ? p.cadeaux.filter((i) => i.id !== c.ID)
+                              : [...p.cadeaux, { id: c.ID, qty: 1 }],
                           }));
                         }}
                       />
@@ -703,7 +753,7 @@ export default function FormDialog({ open, onOpenChange }) {
                           setForm((p) => ({
                             ...p,
                             cadeaux: p.cadeaux.map((i) =>
-                              i.id === c.id
+                              i.id === c.ID
                                 ? { ...i, qty: Number(e.target.value) }
                                 : i
                             ),

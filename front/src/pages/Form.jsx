@@ -46,7 +46,7 @@ export default function FormulairesPage() {
   const fetchFormulaires = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/formulaire/all`, {
+      const res = await fetch(`${URL}/api/form/`, {
         credentials: "include",
       });
       const data = await res.json();
