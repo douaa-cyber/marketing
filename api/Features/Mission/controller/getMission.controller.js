@@ -18,7 +18,14 @@ const getMissionById = async (req, res) => {
         status: "ENCOURS",
         [Op.or]: [{ responsable_id: userId }, { agent_id: userId }],
       },
-      attributes: ["id", "Objectif", "agent_id", "responsable_id"],
+      attributes: [
+        "id",
+        "Objectif",
+        "agent_id",
+        "responsable_id",
+        "date_deb",
+        "date_fin",
+      ],
     });
 
     if (!missions || missions.length === 0) {
