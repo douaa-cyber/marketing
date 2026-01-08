@@ -5,11 +5,15 @@ const authMiddleware = require("../../../middleware/Auth");
 const UserController = require("../controller/index");
 
 router.get("/profile", authMiddleware, UserController.getProfile);
-router.get("/all", UserController.getAllUsers);
-router.get("/agents", UserController.getAllUsersFullnameAndUsername);
-router.get("/:id", UserController.getUserById);
-router.post("/", UserController.addUser);
-router.put("/:id", UserController.UpdateUser);
-router.delete("/:id", UserController.DeleteUser);
+router.get("/all", authMiddleware, UserController.getAllUsers);
+router.get(
+  "/agents",
+  authMiddleware,
+  UserController.getAllUsersFullnameAndUsername
+);
+router.get("/:id", authMiddleware, UserController.getUserById);
+router.post("/", authMiddleware, UserController.addUser);
+router.put("/:id", authMiddleware, UserController.UpdateUser);
+router.delete("/:id", authMiddleware, UserController.DeleteUser);
 
 module.exports = router;

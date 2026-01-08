@@ -45,62 +45,7 @@ const Formulaire = sequelize.define(
       allowNull: true,
     },
 
-    Activite: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
-    produitLampeId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    produitAppareillageId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    produitDisjoncteurId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    produitAccessoireId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
-    concurrentLampeId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    concurrentAppareillageId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    concurrentDisjoncteurId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    ConcurrentProduitAccessoireId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
-    ConcurrentProduitLampeId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    ConcurrentProduitAppareillageId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    ConcurrentProduitDisjoncteurId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    ConcurrentProduitAccessoireId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
-    SourceApproId: {
+    ActiviteId: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
@@ -132,8 +77,11 @@ const Formulaire = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
-
     plaque: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    packDetaillant: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },

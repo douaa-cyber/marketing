@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../../User/model/User");
-
+const hostname = process.env.hostname;
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -33,7 +33,7 @@ const login = async (req, res) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      domain: "10.88.134.193",
+      domain: hostname,
       maxAge: 3600000,
     });
 

@@ -1,0 +1,152 @@
+// Formulaire
+const Formulaire = require("../model/Formulaire");
+
+// Produits
+const ProduitLampe = require("../../Product/model/ProduitLampe");
+const ProduitAppareillage = require("../../Product/model/ProduitAppareillage");
+const ProduitDisjoncteur = require("../../Product/model/ProduitDisjoncteur");
+const ProduitAccessoire = require("../../Product/model/ProduitAccessoire");
+
+// Concurrents
+const ConcurrentLampe = require("../../Concurrent/model/ConcurrentLampe");
+const ConcurrentAppareillage = require("../../Concurrent/model/ConcurrentAppareillage");
+const ConcurrentDisjoncteur = require("../../Concurrent/model/ConcurrentDisjoncteur");
+const ConcurrentAccessoire = require("../../Concurrent/model/ConcurrentAccessoire");
+
+// Produits des concurrents
+const ProdConcurrentLampe = require("../../Product_Concurrent/model/ProdConcurrentLampe");
+const ProdConcurrentAppareillage = require("../../Product_Concurrent/model/ProdConcurrentAppareillage");
+const ProdConcurrentDisj = require("../../Product_Concurrent/model/ProdConcurrentDisjoncteur");
+const ProdConcurrentAccessoire = require("../../Product_Concurrent/model/ProdConcurrentAccessoire");
+
+// Source d'approvisionnement
+const SourceAppro = require("../../SourceAppro/model/SourceApprovisionement");
+const Form_prodLampe = require("../model/Form_ProduitLampe");
+const Form_prodAppareillage = require("../model/Form_ProdAppareillage");
+const Form_prodDisj = require("../model/Form_ProdDisjoncteur");
+const Form_prodAcc = require("../model/Form_ProdAccessoire");
+// Cadeaux
+const Cadeau = require("../../Cadeau/model/Cadeau");
+
+const getAllForms = async (req, res) => {
+  try {
+    const forms = await Formulaire.findAll({
+      include: [
+        // ================= PRODUITS =================
+        {
+          model: ProduitLampe,
+          through: { model: Form_prodLampe, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProduitAppareillage,
+          through: { model: Form_prodAppareillage, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProduitDisjoncteur,
+          through: { model: Form_prodDisj, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProduitAccessoire,
+          through: { model: Form_prodAcc, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+
+        // ================= CONCURRENTS =================
+        {
+          model: ConcurrentLampe,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ConcurrentAppareillage,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ConcurrentDisjoncteur,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ConcurrentAccessoire,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+
+        // ================= PRODUITS CONCURRENTS =================
+        {
+          model: ProdConcurrentLampe,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProdConcurrentAppareillage,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProdConcurrentDisj,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProdConcurrentAccessoire,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+
+        // ================= AUTRES =================
+        {
+          model: SourceAppro,
+          through: { attributes: [] },
+          attributes: ["ID", "name", "surname"],
+        },
+        {
+          model: Cadeau,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+      ],
+    });
+
+    res.status(200).json(forms);
+  } catch (error) {
+    console.error("getAllForms error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getFormById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const form = await Formulaire.findOne({
+      where: { ID: id },
+      include: [
+        {
+          model: ProduitLampe,
+          through: {
+            model: Form_prodLampe,
+            attributes: [],
+          },
+          attributes: ["ID", "name"],
+        },
+      ],
+    });
+
+    if (!form) return res.status(404).json({ message: "Form not found" });
+
+    res.status(200).json(form);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = {
+  getAllForms,
+  getFormById,
+};

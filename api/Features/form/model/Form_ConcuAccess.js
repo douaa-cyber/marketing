@@ -1,7 +1,7 @@
 const sequelize = require("../../../config/database");
 
-const Form_ConcuLampe = sequelize.define(
-  "Form_ConcuLampe",
+const Form_ConcuAccess = sequelize.define(
+  "Form_ConcuAccess",
   {},
   {
     timestamps: false,
@@ -9,4 +9,4 @@ const Form_ConcuLampe = sequelize.define(
   }
 );
 
-module.exports = Form_ConcuLampe;
+module.exports = Form_ConcuAccess;

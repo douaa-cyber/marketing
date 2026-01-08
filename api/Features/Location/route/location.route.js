@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../../../middleware/Auth");
 
 const LocationController = require("../controller/getLocation.controller");
 
-router.get("/", LocationController.GetAllLocation);
-router.get("/ville", LocationController.GetLocationForForm);
-router.get("/:id", LocationController.GetLocationById);
+router.get("/", authMiddleware, LocationController.GetAllLocation);
+router.get("/ville", authMiddleware, LocationController.GetLocationForForm);
+router.get("/:id", authMiddleware, LocationController.GetLocationById);
 
 module.exports = router;
