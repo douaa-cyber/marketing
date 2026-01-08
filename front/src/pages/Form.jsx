@@ -50,6 +50,7 @@ export default function FormulairesPage() {
         credentials: "include",
       });
       const data = await res.json();
+      console.log(data);
       setFormulaires(data);
     } catch (err) {
       console.error(err);
@@ -225,6 +226,7 @@ export default function FormulairesPage() {
         <FormDialog
           open={openDialog}
           onOpenChange={setOpenDialog}
+          selectedFormulaire={selectedFormulaire}
           missions={missions}
         />
       )}

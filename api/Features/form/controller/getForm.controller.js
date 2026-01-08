@@ -21,7 +21,10 @@ const ProdConcurrentAccessoire = require("../../Product_Concurrent/model/ProdCon
 
 // Source d'approvisionnement
 const SourceAppro = require("../../SourceAppro/model/SourceApprovisionement");
-
+const Form_prodLampe = require("../model/Form_ProduitLampe");
+const Form_prodAppareillage = require("../model/Form_ProdAppareillage");
+const Form_prodDisj = require("../model/Form_ProdDisjoncteur");
+const Form_prodAcc = require("../model/Form_ProdAccessoire");
 // Cadeaux
 const Cadeau = require("../../Cadeau/model/Cadeau");
 
@@ -29,30 +32,89 @@ const getAllForms = async (req, res) => {
   try {
     const forms = await Formulaire.findAll({
       include: [
-        // Produits
-        { model: ProduitLampe, through: { attributes: [] } },
-        { model: ProduitAppareillage, through: { attributes: [] } },
-        { model: ProduitDisjoncteur, through: { attributes: [] } },
-        { model: ProduitAccessoire, through: { attributes: [] } },
-        // Concurrents
-        { model: ConcurrentLampe, through: { attributes: [] } },
-        { model: ConcurrentAppareillage, through: { attributes: [] } },
-        { model: ConcurrentDisjoncteur, through: { attributes: [] } },
-        { model: ConcurrentAccessoire, through: { attributes: [] } },
-        // ProdConcurrent
-        { model: ProdConcurrentLampe, through: { attributes: [] } },
-        { model: ProdConcurrentAppareillage, through: { attributes: [] } },
-        { model: ProdConcurrentDisj, through: { attributes: [] } },
-        { model: ProdConcurrentAccessoire, through: { attributes: [] } },
-        // Cadeaux et SourceAppro
-        { model: SourceAppro, through: { attributes: [] } },
-        { model: Cadeau, through: { attributes: [] } },
+        // ================= PRODUITS =================
+        {
+          model: ProduitLampe,
+          through: { model: Form_prodLampe, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProduitAppareillage,
+          through: { model: Form_prodAppareillage, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProduitDisjoncteur,
+          through: { model: Form_prodDisj, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProduitAccessoire,
+          through: { model: Form_prodAcc, attributes: [] },
+          attributes: ["ID", "name"],
+        },
+
+        // ================= CONCURRENTS =================
+        {
+          model: ConcurrentLampe,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ConcurrentAppareillage,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ConcurrentDisjoncteur,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ConcurrentAccessoire,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+
+        // ================= PRODUITS CONCURRENTS =================
+        {
+          model: ProdConcurrentLampe,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProdConcurrentAppareillage,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProdConcurrentDisj,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: ProdConcurrentAccessoire,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
+
+        // ================= AUTRES =================
+        {
+          model: SourceAppro,
+          through: { attributes: [] },
+          attributes: ["ID", "name", "surname"],
+        },
+        {
+          model: Cadeau,
+          through: { attributes: [] },
+          attributes: ["ID", "name"],
+        },
       ],
     });
-    console.log(forms);
+
     res.status(200).json(forms);
   } catch (error) {
-    console.error(error);
+    console.error("getAllForms error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -64,24 +126,14 @@ const getFormById = async (req, res) => {
     const form = await Formulaire.findOne({
       where: { ID: id },
       include: [
-        // Produits
-        { model: ProduitLampe, through: { attributes: [] } },
-        { model: ProduitAppareillage, through: { attributes: [] } },
-        { model: ProduitDisjoncteur, through: { attributes: [] } },
-        { model: ProduitAccessoire, through: { attributes: [] } },
-        // Concurrents
-        { model: ConcurrentLampe, through: { attributes: [] } },
-        { model: ConcurrentAppareillage, through: { attributes: [] } },
-        { model: ConcurrentDisjoncteur, through: { attributes: [] } },
-        { model: ConcurrentAccessoire, through: { attributes: [] } },
-        // ProdConcurrent
-        { model: ProdConcurrentLampe, through: { attributes: [] } },
-        { model: ProdConcurrentAppareillage, through: { attributes: [] } },
-        { model: ProdConcurrentDisj, through: { attributes: [] } },
-        { model: ProdConcurrentAccessoire, through: { attributes: [] } },
-        // Cadeaux et SourceAppro
-        { model: SourceAppro, through: { attributes: [] } },
-        { model: Cadeau, through: { attributes: [] } },
+        {
+          model: ProduitLampe,
+          through: {
+            model: Form_prodLampe,
+            attributes: [],
+          },
+          attributes: ["ID", "name"],
+        },
       ],
     });
 

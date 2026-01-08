@@ -37,24 +37,36 @@ import { URL } from "@/api";
 
 const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
 
-export default function FormDialog({ open, onOpenChange }) {
+export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
   const { user, loading: userLoading } = useContext(AuthContext);
   const [step, setStep] = useState(1);
+
   const [cities, setCities] = useState([]);
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+
+  const [activites, setActivites] = useState([]);
+  const [missions, setMissions] = useState([]);
+  const [sourcesList, setSourcesList] = useState([]);
   const [sourcePopoverOpen, setSourcePopoverOpen] = useState(false);
   const [sourceSearch, setSourceSearch] = useState("");
+
+  const [cadeauxList, setCadeauxList] = useState([]);
   const [cadeauxOpen, setCadeauxOpen] = useState(false);
   const [cadeauxSearch, setCadeauxSearch] = useState("");
 
-  const [activites, setActivites] = useState([]);
-  const [citySearch, setCitySearch] = useState("");
-  const [missions, setMissions] = useState([]);
-  const [sourcesList, setSourcesList] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("lampe");
 
-  const [form, setForm] = useState({
+  const [data, setData] = useState({
+    lampe: { produits: [], concurrents: [], prodConcurrents: [] },
+    appareillage: { produits: [], concurrents: [], prodConcurrents: [] },
+    disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
+    accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
+  });
+
+  const initialFormState = {
     mission_id: null,
-    utilisateur_id: null,
+    utilisateur_id: user?.id || null,
     Fullname: "",
     Tel: "",
     nom_magasin: "",
@@ -72,15 +84,9 @@ export default function FormDialog({ open, onOpenChange }) {
     SatisfactionCli: 0,
     evaluconcurrent: 0,
     commentaire: "",
-  });
+  };
 
-  const [activeCategory, setActiveCategory] = useState("lampe");
-  const [data, setData] = useState({
-    lampe: { produits: [], concurrents: [], prodConcurrents: [] },
-    appareillage: { produits: [], concurrents: [], prodConcurrents: [] },
-    disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
-    accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
-  });
+  const [form, setForm] = useState(initialFormState);
 
   const [selected, setSelected] = useState({
     lampe: { produits: [], concurrents: [], prodConcurrents: [] },
@@ -89,50 +95,55 @@ export default function FormDialog({ open, onOpenChange }) {
     accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
   });
 
-  const [cadeauxList, setCadeauxList] = useState([]);
-
-  // --- LOGIQUE EXISTANTE ---
+  // ----------------- Fetch Data -----------------
   useEffect(() => {
-    if (user) setForm((prev) => ({ ...prev, utilisateur_id: user.id }));
-  }, [user]);
+    if (!user) return;
+    setForm((prev) => ({ ...prev, utilisateur_id: user.id }));
 
-  useEffect(() => {
-    fetch(`${URL}/api/location/ville`, {
-      credentials: "include",
-    })
+    fetch(`${URL}/api/location/ville`, { credentials: "include" })
       .then((r) => r.json())
       .then(setCities)
       .catch(() => setCities([]));
+
     fetch(`${URL}/api/cadeau/all`, { credentials: "include" })
       .then((r) => r.json())
       .then(setCadeauxList)
       .catch(() => setCadeauxList([]));
-    fetch(`${URL}/api/sourceAppro/all`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
+
+    fetch(`${URL}/api/sourceAppro/all`, { credentials: "include" })
+      .then((r) => r.json())
       .then(setSourcesList)
       .catch(() => setSourcesList([]));
+
     fetch(`${URL}/api/activite/all`, { credentials: "include" })
-      .then((res) => res.json())
+      .then((r) => r.json())
       .then(setActivites)
       .catch(() => setActivites([]));
-  }, []);
+
+    fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setMissions(Array.isArray(d) ? d : []))
+      .catch(() => setMissions([]));
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setForm((prev) => ({
+          ...prev,
+          latitude: pos.coords.latitude.toString(),
+          longitude: pos.coords.longitude.toString(),
+        }));
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchCategoryData = async (cat) => {
       try {
         const [produitsRes, concurrentsRes, prodConcurrentsRes] =
           await Promise.all([
-            fetch(`${URL}/api/product/${cat}`, {
-              credentials: "include",
-            }),
-            fetch(`${URL}/api/concurrent/${cat}`, {
-              credentials: "include",
-            }),
-            fetch(`${URL}/api/productConcu/${cat}`, {
-              credentials: "include",
-            }),
+            fetch(`${URL}/api/product/${cat}`, { credentials: "include" }),
+            fetch(`${URL}/api/concurrent/${cat}`, { credentials: "include" }),
+            fetch(`${URL}/api/productConcu/${cat}`, { credentials: "include" }),
           ]);
         const [produits, concurrents, prodConcurrents] = await Promise.all([
           produitsRes.json(),
@@ -150,38 +161,34 @@ export default function FormDialog({ open, onOpenChange }) {
     fetchCategoryData(activeCategory);
   }, [activeCategory]);
 
+  // ----------------- Pré-remplissage si édition -----------------
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) =>
-        setForm((prev) => ({
-          ...prev,
-          latitude: pos.coords.latitude.toString(),
-          longitude: pos.coords.longitude.toString(),
-        }))
-      );
+    if (selectedFormulaire) {
+      setForm({
+        ...initialFormState,
+        ...selectedFormulaire,
+      });
+      setSelected(selectedFormulaire.selections || selected);
+    } else {
+      setForm(initialFormState);
+      setSelected({
+        lampe: { produits: [], concurrents: [], prodConcurrents: [] },
+        appareillage: { produits: [], concurrents: [], prodConcurrents: [] },
+        disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
+        accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
+      });
     }
-  }, []);
+  }, [selectedFormulaire]);
 
-  useEffect(() => {
-    if (!user) return;
-    fetch(`${URL}/api/mission/${user.id}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setMissions(Array.isArray(data) ? data : []))
-      .catch(() => setMissions([]));
-  }, [user]);
-
+  // ----------------- Handlers -----------------
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
+
   const normalizeSelections = (sel) => {
     const out = {};
-
     Object.keys(sel).forEach((cat) => {
       out[cat] = {
-        produits: sel[cat].produits.map((id) => ({
-          produitId: Number(id),
-        })),
+        produits: sel[cat].produits.map((id) => ({ produitId: Number(id) })),
         concurrents: sel[cat].concurrents.map((id) => ({
           concurrentId: Number(id),
         })),
@@ -190,56 +197,43 @@ export default function FormDialog({ open, onOpenChange }) {
         })),
       };
     });
-    console.log(out);
     return out;
   };
 
   const normalizeCadeaux = (cadeaux) =>
-    cadeaux.map((c) => ({
-      cadeauId: c.id,
-      quantite: Number(c.qty),
-    }));
+    cadeaux.map((c) => ({ cadeauId: c.id, quantite: Number(c.qty) }));
 
   const handleSubmit = async () => {
     const formData = new FormData();
 
-    const cleanValue = (value) => {
-      if (value === null || value === undefined) return null;
-
-      if (value instanceof File) return value;
-
-      if (typeof value === "object") return JSON.stringify(value);
-
-      if (value === true || value === false) return value;
-
-      if (!isNaN(value) && value !== "") return Number(value);
-
-      return value;
-    };
-
     const payload = {
       ...form,
-      cadeaux: normalizeCadeaux(form.cadeaux),
       selections: normalizeSelections(selected),
+      cadeaux: normalizeCadeaux(form.cadeaux),
     };
 
     Object.keys(payload).forEach((key) => {
-      if (key === "Image" && payload.Image) {
+      if (key === "Image" && payload.Image)
         formData.append("Image", payload.Image);
-      } else {
-        const val = cleanValue(payload[key]);
-        if (val !== null) formData.append(key, val);
-      }
+      else
+        formData.append(
+          key,
+          typeof payload[key] === "object"
+            ? JSON.stringify(payload[key])
+            : payload[key]
+        );
     });
 
-    await fetch(`${URL}/api/form`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
+    const url = selectedFormulaire
+      ? `${URL}/api/form/${selectedFormulaire.ID}`
+      : `${URL}/api/form`;
+    const method = selectedFormulaire ? "PUT" : "POST";
+
+    await fetch(url, { method, body: formData, credentials: "include" });
 
     setStep(1);
     onOpenChange(false);
+    if (onClose) onClose(); // Refresh parent
   };
 
   const renderStars = (value, onChange) => (
@@ -247,7 +241,7 @@ export default function FormDialog({ open, onOpenChange }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <span
           key={i}
-          className={`cursor-pointer text-4xl transition-colors ${
+          className={`cursor-pointer text-4xl ${
             i <= value ? "text-yellow-400" : "text-gray-300"
           }`}
           onClick={() => onChange(i)}
