@@ -11,6 +11,14 @@ import {
   CarFront,
   NotebookPen,
   Menu,
+  Lightbulb,
+  Package,
+  Plug,
+  Zap,
+  Truck,
+  Columns,
+  Gift,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,22 +32,38 @@ const items = [
     icon: Table,
     subItems: [
       { title: "Utilisateur", href: "/users", icon: UsersIcon },
-      { title: "Produit Accessoire", href: "/ProdAcc" },
-      { title: "Produit Appareillage", href: "/ProdApp" },
-      { title: "Produit Disjoncteur", href: "/ProdDisj" },
-      { title: "Produit Lampe", href: "/ProdLamp" },
-      { title: "Concurrent Accessoire", href: "/ConcuAcc" },
-      { title: "Concurrent Appareillage", href: "/ConcuApp" },
-      { title: "Concurrent Disjoncteur", href: "/ConcuDisj" },
-      { title: "Concurrent Lampe", href: "/ConcuLamp" },
-      { title: "Produit Concurrent Accessoire", href: "/ProdConcuAcc" },
-      { title: "Produit Concurrent Appareillage", href: "/ProdConcuApp" },
-      { title: "Produit Concurrent Disjoncteur", href: "/ProdConcuDisj" },
-      { title: "Produit Concurrent Lampe", href: "/ProdConcuLamp" },
-      { title: "Source Approvisionement", href: "/SourceAppro" },
-      { title: "Activite", href: "/Activite" },
-      { title: "Cadeau", href: "/Cadeau" },
-      { title: "Wilaya", href: "/Location" },
+      { title: "Produit Accessoire", href: "/ProdAcc", icon: Package },
+      { title: "Produit Appareillage", href: "/ProdApp", icon: Plug },
+      { title: "Produit Disjoncteur", href: "/ProdDisj", icon: Zap },
+      { title: "Produit Lampe", href: "/ProdLamp", icon: Lightbulb },
+      { title: "Concurrent Accessoire", href: "/ConcuAcc", icon: Package },
+      { title: "Concurrent Appareillage", href: "/ConcuApp", icon: Plug },
+      { title: "Concurrent Disjoncteur", href: "/ConcuDisj", icon: Zap },
+      { title: "Concurrent Lampe", href: "/ConcuLamp", icon: Lightbulb },
+      {
+        title: "Produit Concurrent Accessoire",
+        href: "/ProdConcuAcc",
+        icon: Package,
+      },
+      {
+        title: "Produit Concurrent Appareillage",
+        href: "/ProdConcuApp",
+        icon: Plug,
+      },
+      {
+        title: "Produit Concurrent Disjoncteur",
+        href: "/ProdConcuDisj",
+        icon: Zap,
+      },
+      {
+        title: "Produit Concurrent Lampe",
+        href: "/ProdConcuLamp",
+        icon: Lightbulb,
+      },
+      { title: "Source Approvisionement", href: "/SourceAppro", icon: Truck },
+      { title: "Activite", href: "/Activite", icon: Columns },
+      { title: "Cadeau", href: "/Cadeau", icon: Gift },
+      { title: "Wilaya", href: "/Location", icon: MapPin },
     ],
   },
   { title: "Mission", href: "/Mission", icon: CarFront },
@@ -105,7 +129,7 @@ export default function Sidebar() {
         className={cn(
           "fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300 flex flex-col",
           isSidebarOpen ? "w-64" : "w-16",
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
         {/* Logo */}
@@ -137,7 +161,7 @@ export default function Sidebar() {
                       <ChevronDown
                         className={cn(
                           "h-4 w-4 transition-transform",
-                          openItems[item.title] ? "rotate-180" : "rotate-0"
+                          openItems[item.title] ? "rotate-180" : "rotate-0",
                         )}
                       />
                     )}

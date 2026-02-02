@@ -18,41 +18,41 @@ const updateForm = async (req, res) => {
   try {
     const formId = parseInt(req.params.id);
     const body = req.body;
-    const plaques = body.plaques === "true";
-    const espacepub = body.espacepub === "true";
-    const packDetaillant = body.packDetaillant === "true";
+    console.log(body);
+    const imagePath = req.file ? req.file.path : undefined;
+    const plaques = body.plaque === "1" ? "true" : "false";
+    const espacepub = body.espacepub === "1" ? "true" : "false";
+    const packDetaillant = body.packDetaillant === "1" ? "true" : "false";
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};
+    const updatedForm = {
+      Fullname: body.Fullname,
+      Tel: body.Tel || null,
+      nom_magasin: body.nom_magasin || null,
+      latitude: body.latitude || null,
+      longitude: body.longitude || null,
+      algeriaCitiesId: body.algeriaCitiesId
+        ? parseInt(body.algeriaCitiesId)
+        : null,
+      ActiviteId: body.ActiviteId ? parseInt(body.ActiviteId) : null,
+      plaque: plaques,
+      espacepub,
+      packDetaillant,
+      evalueBms: body.evalueBms ? parseInt(body.evalueBms) : 0,
+      SatisfactionCli: body.SatisfactionCli
+        ? parseInt(body.SatisfactionCli)
+        : 0,
+      evaluconcurrent: body.evaluconcurrent
+        ? parseInt(body.evaluconcurrent)
+        : 0,
+      commentaire: body.commentaire || null,
+    };
+    if (imagePath) {
+      updatedForm.Image = imagePath;
+    }
+    await Form.update(updatedForm, { where: { ID: formId } });
 
-    // Mettre à jour les infos principales du formulaire
-    await Form.update(
-      {
-        Fullname: body.Fullname,
-        Tel: body.Tel || null,
-        nom_magasin: body.nom_magasin || null,
-        latitude: body.latitude || null,
-        longitude: body.longitude || null,
-        algeriaCitiesId: body.algeriaCitiesId
-          ? parseInt(body.algeriaCitiesId)
-          : null,
-        ActiviteId: body.ActiviteId ? parseInt(body.ActiviteId) : null,
-        plaque: plaques,
-        espacepub,
-        packDetaillant,
-        evalueBms: body.evalueBms ? parseInt(body.evalueBms) : 0,
-        SatisfactionCli: body.SatisfactionCli
-          ? parseInt(body.SatisfactionCli)
-          : 0,
-        evaluconcurrent: body.evaluconcurrent
-          ? parseInt(body.evaluconcurrent)
-          : 0,
-        commentaire: body.commentaire || null,
-      },
-      { where: { ID: formId } }
-    );
-
-    // Supprimer toutes les anciennes relations pour éviter les doublons
     await Promise.all([
       form_ProduitLampe.destroy({ where: { formulaireID: formId } }),
       Form_ProdAppareillage.destroy({ where: { formulaireID: formId } }),
@@ -103,7 +103,7 @@ const updateForm = async (req, res) => {
                 });
             }
           })
-          .filter(Boolean)
+          .filter(Boolean),
       );
 
       // Concurrents
@@ -135,7 +135,7 @@ const updateForm = async (req, res) => {
                 });
             }
           })
-          .filter(Boolean)
+          .filter(Boolean),
       );
 
       // ProdConcurrents
@@ -167,7 +167,7 @@ const updateForm = async (req, res) => {
                 });
             }
           })
-          .filter(Boolean)
+          .filter(Boolean),
       );
     }
 
@@ -182,7 +182,7 @@ const updateForm = async (req, res) => {
             SourceApproID: numId,
           });
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     // Cadeaux
@@ -197,7 +197,7 @@ const updateForm = async (req, res) => {
             quantity: c.quantite,
           });
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     res.status(200).json({ message: "Form mis à jour avec succès" });

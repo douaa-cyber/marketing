@@ -27,78 +27,52 @@ const Form_prodDisj = require("../model/Form_ProdDisjoncteur");
 const Form_prodAcc = require("../model/Form_ProdAccessoire");
 // Cadeaux
 const Cadeau = require("../../Cadeau/model/Cadeau");
+const CadeauForm = require("../model/Form_Cadeau");
+
+const buildWhereClause = (user) => {
+  if (!user) return {};
+
+  if (user.role === "admin") {
+    return {};
+  }
+
+  if (user.role === "responsable") {
+    return {};
+  }
+
+  return {
+    utilisateur_id: user.id,
+  };
+};
+
+const simpleInclude = (model, throughModel = null, extraAttrs = []) => ({
+  model,
+  through: throughModel
+    ? { model: throughModel, attributes: [] }
+    : { attributes: [] },
+  attributes: ["ID", "name", ...extraAttrs],
+});
 
 const getAllForms = async (req, res) => {
   try {
     const forms = await Formulaire.findAll({
+      where: buildWhereClause(req.user),
       include: [
-        // ================= PRODUITS =================
-        {
-          model: ProduitLampe,
-          through: { model: Form_prodLampe, attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ProduitAppareillage,
-          through: { model: Form_prodAppareillage, attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ProduitDisjoncteur,
-          through: { model: Form_prodDisj, attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ProduitAccessoire,
-          through: { model: Form_prodAcc, attributes: [] },
-          attributes: ["ID", "name"],
-        },
+        simpleInclude(ProduitLampe, Form_prodLampe),
+        simpleInclude(ProduitAppareillage, Form_prodAppareillage),
+        simpleInclude(ProduitDisjoncteur, Form_prodDisj),
+        simpleInclude(ProduitAccessoire, Form_prodAcc),
 
-        // ================= CONCURRENTS =================
-        {
-          model: ConcurrentLampe,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ConcurrentAppareillage,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ConcurrentDisjoncteur,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ConcurrentAccessoire,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
+        simpleInclude(ConcurrentLampe),
+        simpleInclude(ConcurrentAppareillage),
+        simpleInclude(ConcurrentDisjoncteur),
+        simpleInclude(ConcurrentAccessoire),
 
-        // ================= PRODUITS CONCURRENTS =================
-        {
-          model: ProdConcurrentLampe,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ProdConcurrentAppareillage,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ProdConcurrentDisj,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
-        {
-          model: ProdConcurrentAccessoire,
-          through: { attributes: [] },
-          attributes: ["ID", "name"],
-        },
+        simpleInclude(ProdConcurrentLampe),
+        simpleInclude(ProdConcurrentAppareillage),
+        simpleInclude(ProdConcurrentDisj),
+        simpleInclude(ProdConcurrentAccessoire),
 
-        // ================= AUTRES =================
         {
           model: SourceAppro,
           through: { attributes: [] },
@@ -106,7 +80,7 @@ const getAllForms = async (req, res) => {
         },
         {
           model: Cadeau,
-          through: { attributes: [] },
+          through: { model: CadeauForm, attributes: ["quantity"] },
           attributes: ["ID", "name"],
         },
       ],

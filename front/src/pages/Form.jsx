@@ -91,7 +91,7 @@ export default function FormulairesPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`${URL}/api/formulaire/${deleteTarget.id}`, {
+    await fetch(`${URL}/api/form/${deleteTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -169,7 +169,7 @@ export default function FormulairesPage() {
                   <TableHead key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </TableHead>
                 ))}
@@ -184,7 +184,7 @@ export default function FormulairesPage() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -228,6 +228,10 @@ export default function FormulairesPage() {
           onOpenChange={setOpenDialog}
           selectedFormulaire={selectedFormulaire}
           missions={missions}
+          onSuccess={() => {
+            fetchFormulaires();
+            setOpenDialog(false);
+          }}
         />
       )}
 

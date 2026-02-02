@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,12 @@ import { URL } from "@/api";
 
 const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
 
-export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
+export default function FormDialog({
+  open,
+  onOpenChange,
+  selectedFormulaire,
+  onSuccess,
+}) {
   const { user, loading: userLoading } = useContext(AuthContext);
   const [step, setStep] = useState(1);
 
@@ -161,14 +165,49 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
     fetchCategoryData(activeCategory);
   }, [activeCategory]);
 
+  const mapFormulaireToSelected = (f) => ({
+    lampe: {
+      produits: f.ProduitLampes?.map((p) => String(p.ID)) || [],
+      concurrents: f.ConcurrentLampes?.map((c) => String(c.ID)) || [],
+      prodConcurrents: f.ProdConcurrentLampes?.map((pc) => String(pc.ID)) || [],
+    },
+    appareillage: {
+      produits: f.ProduitAppareillages?.map((p) => String(p.ID)) || [],
+      concurrents: f.ConcurrentAppareillages?.map((c) => String(c.ID)) || [],
+      prodConcurrents:
+        f.ProdConcurrentAppareillages?.map((pc) => String(pc.ID)) || [],
+    },
+    disjoncteur: {
+      produits: f.ProduitDisjoncteurs?.map((p) => String(p.ID)) || [],
+      concurrents: f.ConcurrentDisjoncteurs?.map((c) => String(c.ID)) || [],
+      prodConcurrents: f.ProdConcurrentDisjs?.map((pc) => String(pc.ID)) || [],
+    },
+    accessoire: {
+      produits: f.ProduitAccessoires?.map((p) => String(p.ID)) || [],
+      concurrents: f.ConcurrentAccessoires?.map((c) => String(c.ID)) || [],
+      prodConcurrents:
+        f.ProdConcurrentAccessoires?.map((pc) => String(pc.ID)) || [],
+    },
+
+    sourceAppro: f.SourceAppros?.map((sa) => String(sa.ID)) || [],
+    cadeaux: f.cadeaus?.map((c) => String(c.ID)) || [],
+  });
+
   // ----------------- Pré-remplissage si édition -----------------
   useEffect(() => {
     if (selectedFormulaire) {
       setForm({
         ...initialFormState,
         ...selectedFormulaire,
+        sourceAppro: selectedFormulaire.SourceAppros?.map((s) => s.ID) || [],
+        cadeaux:
+          selectedFormulaire.cadeaus?.map((c) => ({
+            id: c.ID,
+            qty: c.cadeau_form.quantity,
+          })) || [],
       });
-      setSelected(selectedFormulaire.selections || selected);
+
+      setSelected(mapFormulaireToSelected(selectedFormulaire));
     } else {
       setForm(initialFormState);
       setSelected({
@@ -186,17 +225,28 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
 
   const normalizeSelections = (sel) => {
     const out = {};
-    Object.keys(sel).forEach((cat) => {
+    const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
+
+    categories.forEach((cat) => {
+      const catData = sel[cat] || {
+        produits: [],
+        concurrents: [],
+        prodConcurrents: [],
+      };
+
       out[cat] = {
-        produits: sel[cat].produits.map((id) => ({ produitId: Number(id) })),
-        concurrents: sel[cat].concurrents.map((id) => ({
+        produits: (catData.produits || []).map((id) => ({
+          produitId: Number(id),
+        })),
+        concurrents: (catData.concurrents || []).map((id) => ({
           concurrentId: Number(id),
         })),
-        prodConcurrents: sel[cat].prodConcurrents.map((id) => ({
+        prodConcurrents: (catData.prodConcurrents || []).map((id) => ({
           prodConcurrentId: Number(id),
         })),
       };
     });
+
     return out;
   };
 
@@ -211,6 +261,7 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
       selections: normalizeSelections(selected),
       cadeaux: normalizeCadeaux(form.cadeaux),
     };
+    console.log("PAYLOAD ENVOYÉ AU BACKEND:", payload);
 
     Object.keys(payload).forEach((key) => {
       if (key === "Image" && payload.Image)
@@ -220,7 +271,7 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
           key,
           typeof payload[key] === "object"
             ? JSON.stringify(payload[key])
-            : payload[key]
+            : payload[key],
         );
     });
 
@@ -229,8 +280,14 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
       : `${URL}/api/form`;
     const method = selectedFormulaire ? "PUT" : "POST";
 
-    await fetch(url, { method, body: formData, credentials: "include" });
-
+    const res = await fetch(url, {
+      method,
+      body: formData,
+      credentials: "include",
+    });
+    if (res.ok) {
+      onSuccess?.();
+    }
     setStep(1);
     onOpenChange(false);
     if (onClose) onClose(); // Refresh parent
@@ -376,7 +433,7 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
                               .filter((c) =>
                                 c.name
                                   .toLowerCase()
-                                  .includes(citySearch.toLowerCase())
+                                  .includes(citySearch.toLowerCase()),
                               )
                               .map((c) => (
                                 <CommandItem
@@ -438,8 +495,8 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
                       {key === "produits"
                         ? "Nos Produits"
                         : key === "concurrents"
-                        ? "Concurrents"
-                        : "Produits Concurrents"}
+                          ? "Concurrents"
+                          : "Produits Concurrents"}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {data[activeCategory][key].map((item) => {
@@ -541,20 +598,20 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
                             .filter((s) =>
                               s.name
                                 .toLowerCase()
-                                .includes(sourceSearch.toLowerCase())
+                                .includes(sourceSearch.toLowerCase()),
                             )
                             .map((s) => (
                               <CommandItem
                                 key={s.ID}
                                 onSelect={() => {
                                   const isSelected = form.sourceAppro.includes(
-                                    s.ID
+                                    s.ID,
                                   );
                                   setForm({
                                     ...form,
                                     sourceAppro: isSelected
                                       ? form.sourceAppro.filter(
-                                          (id) => id !== s.ID
+                                          (id) => id !== s.ID,
                                         )
                                       : [...form.sourceAppro, s.ID],
                                   });
@@ -567,7 +624,9 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
                                       : "opacity-0"
                                   }`}
                                 />
-                                {s.name}
+                                <span className="capitalize">
+                                  {s.name} - {s.surname}
+                                </span>
                               </CommandItem>
                             ))}
                         </CommandGroup>
@@ -656,7 +715,7 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
                         {item.l}
                       </p>
                       {renderStars(form[item.k], (val) =>
-                        setForm({ ...form, [item.k]: val })
+                        setForm({ ...form, [item.k]: val }),
                       )}
                     </div>
                   ))}
@@ -749,7 +808,7 @@ export default function FormDialog({ open, onOpenChange, selectedFormulaire }) {
                             cadeaux: p.cadeaux.map((i) =>
                               i.id === c.ID
                                 ? { ...i, qty: Number(e.target.value) }
-                                : i
+                                : i,
                             ),
                           }));
                         }}

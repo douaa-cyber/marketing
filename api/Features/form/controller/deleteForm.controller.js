@@ -20,8 +20,8 @@ const deleteForm = async (req, res) => {
   if (!id) return res.status(400).json({ error: "ID requis" });
 
   try {
-    // Produits
-    /*   await Promise.all([
+    /*  // Produits
+      await Promise.all([
       form_ProduitLampe.destroy({ where: { formulaireID: id } }),
       Form_ProdAppareillage.destroy({ where: { formulaireID: id } }),
       Form_ProdDisjoncteur.destroy({ where: { formulaireID: id } }),
@@ -48,9 +48,8 @@ const deleteForm = async (req, res) => {
     await Form_SourceAppro.destroy({ where: { formulaireID: id } });
 
     // Cadeaux
-    await Form_Cadeau.destroy({ where: { form_id: id } });
- */
-    // Formulaire principal
+    await Form_Cadeau.destroy({ where: { form_id: id } }); */
+
     await Form.destroy({ where: { ID: id } });
 
     res.json({ message: "Formulaire et toutes ses données supprimés" });

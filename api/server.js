@@ -14,7 +14,7 @@ const SourceApproRoute = require("./Features/SourceAppro/route/source.route");
 const UserRoute = require("./Features/User/route/User.route");
 const ActiviteRoute = require("./Features/Activite/route/Activite.route");
 const FormRoute = require("./Features/form/route/Form.route");
-
+const DashboardRoute = require("./Features/Dashboard/Stat.router");
 const app = express();
 const port = process.env.PORT;
 const hostname = process.env.hostname;
@@ -25,7 +25,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"],
-  })
+  }),
 );
 
 app.use(express.json());
@@ -43,11 +43,12 @@ app.use("/api/productConcu", ProductConcuRoute);
 app.use("/api/sourceAppro", SourceApproRoute);
 app.use("/api/user", UserRoute);
 app.use("/api/form", FormRoute);
+app.use("/api/dashboard", DashboardRoute);
 
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync({ alter: true });
+    return db.sync({});
   })
   .then(() => {
     app.listen(port, hostname, () => {

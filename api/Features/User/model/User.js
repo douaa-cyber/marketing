@@ -13,7 +13,6 @@ const User = sequelize.define(
     username: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: true,
     },
 
     fullname: {
@@ -30,12 +29,20 @@ const User = sequelize.define(
     },
   },
   {
+    indexes: [
+      {
+        unique: true,
+        fields: ["username"],
+      },
+    ],
+  },
+  {
     timestamps: true,
     freezeTableName: true,
     defaultScope: {
       attributes: { exclude: ["password"] },
     },
-  }
+  },
 );
 
 module.exports = User;

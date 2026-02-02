@@ -15,25 +15,11 @@ import { URL } from "@/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// --- UTILITAIRES ---
-
-const getStatusColor = (status) => {
-  const s = status?.toLowerCase() || "";
-  if (s.includes("active") || s.includes("cours"))
-    return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200";
-  if (s.includes("attente"))
-    return "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200";
-  if (s.includes("termin"))
-    return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
-  return "bg-gray-100 text-gray-700 border-gray-200";
-};
-
 // Fonction de formatage robuste pour éviter les erreurs d'affichage
 const formatDate = (dateValue) => {
   if (!dateValue) return "Non définie";
   const date = new Date(dateValue);
 
-  // Si la date est invalide, on essaie de nettoyer la chaîne (cas SQL)
   if (isNaN(date.getTime())) {
     return String(dateValue).split("T")[0];
   }
@@ -68,23 +54,25 @@ export default function Accueil() {
   const [stats, setStats] = useState({ missionCount: 0, formsCount: 0 });
   const [activeMission, setActiveMission] = useState(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [missionRes] = await Promise.all([
-          fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" }),
+        const [statsRes, missionRes] = await Promise.all([
+          fetch(`${URL}/api/dashboard/stats`, {
+            credentials: "include",
+          }),
+          fetch(`${URL}/api/mission/${user.id}`, {
+            credentials: "include",
+          }),
         ]);
 
+        const statsData = await statsRes.json();
         const missions = await missionRes.json();
-        const missionData = Array.isArray(missions) ? missions[0] : missions;
-
-        console.log("Mission récupérée:", missionData);
-
-        setStats({ missionCount: 5, formsCount: 120 });
-        setActiveMission(missionData || null);
+        console.log(statsData);
+        setStats(statsData);
+        setActiveMission(Array.isArray(missions) ? missions[0] : missions);
       } catch (e) {
-        console.error("Erreur fetch:", e);
+        console.error("Erreur fetch dashboard:", e);
       } finally {
         setLoading(false);
       }
@@ -129,7 +117,7 @@ export default function Accueil() {
               </Badge>
             </div>
             <div className="text-3xl font-black text-gray-900">
-              {stats.missionCount}
+              {stats.TotalMission}
             </div>
             <p className="text-xs text-muted-foreground mt-1 font-medium italic">
               Missions assignées
@@ -151,10 +139,10 @@ export default function Accueil() {
               </Badge>
             </div>
             <div className="text-3xl font-black text-gray-900">
-              {stats.formsCount}
+              {stats.TotalForm}
             </div>
             <p className="text-xs text-muted-foreground mt-1 font-medium italic">
-              Rapports envoyés
+              Fiches envoyés
             </p>
           </CardContent>
         </Card>
