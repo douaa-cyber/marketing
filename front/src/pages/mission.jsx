@@ -81,6 +81,7 @@ const columns = (onEdit, onDelete) => [
 export default function MissionsPage() {
   const [missions, setMissions] = useState([]);
   const [agents, setAgents] = useState([]);
+  const [Vehicule, setVehicule] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -88,6 +89,7 @@ export default function MissionsPage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openAgentCombo, setOpenAgentCombo] = useState(false);
   const [openRespCombo, setOpenRespCombo] = useState(false);
+  const [openVehiCombo, setOpenVehiCombo] = useState(false);
 
   const [selectedMission, setSelectedMission] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -101,6 +103,8 @@ export default function MissionsPage() {
     status: "ENCOURS",
     agent_id: null,
     responsable_id: null,
+    vehicule_id: null,
+    Immatriculation: "",
   });
 
   /* ================= FETCH ================= */
@@ -132,10 +136,23 @@ export default function MissionsPage() {
       setAgents([]);
     }
   };
+  const fetchVehicule = async () => {
+    try {
+      const res = await fetch(`${URL}/api/vehicule/all`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      setVehicule(data);
+    } catch (err) {
+      console.error(err);
+      setVehicule([]);
+    }
+  };
 
   useEffect(() => {
     fetchMissions();
     fetchAgents();
+    fetchVehicule();
   }, []);
 
   /* ================= HANDLERS ================= */
@@ -158,6 +175,8 @@ export default function MissionsPage() {
         status: "ENCOURS",
         agent_id: null,
         responsable_id: null,
+        vehicule_id: null,
+        Immatriculation: "",
       });
     }
     setOpenDialog(true);
@@ -246,7 +265,7 @@ export default function MissionsPage() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -333,7 +352,7 @@ export default function MissionsPage() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
                   {agents.find((a) => a.id === form.responsable_id)?.fullname ||
-                    "Responsable"}
+                    "Selectionner un responsable"}
                   <ChevronDown size={16} />
                 </Button>
               </PopoverTrigger>
@@ -370,7 +389,7 @@ export default function MissionsPage() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
                   {agents.find((a) => a.id === form.agent_id)?.fullname ||
-                    "Agent"}
+                    "Selectionner un agent"}
                   <ChevronDown size={16} />
                 </Button>
               </PopoverTrigger>
@@ -399,6 +418,49 @@ export default function MissionsPage() {
                 </Command>
               </PopoverContent>
             </Popover>
+            {/* Vehicule */}
+            <Popover open={openVehiCombo} onOpenChange={setOpenVehiCombo}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  {Vehicule.find((a) => a.id === form.vehicule_id)?.marque ||
+                    "Selectionner une vehicule"}
+                  <ChevronDown size={16} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <Command>
+                  <CommandInput placeholder="Rechercher..." />
+                  <CommandEmpty>Aucune vehicule trouvé</CommandEmpty>
+                  <CommandGroup>
+                    {Vehicule.map((a) => (
+                      <CommandItem
+                        key={a.id}
+                        onSelect={() => {
+                          setForm({ ...form, vehicule_id: a.id });
+                          setOpenAgentCombo(false);
+                        }}
+                      >
+                        <Check
+                          className={
+                            form.vehicule_id === a.id
+                              ? "opacity-100"
+                              : "opacity-0"
+                          }
+                        />
+                        {a.marque}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <Input
+              value={form.Immatriculation}
+              placeholder="Immatriculation"
+              onChange={(e) =>
+                setForm({ ...form, Immatriculation: e.target.value })
+              }
+            />
           </div>
 
           <DialogFooter>

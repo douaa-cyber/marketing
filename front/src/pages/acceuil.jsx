@@ -4,7 +4,6 @@ import React, { useEffect, useState, useContext } from "react";
 import {
   ClipboardCheck,
   TrendingUp,
-  LayoutDashboard,
   ArrowRight,
   AlertCircle,
   CalendarDays,
@@ -12,18 +11,16 @@ import {
 } from "lucide-react";
 import { AuthContext } from "@/context/AuthContext";
 import { URL } from "@/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Fonction de formatage robuste pour éviter les erreurs d'affichage
+// Fonction de formatage robuste
 const formatDate = (dateValue) => {
   if (!dateValue) return "Non définie";
   const date = new Date(dateValue);
-
   if (isNaN(date.getTime())) {
     return String(dateValue).split("T")[0];
   }
-
   return date.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
@@ -32,7 +29,6 @@ const formatDate = (dateValue) => {
 };
 
 // --- COMPOSANTS INTERNES ---
-
 const DateInfo = ({ label, value, icon: Icon, colorClass }) => (
   <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex-1">
     <div className={`p-2.5 rounded-lg ${colorClass}`}>
@@ -50,43 +46,72 @@ const DateInfo = ({ label, value, icon: Icon, colorClass }) => (
 );
 
 export default function Accueil() {
-  const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState({ missionCount: 0, formsCount: 0 });
+  const { user, loading: authLoading } = useContext(AuthContext);
+
+  // Correction des clés pour correspondre à votre rendu JSX
+  const [stats, setStats] = useState({ TotalMission: 0, TotalForm: 0 });
   const [activeMission, setActiveMission] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const hasRefreshed = sessionStorage.getItem("dashboard_refreshed");
+    if (hasRefreshed) return;
+
+    const timer = setTimeout(() => {
+      sessionStorage.setItem("dashboard_refreshed", "true");
+      window.location.reload();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
+      // Bloque si l'authentification travaille encore
+      if (authLoading) return;
+
+      // Arrête si on a fini de charger mais qu'il n'y a pas d'utilisateur
+      if (!user?.id) {
+        setDataLoading(false);
+        return;
+      }
+
       try {
+        setDataLoading(true); // On affiche le loader local le temps du fetch
         const [statsRes, missionRes] = await Promise.all([
-          fetch(`${URL}/api/dashboard/stats`, {
-            credentials: "include",
-          }),
-          fetch(`${URL}/api/mission/${user.id}`, {
-            credentials: "include",
-          }),
+          fetch(`${URL}/api/dashboard/stats`, { credentials: "include" }),
+          fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" }),
         ]);
 
-        const statsData = await statsRes.json();
-        const missions = await missionRes.json();
-        console.log(statsData);
-        setStats(statsData);
-        setActiveMission(Array.isArray(missions) ? missions[0] : missions);
+        if (statsRes.ok && missionRes.ok) {
+          const statsData = await statsRes.json();
+          const missions = await missionRes.json();
+          setStats({
+            TotalMission: statsData.TotalMission || 0,
+            TotalForm: statsData.TotalForm || 0,
+          });
+          setActiveMission(Array.isArray(missions) ? missions[0] : missions);
+        }
       } catch (e) {
         console.error("Erreur fetch dashboard:", e);
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     };
 
-    if (user?.id) fetchData();
-  }, [user?.id]);
+    fetchData();
+  }, [user?.id, authLoading]); // Ces deux dépendances garantissent la réactivité
 
-  if (loading)
+  // Écran de chargement unique et propre
+  if (authLoading || dataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 text-muted-foreground animate-pulse">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 text-muted-foreground animate-pulse font-medium">
         Chargement du tableau de bord...
       </div>
     );
+  }
 
   return (
     <div className="p-6 space-y-8 bg-gray-50/50 min-h-screen font-sans">
@@ -157,21 +182,16 @@ export default function Accueil() {
 
         {activeMission ? (
           <Card className="border-none shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-white to-gray-50 transition hover:shadow-2xl">
-            {/* Header de mission */}
             <div className=" px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-900">
                 {activeMission.Objectif}
               </h3>
-              <Badge
-                className={`px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200`}
-              >
-                {"En cours"}
+              <Badge className="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border-emerald-200">
+                En cours
               </Badge>
             </div>
 
-            {/* Corps de la mission */}
             <CardContent className="p-6 flex flex-col md:flex-row gap-6 md:gap-12">
-              {/* Dates et infos */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DateInfo
                   icon={CalendarDays}
@@ -187,7 +207,6 @@ export default function Accueil() {
                 />
               </div>
 
-              {/* Call to action */}
               <div className="md:w-64 flex flex-col justify-center">
                 <p className="text-sm font-semibold text-gray-700 mb-2">
                   Prêt pour la visite ?

@@ -38,7 +38,6 @@ export default function FormulairesPage() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedFormulaire, setSelectedFormulaire] = useState(null);
-
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -104,8 +103,6 @@ export default function FormulairesPage() {
     { accessorKey: "Fullname", header: "Fullname" },
     { accessorKey: "Tel", header: "Tel" },
     { accessorKey: "nom_magasin", header: "Magasin" },
-    { accessorKey: "Activite", header: "Activité" },
-    { accessorKey: "mission_id", header: "Mission ID" },
     { accessorKey: "createdAt", header: "Créé le" },
     {
       id: "actions",

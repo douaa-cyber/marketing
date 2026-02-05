@@ -31,6 +31,8 @@ const ProdConcurrentDisj = require("../Features/Product_Concurrent/model/ProdCon
 const Form_ProdConcuDisj = require("../Features/form/model/Form_ProdConcuDisj.js");
 const SourceAppro = require("../Features/SourceAppro/model/SourceApprovisionement.js");
 const Form_SourceAppro = require("../Features/form/model/Form_SourceAppro.js");
+const Vehicule = require("../Features/vehicule/vehicule.model.js");
+
 /* ========= MISSIONS ========= */
 User.hasMany(Mission, {
   foreignKey: "agent_id",
@@ -50,6 +52,14 @@ Mission.belongsTo(User, {
 Mission.belongsTo(User, {
   foreignKey: "responsable_id",
   as: "responsable",
+});
+
+Mission.belongsTo(Vehicule, {
+  foreignKey: "vehicule_id",
+});
+
+Vehicule.hasMany(Mission, {
+  foreignKey: "vehicule_id",
 });
 
 /* ========= FORMULAIRES ========= */

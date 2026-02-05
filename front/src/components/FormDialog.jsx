@@ -367,6 +367,7 @@ export default function FormDialog({
                     <label className="text-sm font-medium">Téléphone</label>
                     <Input
                       value={form.Tel}
+                      maxLength="10"
                       onChange={(e) =>
                         setForm({ ...form, Tel: e.target.value })
                       }

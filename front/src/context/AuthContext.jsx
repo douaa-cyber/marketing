@@ -12,6 +12,12 @@ export const AuthProvider = ({ children }) => {
         credentials: "include",
       });
 
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.removeItem("dashboard_refreshed");
+        setUser(null);
+        return;
+      }
+
       const data = await res.json();
       if (res.ok) setUser(data);
       else setUser(null);

@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../config/database");
 
 const Vehicule = sequelize.define(
   "Vehicule",
@@ -14,9 +14,6 @@ const Vehicule = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
-    immatriculation: {
-      type: DataTypes.INTEGER,
-    },
   },
   {
     timestamps: true,
@@ -24,4 +21,4 @@ const Vehicule = sequelize.define(
   },
 );
 
-module.exports = SourceAppro;
+module.exports = Vehicule;

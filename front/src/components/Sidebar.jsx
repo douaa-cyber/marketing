@@ -19,6 +19,7 @@ import {
   Columns,
   Gift,
   MapPin,
+  Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,7 @@ const items = [
       { title: "Activite", href: "/Activite", icon: Columns },
       { title: "Cadeau", href: "/Cadeau", icon: Gift },
       { title: "Wilaya", href: "/Location", icon: MapPin },
+      { title: "vehicule", href: "/vehicule", icon: Car },
     ],
   },
   { title: "Mission", href: "/Mission", icon: CarFront },
@@ -97,6 +99,8 @@ export default function Sidebar() {
         credentials: "include",
       });
       setUser(null);
+      sessionStorage.removeItem("dashboard_refreshed");
+
       navigate("/login");
     } catch (err) {
       console.error("Erreur logout:", err);
