@@ -50,11 +50,21 @@ const Mission = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    vehicule_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    Immatriculation: {
+      type: DataTypes.STRING(12),
+    },
+    clientAVisite: {
+      type: DataTypes.INTEGER,
+    },
   },
   {
     timestamps: true,
     freezeTableName: true,
-  }
+  },
 );
 
 module.exports = Mission;

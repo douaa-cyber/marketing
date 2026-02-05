@@ -38,7 +38,6 @@ export default function FormulairesPage() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedFormulaire, setSelectedFormulaire] = useState(null);
-
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -91,7 +90,7 @@ export default function FormulairesPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`${URL}/api/formulaire/${deleteTarget.id}`, {
+    await fetch(`${URL}/api/form/${deleteTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -104,8 +103,6 @@ export default function FormulairesPage() {
     { accessorKey: "Fullname", header: "Fullname" },
     { accessorKey: "Tel", header: "Tel" },
     { accessorKey: "nom_magasin", header: "Magasin" },
-    { accessorKey: "Activite", header: "Activité" },
-    { accessorKey: "mission_id", header: "Mission ID" },
     { accessorKey: "createdAt", header: "Créé le" },
     {
       id: "actions",
@@ -169,7 +166,7 @@ export default function FormulairesPage() {
                   <TableHead key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </TableHead>
                 ))}
@@ -184,7 +181,7 @@ export default function FormulairesPage() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -228,6 +225,10 @@ export default function FormulairesPage() {
           onOpenChange={setOpenDialog}
           selectedFormulaire={selectedFormulaire}
           missions={missions}
+          onSuccess={() => {
+            fetchFormulaires();
+            setOpenDialog(false);
+          }}
         />
       )}
 

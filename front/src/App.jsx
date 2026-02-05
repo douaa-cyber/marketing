@@ -22,6 +22,8 @@ import SourceAppro from "./pages/SourceAppro";
 import MissionsPage from "./pages/mission";
 import Activite from "./pages/activite";
 import Form from "./pages/Form";
+import Vehicule from "./pages/vehicule";
+import Dashboard from "./pages/dashboard";
 function App() {
   return (
     <Router>
@@ -223,6 +225,26 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <Activite />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/vehicule"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Vehicule />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Dashboard />
               </Layout>
             </PrivateRoute>
           }

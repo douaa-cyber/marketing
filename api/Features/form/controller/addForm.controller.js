@@ -16,6 +16,7 @@ const Form_Cadeau = require("../model/Form_Cadeau");
 const createForm = async (req, res) => {
   try {
     const body = req.body;
+    const imagePath = req.file ? req.file.path : null;
     const plaques = body.plaques === "true";
     const espacepub = body.espacepub === "true";
     const packDetaillant = body.packDetaillant === "true";
@@ -36,6 +37,7 @@ const createForm = async (req, res) => {
         : null,
       ActiviteId: body.ActiviteId ? parseInt(body.ActiviteId) : null,
       plaque: plaques,
+      Image: imagePath,
       espacepub,
       packDetaillant,
       evalueBms: body.evalueBms ? parseInt(body.evalueBms) : 0,
@@ -49,7 +51,7 @@ const createForm = async (req, res) => {
     });
     console.log(
       "Selections accessoire:",
-      JSON.stringify(selections.accessoire, null, 2)
+      JSON.stringify(selections.accessoire, null, 2),
     );
 
     // Parcours des catégories
@@ -85,7 +87,7 @@ const createForm = async (req, res) => {
                 });
             }
           })
-          .filter(Boolean)
+          .filter(Boolean),
       );
 
       // Concurrents
@@ -117,7 +119,7 @@ const createForm = async (req, res) => {
                 });
             }
           })
-          .filter(Boolean)
+          .filter(Boolean),
       );
 
       // ProdConcurrents
@@ -149,7 +151,7 @@ const createForm = async (req, res) => {
                 });
             }
           })
-          .filter(Boolean)
+          .filter(Boolean),
       );
     }
 
@@ -164,7 +166,7 @@ const createForm = async (req, res) => {
             SourceApproID: numId,
           });
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     // Cadeaux
@@ -179,7 +181,7 @@ const createForm = async (req, res) => {
             quantity: c.quantite,
           });
         })
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     res.status(201).json({ form, message: "Form + produits enregistrés" });
