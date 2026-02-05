@@ -25,6 +25,7 @@ const getMissionById = async (req, res) => {
         "responsable_id",
         "date_deb",
         "date_fin",
+        "clientAVisite",
       ],
     });
 

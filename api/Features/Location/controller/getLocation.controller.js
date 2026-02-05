@@ -47,9 +47,27 @@ const GetLocationForForm = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const GetJustWilayas = async (req, res) => {
+  try {
+    const wilayas = await Location.findAll({
+      attributes: ["wilaya"],
+      group: ["wilaya"],
+      order: [["wilaya", "ASC"]],
+    });
+
+    if (!wilayas) {
+      return res.status(404).json({ message: "Location introuvable." });
+    }
+
+    res.status(200).json(wilayas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   GetAllLocation,
   GetLocationById,
   GetLocationForForm,
+  GetJustWilayas,
 };

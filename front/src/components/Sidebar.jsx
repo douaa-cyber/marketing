@@ -20,6 +20,7 @@ import {
   Gift,
   MapPin,
   Car,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,7 @@ const items = [
   },
   { title: "Mission", href: "/Mission", icon: CarFront },
   { title: "Fiche Visite", href: "/Form", icon: NotebookPen },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
 export default function Sidebar() {

@@ -57,6 +57,9 @@ const Mission = sequelize.define(
     Immatriculation: {
       type: DataTypes.STRING(12),
     },
+    clientAVisite: {
+      type: DataTypes.INTEGER,
+    },
   },
   {
     timestamps: true,
