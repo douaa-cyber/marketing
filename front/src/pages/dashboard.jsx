@@ -1,5 +1,12 @@
-import React, { useState, useMemo } from "react";
-import { Search, Calendar, Users, Filter, ArrowRight, X } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Search,
+  Calendar,
+  Users,
+  Filter,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,72 +17,61 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import TauxCouverture from "../components/TauxCouverture";
-
+import { URL as API_BASE } from "@/api";
 const DashboardPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [agents, setAgents] = useState([]);
   const [dates, setDates] = useState({
-    start: "2024-02-01",
-    end: "2024-02-28",
+    start: new Date().toISOString().split("T")[0],
+    end: new Date().toISOString().split("T")[0],
   });
 
-  // Données simulées (À remplacer par ton fetch API)
-  const agents = [
-    {
-      id: 1,
-      fullname: "Karim Benchabane",
-      visitesUniques: 92,
-      objectif: 100,
-      taux: 92,
-      status: "Acceptable",
-    },
-    {
-      id: 2,
-      fullname: "Sarah Mansouri",
-      visitesUniques: 45,
-      objectif: 100,
-      taux: 45,
-      status: "Indiscipline",
-    },
-    {
-      id: 3,
-      fullname: "Yacine Rahmouni",
-      visitesUniques: 98,
-      objectif: 100,
-      taux: 98,
-      status: "Très Bon",
-    },
-    {
-      id: 4,
-      fullname: "Amine Hadj",
-      visitesUniques: 80,
-      objectif: 100,
-      taux: 80,
-      status: "Indiscipline",
-    },
-    // ... plus d'agents
-  ];
+  const fetchPerformanceData = async () => {
+    setLoading(true);
+    try {
+      // 1. Construire l'URL avec les query params directement
+      // On utilise l'import URL (ton api) et on ajoute les paramètres
+      const response = await fetch(
+        `${API_BASE}/api/dashboard/dashboard?dateDebut=${dates.start}&dateFin=${dates.end}`,
+      );
 
-  // Tri par performance (du meilleur au moins bon)
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setAgents(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des données:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPerformanceData();
+  }, [dates.start, dates.end]);
+
   const sortedAgents = useMemo(
     () => [...agents].sort((a, b) => b.taux - a.taux),
     [agents],
   );
 
-  // Filtrage pour la recherche
   const filteredAgents = sortedAgents.filter((a) =>
     a.fullname.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 space-y-8">
-      {/* --- HEADER & FILTRES --- */}
+      {/* --- HEADER --- */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 rounded-2xl border shadow-sm">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
             Performance Terrain
           </h1>
           <p className="text-slate-500 text-sm">
-            Période du {dates.start} au {dates.end}
+            Analyse du {dates.start} au {dates.end}
           </p>
         </div>
 
@@ -86,23 +82,23 @@ const DashboardPage = () => {
               type="date"
               value={dates.start}
               onChange={(e) => setDates({ ...dates, start: e.target.value })}
-              className="bg-transparent border-none text-sm focus:ring-0 outline-none"
+              className="bg-transparent border-none text-sm focus:ring-0 outline-none cursor-pointer"
             />
             <ArrowRight size={14} className="text-slate-300" />
             <input
               type="date"
               value={dates.end}
               onChange={(e) => setDates({ ...dates, end: e.target.value })}
-              className="bg-transparent border-none text-sm focus:ring-0 outline-none"
+              className="bg-transparent border-none text-sm focus:ring-0 outline-none cursor-pointer"
             />
           </div>
-          <Button variant="outline" size="icon" className="shrink-0">
+          <Button variant="outline" size="icon" onClick={fetchPerformanceData}>
             <Filter size={18} />
           </Button>
         </div>
       </div>
 
-      {/* --- SECTION PRINCIPALE : TOP 3 --- */}
+      {/* --- MAIN SECTION --- */}
       <section className="space-y-4">
         <div className="flex justify-between items-end">
           <div className="flex items-center gap-2">
@@ -114,7 +110,6 @@ const DashboardPage = () => {
             </h2>
           </div>
 
-          {/* DIALOG VOIR TOUT */}
           <Dialog>
             <DialogTrigger asChild>
               <Button
@@ -126,14 +121,14 @@ const DashboardPage = () => {
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Classement Complet des Agents</DialogTitle>
+                <DialogTitle>Classement Complet</DialogTitle>
                 <div className="relative mt-4">
                   <Search
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                     size={18}
                   />
                   <Input
-                    placeholder="Rechercher un agent..."
+                    placeholder="Rechercher..."
                     className="pl-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -151,15 +146,15 @@ const DashboardPage = () => {
                       <div
                         className={`w-2 h-2 rounded-full ${agent.taux < 85 ? "bg-red-500" : "bg-emerald-500"}`}
                       />
-                      <span className="font-medium">{agent.fullname}</span>
+                      <span className="font-medium text-sm">
+                        {agent.fullname}
+                      </span>
                     </div>
                     <div className="flex items-center gap-6">
-                      <span className="text-sm text-slate-500">
+                      <span className="text-xs text-slate-500">
                         {agent.visitesUniques} / {agent.objectif}
                       </span>
-                      <span className="font-bold w-12 text-right">
-                        {agent.taux}%
-                      </span>
+                      <span className="font-bold text-sm">{agent.taux}%</span>
                     </div>
                   </div>
                 ))}
@@ -168,35 +163,51 @@ const DashboardPage = () => {
           </Dialog>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {sortedAgents.slice(0, 3).map((agent) => (
-            <TauxCouverture key={agent.id} data={agent} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
+            <p className="text-slate-500 text-sm font-medium">
+              Mise à jour des données...
+            </p>
+          </div>
+        ) : agents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {sortedAgents.slice(0, 3).map((agent) => (
+              <TauxCouverture key={agent.id} data={agent} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-2xl border border-dashed">
+            <p className="text-slate-400">Aucun résultat pour cette période.</p>
+          </div>
+        )}
       </section>
 
-      {/* 
-      <section className="bg-red-50/50 p-6 rounded-2xl border border-red-100 space-y-4">
-        <h2 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
-          Alerte Discipline Terrain
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {sortedAgents
-            .filter((a) => a.taux < 85)
-            .slice(0, 4)
-            .map((agent) => (
-              <div
-                key={agent.id}
-                className="bg-white p-3 rounded-xl border border-red-200 flex flex-col gap-1 shadow-sm"
-              >
-                <span className="text-sm font-bold">{agent.fullname}</span>
-                <span className="text-xs text-red-500 font-bold">
-                  {agent.taux}% de couverture
-                </span>
-              </div>
-            ))}
-        </div>
-      </section> */}
+      {/*  {!loading && sortedAgents.filter((a) => a.taux < 85).length > 0 && (
+        <section className="bg-red-50/50 p-6 rounded-2xl border border-red-100 space-y-4">
+          <h2 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
+            Discipline Terrain Critique
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {sortedAgents
+              .filter((a) => a.taux < 85)
+              .slice(0, 4)
+              .map((agent) => (
+                <div
+                  key={agent.id}
+                  className="bg-white p-3 rounded-xl border border-red-200 flex flex-col shadow-sm"
+                >
+                  <span className="text-sm font-bold text-slate-800">
+                    {agent.fullname}
+                  </span>
+                  <span className="text-xs text-red-600 font-bold">
+                    {agent.taux}% de couverture
+                  </span>
+                </div>
+              ))}
+          </div>
+        </section>
+      )} */}
     </div>
   );
 };

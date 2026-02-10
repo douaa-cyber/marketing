@@ -32,6 +32,8 @@ const Form_ProdConcuDisj = require("../Features/form/model/Form_ProdConcuDisj.js
 const SourceAppro = require("../Features/SourceAppro/model/SourceApprovisionement.js");
 const Form_SourceAppro = require("../Features/form/model/Form_SourceAppro.js");
 const Vehicule = require("../Features/vehicule/vehicule.model.js");
+const Criteria = require("../Features/Critere/critere.model.js");
+const Form_Critere = require("../Features/form/model/Form_critere.js");
 
 /* ========= MISSIONS ========= */
 User.hasMany(Mission, {
@@ -165,6 +167,14 @@ Formulaire.belongsToMany(ProdConcurrentAccessoire, {
 
 ProdConcurrentAccessoire.belongsToMany(Formulaire, {
   through: Form_ProdConcuAcc,
+});
+
+Formulaire.belongsToMany(Criteria, {
+  through: Form_Critere,
+});
+
+Criteria.belongsToMany(Formulaire, {
+  through: Form_Critere,
 });
 
 Formulaire.belongsToMany(ProdConcurrentAppareillage, {
