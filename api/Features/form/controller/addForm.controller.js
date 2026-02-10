@@ -13,17 +13,19 @@ const Form_ProdConcuDisj = require("../model/Form_ProdConcuDisj");
 const Form_ProdConcuAcc = require("../model/Form_ProdConcuAcc");
 const Form_SourceAppro = require("../model/Form_SourceAppro");
 const Form_Cadeau = require("../model/Form_Cadeau");
+const Form_Critere = require("../model/Form_critere");
 const createForm = async (req, res) => {
   try {
     const body = req.body;
     const imagePath = req.file ? req.file.path : null;
-    const plaques = body.plaques === "true";
-    const espacepub = body.espacepub === "true";
-    const packDetaillant = body.packDetaillant === "true";
+    const plaques = body.plaques == "1" ? "true" : "false";
+    const espacepub = body.espacepub == "1" ? "true" : "false";
+    const packDetaillant = body.packDetaillant == "1" ? "true" : "false";
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};
-
+    const criteres = body.criteres ? JSON.parse(body.criteres) : [];
+    console.log("data created", req.body);
     const form = await Form.create({
       utilisateur_id: parseInt(body.utilisateur_id),
       mission_id: parseInt(body.mission_id),
@@ -179,6 +181,23 @@ const createForm = async (req, res) => {
             form_id: form.ID,
             cadeau_id: numId,
             quantity: c.quantite,
+          });
+        })
+        .filter(Boolean),
+    );
+
+    //Critaria
+
+    await Promise.all(
+      criteres
+        .map((crit) => {
+          const critId = Number(crit.critereId);
+          if (!critId) return null;
+
+          return Form_Critere.create({
+            formulaireID: form.ID,
+            CritereId: critId,
+            is_checked: crit.is_checked ? 1 : 0,
           });
         })
         .filter(Boolean),

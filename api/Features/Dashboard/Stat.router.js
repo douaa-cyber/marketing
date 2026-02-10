@@ -6,5 +6,10 @@ const DashboardController = require("./dashboardStats.controller");
 
 router.get("/dashboard", DashboardController.getStatsVisitesUniques);
 router.get("/stats", authMiddleware, StatController.AcceuilStat);
+router.get(
+  "/ScoreMarchandising",
+
+  DashboardController.getClientScoresByPeriod,
+);
 
 module.exports = router;

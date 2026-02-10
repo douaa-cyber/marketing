@@ -57,8 +57,8 @@ export default function FormDialog({
 
   const [cadeauxList, setCadeauxList] = useState([]);
   const [cadeauxOpen, setCadeauxOpen] = useState(false);
-  const [cadeauxSearch, setCadeauxSearch] = useState("");
 
+  const [criteriaList, setCriteriaList] = useState([]); // Liste des critères depuis l'API
   const [activeCategory, setActiveCategory] = useState("lampe");
 
   const [data, setData] = useState({
@@ -87,6 +87,7 @@ export default function FormDialog({
     evalueBms: 0,
     SatisfactionCli: 0,
     evaluconcurrent: 0,
+    criteres: [],
     commentaire: "",
   };
 
@@ -104,25 +105,37 @@ export default function FormDialog({
     if (!user) return;
     setForm((prev) => ({ ...prev, utilisateur_id: user.id }));
 
-    fetch(`${URL}/api/location/ville`, { credentials: "include" })
-      .then((r) => r.json())
-      .then(setCities)
-      .catch(() => setCities([]));
+    // Chargement des données de base
+    const fetchBaseData = async () => {
+      try {
+        const [villes, cadeaux, sources, acts, crit] = await Promise.all([
+          fetch(`${URL}/api/location/ville`, { credentials: "include" }).then(
+            (r) => r.json(),
+          ),
+          fetch(`${URL}/api/cadeau/all`, { credentials: "include" }).then((r) =>
+            r.json(),
+          ),
+          fetch(`${URL}/api/sourceAppro/all`, { credentials: "include" }).then(
+            (r) => r.json(),
+          ),
+          fetch(`${URL}/api/activite/all`, { credentials: "include" }).then(
+            (r) => r.json(),
+          ),
+          fetch(`${URL}/api/criteria`, { credentials: "include" }).then((r) =>
+            r.json(),
+          ), // Fetch critères
+        ]);
+        setCities(villes || []);
+        setCadeauxList(cadeaux || []);
+        setSourcesList(sources || []);
+        setActivites(acts || []);
+        setCriteriaList(crit || []);
+      } catch (err) {
+        console.error("Erreur lors du chargement des données initiales", err);
+      }
+    };
 
-    fetch(`${URL}/api/cadeau/all`, { credentials: "include" })
-      .then((r) => r.json())
-      .then(setCadeauxList)
-      .catch(() => setCadeauxList([]));
-
-    fetch(`${URL}/api/sourceAppro/all`, { credentials: "include" })
-      .then((r) => r.json())
-      .then(setSourcesList)
-      .catch(() => setSourcesList([]));
-
-    fetch(`${URL}/api/activite/all`, { credentials: "include" })
-      .then((r) => r.json())
-      .then(setActivites)
-      .catch(() => setActivites([]));
+    fetchBaseData();
 
     fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" })
       .then((r) => r.json())
@@ -165,6 +178,7 @@ export default function FormDialog({
     fetchCategoryData(activeCategory);
   }, [activeCategory]);
 
+  // ----------------- Mapping Edition -----------------
   const mapFormulaireToSelected = (f) => ({
     lampe: {
       produits: f.ProduitLampes?.map((p) => String(p.ID)) || [],
@@ -188,12 +202,8 @@ export default function FormDialog({
       prodConcurrents:
         f.ProdConcurrentAccessoires?.map((pc) => String(pc.ID)) || [],
     },
-
-    sourceAppro: f.SourceAppros?.map((sa) => String(sa.ID)) || [],
-    cadeaux: f.cadeaus?.map((c) => String(c.ID)) || [],
   });
 
-  // ----------------- Pré-remplissage si édition -----------------
   useEffect(() => {
     if (selectedFormulaire) {
       setForm({
@@ -205,8 +215,8 @@ export default function FormDialog({
             id: c.ID,
             qty: c.cadeau_form.quantity,
           })) || [],
+        criteres: selectedFormulaire.Criteres?.map((c) => c.id) || [],
       });
-
       setSelected(mapFormulaireToSelected(selectedFormulaire));
     } else {
       setForm(initialFormState);
@@ -217,23 +227,20 @@ export default function FormDialog({
         accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
       });
     }
-  }, [selectedFormulaire]);
+  }, [selectedFormulaire, open]);
 
-  // ----------------- Handlers -----------------
   const handleNext = () => setStep((s) => Math.min(s + 1, 4));
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
 
+  // ----------------- Normalisation pour Backend -----------------
   const normalizeSelections = (sel) => {
     const out = {};
-    const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
-
     categories.forEach((cat) => {
       const catData = sel[cat] || {
         produits: [],
         concurrents: [],
         prodConcurrents: [],
       };
-
       out[cat] = {
         produits: (catData.produits || []).map((id) => ({
           produitId: Number(id),
@@ -246,33 +253,35 @@ export default function FormDialog({
         })),
       };
     });
-
     return out;
   };
 
   const normalizeCadeaux = (cadeaux) =>
     cadeaux.map((c) => ({ cadeauId: c.id, quantite: Number(c.qty) }));
 
+  const normalizeCriteres = (criteresIds) =>
+    criteresIds.map((id) => ({ critereId: Number(id), is_checked: 1 }));
+
   const handleSubmit = async () => {
     const formData = new FormData();
-
     const payload = {
       ...form,
       selections: normalizeSelections(selected),
       cadeaux: normalizeCadeaux(form.cadeaux),
+      criteres: normalizeCriteres(form.criteres),
     };
-    console.log("PAYLOAD ENVOYÉ AU BACKEND:", payload);
 
     Object.keys(payload).forEach((key) => {
-      if (key === "Image" && payload.Image)
+      if (key === "Image" && payload.Image) {
         formData.append("Image", payload.Image);
-      else
+      } else {
         formData.append(
           key,
           typeof payload[key] === "object"
             ? JSON.stringify(payload[key])
             : payload[key],
         );
+      }
     });
 
     const url = selectedFormulaire
@@ -287,10 +296,9 @@ export default function FormDialog({
     });
     if (res.ok) {
       onSuccess?.();
+      setStep(1);
+      onOpenChange(false);
     }
-    setStep(1);
-    onOpenChange(false);
-    if (onClose) onClose(); // Refresh parent
   };
 
   const renderStars = (value, onChange) => (
@@ -298,9 +306,7 @@ export default function FormDialog({
       {[1, 2, 3, 4, 5].map((i) => (
         <span
           key={i}
-          className={`cursor-pointer text-4xl ${
-            i <= value ? "text-yellow-400" : "text-gray-300"
-          }`}
+          className={`cursor-pointer text-4xl ${i <= value ? "text-yellow-400" : "text-gray-300"}`}
           onClick={() => onChange(i)}
         >
           ★
@@ -317,15 +323,14 @@ export default function FormDialog({
         <DialogHeader className="px-6 py-4 border-b shrink-0 bg-white z-10">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold">
             <ListChecks className="w-5 h-5 text-blue-600" />
-            Nouvelle Visite({step}/4)
+            {selectedFormulaire ? "Modifier Visite" : "Nouvelle Visite"} ({step}
+            /4)
           </DialogTitle>
           <div className="flex w-full gap-2 mt-2">
             {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
-                className={`h-1.5 flex-1 rounded-full transition-all ${
-                  step >= s ? "bg-blue-600" : "bg-gray-100"
-                }`}
+                className={`h-1.5 flex-1 rounded-full transition-all ${step >= s ? "bg-blue-600" : "bg-gray-100"}`}
               />
             ))}
           </div>
@@ -333,7 +338,7 @@ export default function FormDialog({
 
         <div className="flex-1 overflow-y-auto px-6 py-4 bg-slate-50/30">
           <div className="max-w-3xl mx-auto space-y-6">
-            {/* STEP 1 */}
+            {/* STEP 1: Infos Générales */}
             {step === 1 && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -382,8 +387,6 @@ export default function FormDialog({
                       }
                     />
                   </div>
-
-                  {/* AJOUT LATITUDE ET LONGITUDE */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Latitude</label>
                     <Input
@@ -404,7 +407,6 @@ export default function FormDialog({
                       placeholder="Géo-localisation..."
                     />
                   </div>
-
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Ville</label>
                     <Popover
@@ -452,7 +454,6 @@ export default function FormDialog({
                       </PopoverContent>
                     </Popover>
                   </div>
-
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Activité</label>
                     <select
@@ -474,7 +475,7 @@ export default function FormDialog({
               </div>
             )}
 
-            {/* STEP 2 */}
+            {/* STEP 2: Produits et Concurrents */}
             {step === 2 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b">
@@ -520,18 +521,10 @@ export default function FormDialog({
                                 },
                               });
                             }}
-                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                              isSelected
-                                ? "bg-blue-50 border-blue-500 text-blue-700"
-                                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"
-                            }`}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? "bg-blue-50 border-blue-500 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"}`}
                           >
                             <div
-                              className={`w-4 h-4 rounded border flex items-center justify-center ${
-                                isSelected
-                                  ? "bg-blue-600 border-blue-600"
-                                  : "bg-white"
-                              }`}
+                              className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? "bg-blue-600 border-blue-600" : "bg-white"}`}
                             >
                               {isSelected && (
                                 <Check className="w-3 h-3 text-white" />
@@ -549,15 +542,13 @@ export default function FormDialog({
               </div>
             )}
 
-            {/* STEP 3 */}
+            {/* STEP 3: Marketing et Appro */}
             {step === 3 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="space-y-3">
                   <label className="font-bold text-sm text-slate-600">
                     Source d'approvisionnement
                   </label>
-
-                  {/* SOURCE APPRO COMBOBOX */}
                   <Popover
                     open={sourcePopoverOpen}
                     onOpenChange={setSourcePopoverOpen}
@@ -619,11 +610,7 @@ export default function FormDialog({
                                 }}
                               >
                                 <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    form.sourceAppro.includes(s.ID)
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  }`}
+                                  className={`mr-2 h-4 w-4 ${form.sourceAppro.includes(s.ID) ? "opacity-100" : "opacity-0"}`}
                                 />
                                 <span className="capitalize">
                                   {s.name} - {s.surname}
@@ -654,9 +641,7 @@ export default function FormDialog({
                   {["plaques", "espacepub", "packDetaillant"].map((k) => (
                     <label
                       key={k}
-                      className={`flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
-                        form[k] ? "bg-blue-50 border-blue-500" : "bg-white"
-                      }`}
+                      className={`flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${form[k] ? "bg-blue-50 border-blue-500" : "bg-white"}`}
                     >
                       <input
                         type="checkbox"
@@ -698,8 +683,7 @@ export default function FormDialog({
               </div>
             )}
 
-            {/* STEP 4 */}
-            {/* STEP 4 */}
+            {/* STEP 4: Évaluation et Critères */}
             {step === 4 && (
               <div className="space-y-6 animate-in zoom-in-95 duration-300">
                 <div className="grid grid-cols-1 gap-4">
@@ -722,7 +706,62 @@ export default function FormDialog({
                   ))}
                 </div>
 
-                {/* CHAMP COMMENTAIRE */}
+                {/* CHAMP CRITÈRES (DYNAMIQUE) */}
+                {/* CRITÈRES D'ÉVALUATION */}
+                <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-700">
+                      Critères d'évaluation
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Sélectionnez les points observés chez le client
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {criteriaList.map((crit) => {
+                      const isChecked = form.criteres.includes(crit.id);
+
+                      return (
+                        <div
+                          key={crit.id}
+                          onClick={() => {
+                            const next = isChecked
+                              ? form.criteres.filter((id) => id !== crit.id)
+                              : [...form.criteres, crit.id];
+                            setForm({ ...form, criteres: next });
+                          }}
+                          className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
+            ${
+              isChecked
+                ? "bg-blue-50 border-blue-500 text-blue-700 shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-slate-50"
+            }
+          `}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-md border flex items-center justify-center
+              ${
+                isChecked
+                  ? "bg-blue-600 border-blue-600"
+                  : "bg-white border-slate-300"
+              }
+            `}
+                          >
+                            {isChecked && (
+                              <Check className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+
+                          <span className="text-sm font-medium">
+                            {crit.nom}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-600">
                     Commentaires ou observations
@@ -750,7 +789,6 @@ export default function FormDialog({
           >
             <ChevronLeft className="mr-1 h-4 w-4" /> Précédent
           </Button>
-
           {step < 4 ? (
             <Button
               onClick={handleNext}
@@ -819,8 +857,11 @@ export default function FormDialog({
                 );
               })}
             </div>
-            <Button onClick={() => setCadeauxOpen(false)} className="w-full">
-              Confirmer
+            <Button
+              className="w-full mt-4"
+              onClick={() => setCadeauxOpen(false)}
+            >
+              Terminer
             </Button>
           </DialogContent>
         </Dialog>

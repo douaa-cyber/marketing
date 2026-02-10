@@ -13,6 +13,7 @@ const Form_ProdConcuDisj = require("../model/Form_ProdConcuDisj");
 const Form_ProdConcuAcc = require("../model/Form_ProdConcuAcc");
 const Form_SourceAppro = require("../model/Form_SourceAppro");
 const Form_Cadeau = require("../model/Form_Cadeau");
+const Form_Critere = require("../model/Form_critere");
 
 const updateForm = async (req, res) => {
   try {
@@ -26,6 +27,8 @@ const updateForm = async (req, res) => {
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};
+    const criteres = body.criteres ? JSON.parse(body.criteres) : [];
+
     const updatedForm = {
       Fullname: body.Fullname,
       Tel: body.Tel || null,
@@ -68,6 +71,7 @@ const updateForm = async (req, res) => {
       Form_ProdConcuAcc.destroy({ where: { formulaireID: formId } }),
       Form_SourceAppro.destroy({ where: { formulaireID: formId } }),
       Form_Cadeau.destroy({ where: { form_id: formId } }),
+      Form_Critere.destroy({ where: { formulaireID: formId } }),
     ]);
 
     // Réinsérer toutes les nouvelles relations
@@ -199,7 +203,22 @@ const updateForm = async (req, res) => {
         })
         .filter(Boolean),
     );
+    //Critaria
 
+    await Promise.all(
+      criteres
+        .map((crit) => {
+          const critId = Number(crit.critereId);
+          if (!critId) return null;
+
+          return Form_Critere.create({
+            formulaireID: formId,
+            CritereId: critId,
+            is_checked: crit.is_checked ? 1 : 0,
+          });
+        })
+        .filter(Boolean),
+    );
     res.status(200).json({ message: "Form mis à jour avec succès" });
   } catch (error) {
     console.error(error);
