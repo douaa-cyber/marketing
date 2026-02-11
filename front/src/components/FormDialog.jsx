@@ -93,11 +93,19 @@ export default function FormDialog({
 
   const [form, setForm] = useState(initialFormState);
 
+  const defaultCategoryState = {
+    produits: [],
+    concurrents: [],
+    prodConcurrents: [],
+    nbr_article: "",
+    nbr_article_commande: "",
+  };
+
   const [selected, setSelected] = useState({
-    lampe: { produits: [], concurrents: [], prodConcurrents: [] },
-    appareillage: { produits: [], concurrents: [], prodConcurrents: [] },
-    disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
-    accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
+    lampe: { ...defaultCategoryState },
+    appareillage: { ...defaultCategoryState },
+    disjoncteur: { ...defaultCategoryState },
+    accessoire: { ...defaultCategoryState },
   });
 
   // ----------------- Fetch Data -----------------
@@ -184,23 +192,44 @@ export default function FormDialog({
       produits: f.ProduitLampes?.map((p) => String(p.ID)) || [],
       concurrents: f.ConcurrentLampes?.map((c) => String(c.ID)) || [],
       prodConcurrents: f.ProdConcurrentLampes?.map((pc) => String(pc.ID)) || [],
+      nbr_article:
+        f.ProduitLampes?.[0]?.Form_ProdLampe?.nbArticle?.toString() || "",
+      nbr_article_commande:
+        f.ProduitLampes?.[0]?.Form_ProdLampe?.nbArticleCommande?.toString() ||
+        "",
     },
     appareillage: {
       produits: f.ProduitAppareillages?.map((p) => String(p.ID)) || [],
       concurrents: f.ConcurrentAppareillages?.map((c) => String(c.ID)) || [],
       prodConcurrents:
         f.ProdConcurrentAppareillages?.map((pc) => String(pc.ID)) || [],
+      nbr_article:
+        f.ProduitAppareillages?.[0]?.Form_ProdAppareillage?.nbArticle?.toString() ||
+        "",
+      nbr_article_commande:
+        f.ProduitAppareillages?.[0]?.Form_ProdAppareillage?.nbArticleCommande?.toString() ||
+        "",
     },
     disjoncteur: {
       produits: f.ProduitDisjoncteurs?.map((p) => String(p.ID)) || [],
       concurrents: f.ConcurrentDisjoncteurs?.map((c) => String(c.ID)) || [],
       prodConcurrents: f.ProdConcurrentDisjs?.map((pc) => String(pc.ID)) || [],
+      nbr_article:
+        f.ProduitDisjoncteurs?.[0]?.Form_ProdDisj?.nbArticle?.toString() || "",
+      nbr_article_commande:
+        f.ProduitDisjoncteurs?.[0]?.Form_ProdDisj?.nbArticleCommande?.toString() ||
+        "",
     },
     accessoire: {
       produits: f.ProduitAccessoires?.map((p) => String(p.ID)) || [],
       concurrents: f.ConcurrentAccessoires?.map((c) => String(c.ID)) || [],
       prodConcurrents:
         f.ProdConcurrentAccessoires?.map((pc) => String(pc.ID)) || [],
+      nbr_article:
+        f.ProduitAccessoires?.[0]?.Form_ProdAcc?.nbArticle?.toString() || "",
+      nbr_article_commande:
+        f.ProduitAccessoires?.[0]?.Form_ProdAcc?.nbArticleCommande?.toString() ||
+        "",
     },
   });
 
@@ -221,10 +250,10 @@ export default function FormDialog({
     } else {
       setForm(initialFormState);
       setSelected({
-        lampe: { produits: [], concurrents: [], prodConcurrents: [] },
-        appareillage: { produits: [], concurrents: [], prodConcurrents: [] },
-        disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
-        accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
+        lampe: { ...defaultCategoryState },
+        appareillage: { ...defaultCategoryState },
+        disjoncteur: { ...defaultCategoryState },
+        accessoire: { ...defaultCategoryState },
       });
     }
   }, [selectedFormulaire, open]);
@@ -235,12 +264,10 @@ export default function FormDialog({
   // ----------------- Normalisation pour Backend -----------------
   const normalizeSelections = (sel) => {
     const out = {};
+
     categories.forEach((cat) => {
-      const catData = sel[cat] || {
-        produits: [],
-        concurrents: [],
-        prodConcurrents: [],
-      };
+      const catData = sel[cat] || defaultCategoryState;
+
       out[cat] = {
         produits: (catData.produits || []).map((id) => ({
           produitId: Number(id),
@@ -251,8 +278,12 @@ export default function FormDialog({
         prodConcurrents: (catData.prodConcurrents || []).map((id) => ({
           prodConcurrentId: Number(id),
         })),
+
+        nbr_article: Number(catData.nbr_article) || 0,
+        nbr_article_commande: Number(catData.nbr_article_commande) || 0,
       };
     });
+
     return out;
   };
 
@@ -489,6 +520,48 @@ export default function FormDialog({
                       {cat}
                     </Button>
                   ))}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">
+                      Nombre d'articles
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={selected[activeCategory].nbr_article}
+                      onChange={(e) =>
+                        setSelected({
+                          ...selected,
+                          [activeCategory]: {
+                            ...selected[activeCategory],
+                            nbr_article: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">
+                      Nombre d'articles commandés
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={selected[activeCategory].nbr_article_commande}
+                      onChange={(e) =>
+                        setSelected({
+                          ...selected,
+                          [activeCategory]: {
+                            ...selected[activeCategory],
+                            nbr_article_commande: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
                 </div>
 
                 {["produits", "concurrents", "prodConcurrents"].map((key) => (

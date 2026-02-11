@@ -34,7 +34,8 @@ const Form_SourceAppro = require("../Features/form/model/Form_SourceAppro.js");
 const Vehicule = require("../Features/vehicule/vehicule.model.js");
 const Criteria = require("../Features/Critere/critere.model.js");
 const Form_Critere = require("../Features/form/model/Form_critere.js");
-
+const Form_Action = require("../Features/form/model/Form_action.js");
+const Action = require("../Features/ActionMarketing/action.model.js");
 /* ========= MISSIONS ========= */
 User.hasMany(Mission, {
   foreignKey: "agent_id",
@@ -117,6 +118,23 @@ Formulaire.belongsToMany(ProduitDisjoncteur, {
 ProduitDisjoncteur.belongsToMany(Formulaire, {
   through: Form_ProdDisj,
 });
+// --- CONFIGURATION À AJOUTER ---
+
+// 1. Lampes
+Formulaire.hasMany(Form_ProdLampe, { foreignKey: "formulaireID" });
+Form_ProdLampe.belongsTo(Formulaire, { foreignKey: "formulaireID" });
+
+// 2. Accessoires
+Formulaire.hasMany(Form_ProdAccessoire, { foreignKey: "formulaireID" });
+Form_ProdAccessoire.belongsTo(Formulaire, { foreignKey: "formulaireID" });
+
+// 3. Appareillages
+Formulaire.hasMany(Form_ProdAppareillage, { foreignKey: "formulaireID" });
+Form_ProdAppareillage.belongsTo(Formulaire, { foreignKey: "formulaireID" });
+
+// 4. Disjoncteurs
+Formulaire.hasMany(Form_ProdDisj, { foreignKey: "formulaireID" });
+Form_ProdDisj.belongsTo(Formulaire, { foreignKey: "formulaireID" });
 
 /* ========= FORM LINKED WITH CONCURRENT ========= */
 
@@ -171,6 +189,13 @@ ProdConcurrentAccessoire.belongsToMany(Formulaire, {
 
 Formulaire.belongsToMany(Criteria, {
   through: Form_Critere,
+});
+
+Action.belongsToMany(Formulaire, {
+  through: Form_Action,
+});
+Formulaire.belongsToMany(Action, {
+  through: Form_Action,
 });
 
 Criteria.belongsToMany(Formulaire, {

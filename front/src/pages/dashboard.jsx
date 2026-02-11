@@ -6,6 +6,7 @@ import {
   Filter,
   ArrowRight,
   Loader2,
+  Package, // Import ajouté
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,21 +18,32 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import TauxCouverture from "../components/TauxCouverture";
-import AgentQualityDetails from "../components/AgentQualityDetails"; // Ton 2ème KPI
+import AgentQualityDetails from "../components/AgentQualityDetails";
+import StockRuptureCard from "../components/TauxRupureClient"; // Assure-toi que ce composant existe
 import { URL as API_BASE } from "@/api";
 
 const DashboardPage = () => {
+  // --- ÉTATS ---
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [agents, setAgents] = useState([]);
-  const [qualityData, setQualityData] = useState([]); // Pour stocker les scores qualité
+
+  // États pour le KPI Qualité (Détails Agent)
+  const [qualityData, setQualityData] = useState([]);
   const [loadingQuality, setLoadingQuality] = useState(false);
+
+  // États pour le KPI Disponibilité (Taaux)
+  const [ruptureData, setRuptureData] = useState([]);
+  const [loadingRupture, setLoadingRupture] = useState(false);
+
   const [dates, setDates] = useState({
     start: new Date().toISOString().split("T")[0],
     end: new Date().toISOString().split("T")[0],
   });
 
-  // 1. Fetch KPI 1 : Taux de couverture
+  // --- APPELS API ---
+
+  // 1. Fetch KPI 1 : Performance & Couverture
   const fetchPerformanceData = async () => {
     setLoading(true);
     try {
@@ -42,16 +54,16 @@ const DashboardPage = () => {
       const data = await response.json();
       setAgents(data);
     } catch (error) {
-      console.error("Erreur lors de la récupération des données:", error);
+      console.error("Erreur performance:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Fetch KPI 2 : Scores Qualité (appelé au clic sur un agent)
+  // 2. Fetch KPI 2 : Scores Qualité (au clic agent)
   const fetchAgentQuality = async (agentId) => {
     setLoadingQuality(true);
-    setQualityData([]); // Reset précédent
+    setQualityData([]);
     try {
       const response = await fetch(
         `${API_BASE}/api/dashboard/ScoreMarchandising?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${agentId}`,
@@ -66,10 +78,30 @@ const DashboardPage = () => {
     }
   };
 
+  // 3. Fetch KPI 3 : Disponibilité Produits (Taaux)
+  const fetchRuptureData = async () => {
+    setLoadingRupture(true);
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/dashboard/TauxRupture?startDate=${dates.start}&endDate=${dates.end}`,
+      );
+      if (!response.ok) throw new Error("Erreur taux disponibilité");
+      const data = await response.json();
+      setRuptureData(data);
+    } catch (error) {
+      console.error("Erreur rupture data:", error);
+    } finally {
+      setLoadingRupture(false);
+    }
+  };
+
+  // Synchronisation globale au changement de date
   useEffect(() => {
     fetchPerformanceData();
+    fetchRuptureData();
   }, [dates.start, dates.end]);
 
+  // --- LOGIQUE FILTRAGE ---
   const sortedAgents = useMemo(
     () => [...agents].sort((a, b) => b.taux - a.taux),
     [agents],
@@ -81,7 +113,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 space-y-8">
-      {/* --- HEADER --- */}
+      {/* --- HEADER & FILTRES --- */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 rounded-2xl border shadow-sm">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -114,22 +146,25 @@ const DashboardPage = () => {
           <Button
             variant="outline"
             size="icon"
-            className="rounded-xl shadow-sm"
-            onClick={fetchPerformanceData}
+            className="rounded-xl shadow-sm hover:bg-slate-50"
+            onClick={() => {
+              fetchPerformanceData();
+              fetchRuptureData();
+            }}
           >
             <Filter size={18} />
           </Button>
         </div>
       </div>
 
-      {/* --- MAIN SECTION --- */}
+      {/* --- SECTION 1 : TOP PERFORMERS (AGENTS) --- */}
       <section className="space-y-4">
         <div className="flex justify-between items-center px-1">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
               <Users size={20} />
             </div>
-            <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+            <h2 className="text-lg font-bold text-slate-800">
               Top Performeurs
             </h2>
           </div>
@@ -140,9 +175,9 @@ const DashboardPage = () => {
                 Voir tous les agents ({agents.length})
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-3xl">
               <DialogHeader>
-                <DialogTitle className="text-xl font-black italic text-slate-800 uppercase tracking-tighter">
+                <DialogTitle className="text-xl font-black italic uppercase">
                   Classement Complet
                 </DialogTitle>
                 <div className="relative mt-4">
@@ -152,24 +187,23 @@ const DashboardPage = () => {
                   />
                   <Input
                     placeholder="Rechercher un agent..."
-                    className="pl-10 h-11 rounded-xl border-slate-100 bg-slate-50 focus:bg-white transition-all"
+                    className="pl-10 rounded-xl"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </DialogHeader>
-
               <div className="mt-6 space-y-3">
                 {filteredAgents.map((agent) => (
                   <div
                     key={agent.id}
-                    className="flex items-center justify-between p-4 border border-slate-50 rounded-2xl hover:bg-indigo-50/50 hover:border-indigo-100 transition group cursor-pointer"
+                    className="flex items-center justify-between p-4 border rounded-2xl hover:bg-indigo-50 transition cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div
-                        className={`w-3 h-3 rounded-full shadow-sm ${agent.taux < 85 ? "bg-red-500 ring-4 ring-red-50" : "bg-emerald-500 ring-4 ring-emerald-50"}`}
+                        className={`w-3 h-3 rounded-full ${agent.taux < 85 ? "bg-red-500" : "bg-emerald-500"}`}
                       />
-                      <span className="font-bold text-slate-700 group-hover:text-indigo-700 transition-colors">
+                      <span className="font-bold text-slate-700">
                         {agent.fullname}
                       </span>
                     </div>
@@ -177,9 +211,7 @@ const DashboardPage = () => {
                       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                         {agent.visitesUniques} / {agent.objectif} pts
                       </span>
-                      <span className="font-black text-lg text-slate-900">
-                        {agent.taux}%
-                      </span>
+                      <span className="font-black text-lg">{agent.taux}%</span>
                     </div>
                   </div>
                 ))}
@@ -189,7 +221,7 @@ const DashboardPage = () => {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed">
             <Loader2 className="h-10 w-10 animate-spin text-indigo-500 mb-4 opacity-50" />
             <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
               Synchronisation...
@@ -198,7 +230,6 @@ const DashboardPage = () => {
         ) : agents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedAgents.slice(0, 3).map((agent) => (
-              /* ICI : Chaque carte ouvre le Dialog de Qualité */
               <Dialog
                 key={agent.id}
                 onOpenChange={(open) => open && fetchAgentQuality(agent.id)}
@@ -208,38 +239,25 @@ const DashboardPage = () => {
                     <TauxCouverture data={agent} />
                   </div>
                 </DialogTrigger>
-
-                <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
-                  {/* Header plus équilibré : Padding réduit de p-10 à p-6 */}
-                  <div className="bg-white p-6 border-b border-slate-100">
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden rounded-2xl">
+                  <div className="bg-white p-6 border-b">
+                    <h2 className="text-xl font-bold text-slate-900">
                       {agent.fullname}
                     </h2>
                     <p className="text-slate-500 text-sm font-medium">
-                      Analyse de la qualité merchandising et exécution terrain.
+                      Analyse qualité merchandising.
                     </p>
                   </div>
-
-                  {/* Zone de Contenu : Suppression de l'espace inutile */}
                   <div className="bg-slate-50 p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
                     {loadingQuality ? (
                       <div className="flex flex-col items-center justify-center py-20">
-                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-3 opacity-40" />
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                          Synchronisation...
+                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-3" />
+                        <p className="text-xs font-bold text-slate-400 uppercase">
+                          Chargement...
                         </p>
-                      </div>
-                    ) : qualityData && qualityData.length > 0 ? (
-                      <div className="animate-in fade-in slide-in-from-bottom-1 duration-400">
-                        {/* Le composant est maintenant collé au contenu grâce au padding p-6 cohérent */}
-                        <AgentQualityDetails data={qualityData} />
                       </div>
                     ) : (
-                      <div className="text-center py-16 bg-white rounded-xl border border-dashed border-slate-200">
-                        <p className="text-slate-400 text-sm">
-                          Aucun historique disponible pour cette période.
-                        </p>
-                      </div>
+                      <AgentQualityDetails data={qualityData} />
                     )}
                   </div>
                 </DialogContent>
@@ -248,14 +266,45 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed">
-            <p className="text-slate-400 font-medium tracking-tight italic">
+            <p className="text-slate-400 italic">
               Aucun agent actif pour cette période.
             </p>
           </div>
         )}
       </section>
 
-      {/* Tu pourras décommenter la section discipline terrain critique ici plus tard */}
+      {/* --- SECTION 2 : DISPONIBILITÉ PRODUITS (KPI TAAUX) --- */}
+      <section className="space-y-4 mt-12">
+        <div className="flex items-center gap-2 px-1">
+          <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+            <Package size={20} />
+          </div>
+          <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+            Disponibilité par Famille
+          </h2>
+        </div>
+
+        {loadingRupture ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+            <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mb-4 opacity-50" />
+            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+              Analyse des stocks...
+            </p>
+          </div>
+        ) : ruptureData.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {ruptureData.map((client, index) => (
+              <StockRuptureCard key={index} client={client} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed">
+            <p className="text-slate-400 italic">
+              Aucune donnée de disponibilité trouvée.
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 };

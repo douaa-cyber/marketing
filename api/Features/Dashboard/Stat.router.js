@@ -11,5 +11,10 @@ router.get(
 
   DashboardController.getClientScoresByPeriod,
 );
+router.get(
+  "/TauxRupture",
+
+  DashboardController.getRuptureStockStats,
+);
 
 module.exports = router;

@@ -51,10 +51,6 @@ const createForm = async (req, res) => {
         : 0,
       commentaire: body.commentaire || null,
     });
-    console.log(
-      "Selections accessoire:",
-      JSON.stringify(selections.accessoire, null, 2),
-    );
 
     // Parcours des catégories
     for (const cat of Object.keys(selections)) {
@@ -71,21 +67,29 @@ const createForm = async (req, res) => {
                 return form_ProduitLampe.create({
                   formulaireID: form.ID,
                   ProduitLampeID: id,
+                  nbArticle: sel.nbr_article,
+                  nbArticleCommande: sel.nbr_article_commande,
                 });
               case "appareillage":
                 return Form_ProdAppareillage.create({
                   formulaireID: form.ID,
                   ProduitAppareillageID: id,
+                  nbArticle: sel.nbr_article,
+                  nbArticleCommande: sel.nbr_article_commande,
                 });
               case "disjoncteur":
                 return Form_ProdDisjoncteur.create({
                   formulaireID: form.ID,
                   ProduitDisjoncteurID: id,
+                  nbArticle: sel.nbr_article,
+                  nbArticleCommande: sel.nbr_article_commande,
                 });
               case "accessoire":
                 return Form_ProdAccessoire.create({
                   formulaireID: form.ID,
                   ProduitAccessoireID: id,
+                  nbArticle: sel.nbr_article,
+                  nbArticleCommande: sel.nbr_article_commande,
                 });
             }
           })

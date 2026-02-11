@@ -21,9 +21,9 @@ const updateForm = async (req, res) => {
     const body = req.body;
     console.log(body);
     const imagePath = req.file ? req.file.path : undefined;
-    const plaques = body.plaque === "1" ? "true" : "false";
-    const espacepub = body.espacepub === "1" ? "true" : "false";
-    const packDetaillant = body.packDetaillant === "1" ? "true" : "false";
+    const plaques = body.plaque === "0" ? "true" : "false";
+    const espacepub = body.espacepub === "0" ? "true" : "false";
+    const packDetaillant = body.packDetaillant === "0" ? "true" : "false";
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};

@@ -17,6 +17,7 @@ const FormRoute = require("./Features/form/route/Form.route");
 const VehiculeRoute = require("./Features/vehicule/vehicule.route");
 const DashboardRoute = require("./Features/Dashboard/Stat.router");
 const CriteriaRoute = require("./Features/Critere/critere.routes");
+const ActionMarkRoute = require("./Features/ActionMarketing/action.routes");
 
 const app = express();
 const port = process.env.PORT;
@@ -27,7 +28,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://10.19.36.193:5173",
-      "http://192.168.2.49:5173",
+      "http://192.168.2.231:5173",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -53,6 +54,7 @@ app.use("/api/user", UserRoute);
 app.use("/api/form", FormRoute);
 app.use("/api/dashboard", DashboardRoute);
 app.use("/api/criteria", CriteriaRoute);
+app.use("/api/action", ActionMarkRoute);
 
 db.authenticate()
   .then(() => {
