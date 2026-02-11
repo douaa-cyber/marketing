@@ -16,5 +16,10 @@ router.get(
 
   DashboardController.getRuptureStockStats,
 );
+router.get(
+  "/action",
+
+  DashboardController.getActionByPeriod,
+);
 
 module.exports = router;

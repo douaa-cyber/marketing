@@ -3,6 +3,7 @@ const Formulaire = require("../form/model/Formulaire");
 const User = require("../User/model/User");
 const Mission = require("../Mission/model/Mission");
 const Critere = require("../Critere/critere.model");
+const Action = require("../ActionMarketing/action.model");
 const AlgeriaCities = require("../Location/model/AlgeriaCities");
 const Form_ProdLampe = require("../form/model/Form_ProduitLampe");
 const FormProdAccessoire = require("../form/model/Form_ProdAccessoire");
@@ -274,8 +275,87 @@ const getRuptureStockStats = async (req, res) => {
   }
 };
 
+const getActionByPeriod = async (req, res) => {
+  try {
+    const { startDate, endDate, utilisateur_id } = req.query;
+
+    const totalCriteresBase = await Action.count();
+    const pointsParCoche = totalCriteresBase > 0 ? 10 / totalCriteresBase : 0;
+
+    const formulaires = await Formulaire.findAll({
+      where: {
+        utilisateur_id: utilisateur_id,
+        createdAt: {
+          [Op.between]: [
+            new Date(startDate + " 00:00:00"),
+            new Date(endDate + " 23:59:59"),
+          ],
+        },
+      },
+      include: [{ model: Action, through: { attributes: [] } }],
+    });
+
+    const clientsMap = {};
+
+    formulaires.forEach((f) => {
+      const clientKey = f.nom_magasin || f.Fullname;
+      const nbCoches = f.Action ? f.Action.length : 0;
+      const scoreVisite = parseFloat((nbCoches * pointsParCoche).toFixed(2));
+
+      if (!clientsMap[clientKey]) {
+        clientsMap[clientKey] = {
+          clientName: clientKey,
+          telephone: f.Tel,
+          totalScores: 0,
+          visites: [],
+        };
+      }
+
+      clientsMap[clientKey].totalScores += scoreVisite;
+      clientsMap[clientKey].visites.push({
+        id: f.ID,
+        date: f.createdAt,
+        scoreVisite: scoreVisite,
+        nbCoches: nbCoches,
+        totalCriteres: totalCriteresBase,
+      });
+    });
+
+    // 2. Calcul des moyennes et statuts globaux
+    const finalResult = Object.values(clientsMap).map((c) => {
+      const moyenne = parseFloat((c.totalScores / c.visites.length).toFixed(2));
+
+      // Détermination du statut global basé sur la moyenne (votre image)
+      let performance = { label: "mauvaise exécution", color: "#EF4444" };
+      if (moyenne >= 9)
+        performance = { label: "excellence terrain", color: "#10B981" };
+      else if (moyenne >= 7)
+        performance = { label: "acceptable", color: "#F59E0B" };
+      else if (moyenne >= 6)
+        performance = { label: "en progression", color: "#3B82F6" };
+
+      return {
+        clientName: c.clientName,
+        telephone: c.telephone,
+        scoreMoyenGlobal: moyenne,
+        statutGlobal: performance.label,
+        couleurGlobal: performance.color,
+        nombreTotalVisites: c.visites.length,
+        historiqueVisites: c.visites.sort(
+          (a, b) => new Date(b.date) - new Date(a.date),
+        ),
+      };
+    });
+
+    res.json(finalResult);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getStatsVisitesUniques,
   getClientScoresByPeriod,
   getRuptureStockStats,
+  getActionByPeriod,
 };

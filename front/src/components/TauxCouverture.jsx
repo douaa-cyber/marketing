@@ -40,7 +40,7 @@ function TauxCouverture({ data }) {
   return (
     <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow cursor-pointer group">
       <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-medium text-gray-500">
+        <CardTitle className="text-md font-medium text-black-300 font-bold italic">
           {data.fullname}
         </CardTitle>
         <span className={`p-1.5 rounded-full ${theme.bg} ${theme.color}`}>
