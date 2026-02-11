@@ -1,202 +1,372 @@
-import React, { useState, useMemo } from "react";
-import { Search, Calendar, Users, Filter, ArrowRight, X } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Search,
+  Calendar,
+  Users,
+  ArrowRight,
+  Loader2,
+  Package,
+  ClipboardCheck,
+  BarChart3,
+  ChevronLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ComparisonChart from "@/components/ComparaisonCharts";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+
 import TauxCouverture from "../components/TauxCouverture";
+import StockRuptureCard from "../components/TauxRupureClient";
+import AgentDialogWrapper from "../components/AgentCodeWrapper"; // L'import du wrapper
+import { URL as API_BASE } from "@/api";
 
 const DashboardPage = () => {
+  const [view, setView] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [ruptureSearch, setRuptureSearch] = useState("");
+
+  const [agents, setAgents] = useState([]);
+  const [ruptureData, setRuptureData] = useState([]);
+  const [selectedAgent, setSelectedAgent] = useState("");
+  const [qualityData, setQualityData] = useState([]);
+  const [marketingData, setMarketingData] = useState([]);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+
   const [dates, setDates] = useState({
-    start: "2024-02-01",
-    end: "2024-02-28",
+    start: new Date().toISOString().split("T")[0],
+    end: new Date().toISOString().split("T")[0],
   });
 
-  // Données simulées (À remplacer par ton fetch API)
-  const agents = [
-    {
-      id: 1,
-      fullname: "Karim Benchabane",
-      visitesUniques: 92,
-      objectif: 100,
-      taux: 92,
-      status: "Acceptable",
-    },
-    {
-      id: 2,
-      fullname: "Sarah Mansouri",
-      visitesUniques: 45,
-      objectif: 100,
-      taux: 45,
-      status: "Indiscipline",
-    },
-    {
-      id: 3,
-      fullname: "Yacine Rahmouni",
-      visitesUniques: 98,
-      objectif: 100,
-      taux: 98,
-      status: "Très Bon",
-    },
-    {
-      id: 4,
-      fullname: "Amine Hadj",
-      visitesUniques: 80,
-      objectif: 100,
-      taux: 80,
-      status: "Indiscipline",
-    },
-    // ... plus d'agents
-  ];
+  useEffect(() => {
+    if (!selectedAgent) return;
 
-  // Tri par performance (du meilleur au moins bon)
+    const fetchComparison = async () => {
+      setComparisonLoading(true);
+      try {
+        const [resQ, resM] = await Promise.all([
+          fetch(
+            `${API_BASE}/api/dashboard/ScoreMarchandising?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${selectedAgent}`,
+          ),
+          fetch(
+            `${API_BASE}/api/dashboard/action?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${selectedAgent}`,
+          ),
+        ]);
+
+        setQualityData(await resQ.json());
+        setMarketingData(await resM.json());
+      } catch (e) {
+        console.error("Erreur comparaison:", e);
+      } finally {
+        setComparisonLoading(false);
+      }
+    };
+
+    fetchComparison();
+  }, [selectedAgent, dates]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [resA, resR] = await Promise.all([
+        fetch(
+          `${API_BASE}/api/dashboard/dashboard?dateDebut=${dates.start}&dateFin=${dates.end}`,
+        ),
+        fetch(
+          `${API_BASE}/api/dashboard/TauxRupture?startDate=${dates.start}&endDate=${dates.end}`,
+        ),
+      ]);
+      setAgents(await resA.json());
+      setRuptureData(await resR.json());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [dates.start, dates.end]);
+
   const sortedAgents = useMemo(
     () => [...agents].sort((a, b) => b.taux - a.taux),
     [agents],
   );
-
-  // Filtrage pour la recherche
   const filteredAgents = sortedAgents.filter((a) =>
     a.fullname.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+  const filteredRuptures = ruptureData.filter(
+    (item) =>
+      item.nom_client?.toLowerCase().includes(ruptureSearch.toLowerCase()) ||
+      item.wilaya?.toLowerCase().includes(ruptureSearch.toLowerCase()),
+  );
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 space-y-8">
-      {/* --- HEADER & FILTRES --- */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 rounded-2xl border shadow-sm">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Performance Terrain
-          </h1>
-          <p className="text-slate-500 text-sm">
-            Période du {dates.start} au {dates.end}
-          </p>
+  if (view === "all-agents") {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] p-8 space-y-8">
+        <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
+          <Button
+            onClick={() => setView("dashboard")}
+            variant="ghost"
+            className="gap-2"
+          >
+            <ChevronLeft size={20} /> Retour
+          </Button>
+          <div className="relative w-96">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <Input
+              placeholder="Rechercher..."
+              className="pl-10 rounded-xl"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {filteredAgents.map((agent) => (
+            <AgentDialogWrapper key={agent.id} agent={agent} dates={dates}>
+              <div className="transition-transform hover:scale-[1.02]">
+                <TauxCouverture data={agent} />
+              </div>
+            </AgentDialogWrapper>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (view === "all-ruptures") {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] p-8 space-y-8">
+        {/* HEADER */}
+        <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm">
+          <Button
+            onClick={() => setView("dashboard")}
+            variant="ghost"
+            className="gap-2"
+          >
+            <ChevronLeft size={20} /> Retour
+          </Button>
+
+          {/* SEARCH */}
+          <div className="relative w-96">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <Input
+              placeholder="Rechercher par client ou wilaya..."
+              className="pl-10 rounded-xl"
+              value={ruptureSearch}
+              onChange={(e) => setRuptureSearch(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <div className="flex items-center gap-2 bg-slate-50 border rounded-lg px-3 py-2 flex-grow lg:flex-grow-0">
-            <Calendar size={16} className="text-slate-400" />
+        {/* CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {filteredRuptures.length > 0 ? (
+            filteredRuptures.map((client, i) => (
+              <StockRuptureCard key={i} client={client} />
+            ))
+          ) : (
+            <div className="col-span-3 text-center text-slate-400 py-20">
+              Aucun résultat trouvé
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] p-8 space-y-8">
+      {/* HEADER */}
+      <div className="flex justify-between items-center bg-white p-6 rounded-2xl border shadow-sm">
+        <h1 className="text-2xl font-bold">Performance Terrain</h1>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-slate-50 border rounded-xl px-3 py-2">
             <input
               type="date"
               value={dates.start}
               onChange={(e) => setDates({ ...dates, start: e.target.value })}
-              className="bg-transparent border-none text-sm focus:ring-0 outline-none"
+              className="bg-transparent text-sm outline-none"
             />
             <ArrowRight size={14} className="text-slate-300" />
             <input
               type="date"
               value={dates.end}
               onChange={(e) => setDates({ ...dates, end: e.target.value })}
-              className="bg-transparent border-none text-sm focus:ring-0 outline-none"
+              className="bg-transparent text-sm outline-none"
             />
           </div>
-          <Button variant="outline" size="icon" className="shrink-0">
-            <Filter size={18} />
-          </Button>
         </div>
       </div>
 
-      {/* --- SECTION PRINCIPALE : TOP 3 --- */}
-      <section className="space-y-4">
-        <div className="flex justify-between items-end">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
-              <Users size={20} />
-            </div>
-            <h2 className="text-lg font-bold text-slate-800">
-              Top Performeurs
+      {/* GRAPHIQUES */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section className="bg-white p-6 rounded-2xl border shadow-sm h-[400px]">
+          <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <BarChart3 size={20} className="text-indigo-600" /> Couverture
+            Terrain %
+          </h2>
+          <ResponsiveContainer width="100%" height="85%">
+            <BarChart
+              data={sortedAgents.slice(0, 10)}
+              margin={{ top: 20, right: 20, left: -10, bottom: 40 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#E2E8F0"
+              />
+
+              <XAxis
+                dataKey="fullname"
+                tick={{ fill: "#64748B", fontSize: 11 }}
+                angle={-25}
+                textAnchor="end"
+                interval={0}
+              />
+
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fill: "#64748B", fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+              />
+
+              <Tooltip
+                cursor={{ fill: "rgba(99,102,241,0.05)" }}
+                contentStyle={{
+                  borderRadius: "12px",
+                  border: "none",
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
+                }}
+              />
+
+              <Bar
+                dataKey="taux"
+                radius={[8, 8, 0, 0]}
+                barSize={32}
+                animationDuration={800}
+              >
+                {sortedAgents.slice(0, 10).map((e, i) => (
+                  <Cell
+                    key={i}
+                    fill={
+                      e.taux >= 85
+                        ? "#10B981"
+                        : e.taux >= 60
+                          ? "#6366F1"
+                          : "#EF4444"
+                    }
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </section>
+
+        <section className="bg-white p-6 rounded-2xl border shadow-sm h-[400px] flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <ClipboardCheck size={20} className="text-emerald-600" />
+              Analyse
             </h2>
+            {/* SELECT */}
+            <select
+              value={selectedAgent}
+              onChange={(e) => setSelectedAgent(e.target.value)}
+              className="border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Sélectionner un agent</option>
+              {sortedAgents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.fullname}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* DIALOG VOIR TOUT */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="link"
-                className="text-indigo-600 font-semibold p-0"
-              >
-                Voir tous les agents ({agents.length})
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Classement Complet des Agents</DialogTitle>
-                <div className="relative mt-4">
-                  <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={18}
-                  />
-                  <Input
-                    placeholder="Rechercher un agent..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </DialogHeader>
-
-              <div className="mt-6 space-y-4">
-                {filteredAgents.map((agent) => (
-                  <div
-                    key={agent.id}
-                    className="flex items-center justify-between p-3 border rounded-xl hover:bg-slate-50 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-2 h-2 rounded-full ${agent.taux < 85 ? "bg-red-500" : "bg-emerald-500"}`}
-                      />
-                      <span className="font-medium">{agent.fullname}</span>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <span className="text-sm text-slate-500">
-                        {agent.visitesUniques} / {agent.objectif}
-                      </span>
-                      <span className="font-bold w-12 text-right">
-                        {agent.taux}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
+          {/* Correction ici : On s'assure que ce conteneur prend toute la place restante et cache le surplus */}
+          <div className="flex-1 w-full min-h-0 relative overflow-hidden">
+            {!selectedAgent ? (
+              <div className="h-full flex items-center justify-center border-2 border-dashed rounded-xl text-slate-400">
+                <p>Veuillez sélectionner un agent pour voir l’analyse.</p>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            ) : comparisonLoading ? (
+              <div className="h-full flex items-center justify-center">
+                <Loader2 className="animate-spin text-indigo-600" size={30} />
+              </div>
+            ) : (
+              /* Ce composant ComparisonChart DOIT contenir un ResponsiveContainer à l'intérieur */
+              <ComparisonChart
+                qualityData={qualityData}
+                marketingData={marketingData}
+              />
+            )}
+          </div>
+        </section>
+      </div>
 
+      {/* TOP AGENTS */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Users className="text-indigo-600" size={20} /> Top Performeurs
+          </h2>
+          <Button
+            onClick={() => setView("all-agents")}
+            variant="link"
+            className="text-indigo-600 font-bold p-0"
+          >
+            Tout voir
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {sortedAgents.slice(0, 3).map((agent) => (
-            <TauxCouverture key={agent.id} data={agent} />
+            <AgentDialogWrapper key={agent.id} agent={agent} dates={dates}>
+              <div className="transition-transform hover:scale-[1.02]">
+                <TauxCouverture data={agent} />
+              </div>
+            </AgentDialogWrapper>
           ))}
         </div>
       </section>
 
-      {/* 
-      <section className="bg-red-50/50 p-6 rounded-2xl border border-red-100 space-y-4">
-        <h2 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
-          Alerte Discipline Terrain
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {sortedAgents
-            .filter((a) => a.taux < 85)
-            .slice(0, 4)
-            .map((agent) => (
-              <div
-                key={agent.id}
-                className="bg-white p-3 rounded-xl border border-red-200 flex flex-col gap-1 shadow-sm"
-              >
-                <span className="text-sm font-bold">{agent.fullname}</span>
-                <span className="text-xs text-red-500 font-bold">
-                  {agent.taux}% de couverture
-                </span>
-              </div>
-            ))}
+      {/* RUPTURES */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Package className="text-emerald-600" size={20} />
+            Disponibilité Familles
+          </h2>
+
+          <Button
+            onClick={() => setView("all-ruptures")}
+            variant="link"
+            className="text-emerald-600 font-bold p-0"
+          >
+            Voir tous
+          </Button>
         </div>
-      </section> */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {ruptureData.slice(0, 6).map((client, i) => (
+            <StockRuptureCard key={i} client={client} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 };

@@ -4,7 +4,22 @@ const authMiddleware = require("../../middleware/Auth");
 const StatController = require("./AcceuilStats.controller");
 const DashboardController = require("./dashboardStats.controller");
 
-router.get("/", authMiddleware, DashboardController.getStatsVisitesUniques);
+router.get("/dashboard", DashboardController.getStatsVisitesUniques);
 router.get("/stats", authMiddleware, StatController.AcceuilStat);
+router.get(
+  "/ScoreMarchandising",
+
+  DashboardController.getClientScoresByPeriod,
+);
+router.get(
+  "/TauxRupture",
+
+  DashboardController.getRuptureStockStats,
+);
+router.get(
+  "/action",
+
+  DashboardController.getActionByPeriod,
+);
 
 module.exports = router;

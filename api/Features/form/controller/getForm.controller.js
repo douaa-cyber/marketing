@@ -28,6 +28,7 @@ const Form_prodAcc = require("../model/Form_ProdAccessoire");
 // Cadeaux
 const Cadeau = require("../../Cadeau/model/Cadeau");
 const CadeauForm = require("../model/Form_Cadeau");
+const Critere = require("../../Critere/critere.model");
 
 const buildWhereClause = (user) => {
   if (!user) return {};
@@ -52,16 +53,26 @@ const simpleInclude = (model, throughModel = null, extraAttrs = []) => ({
     : { attributes: [] },
   attributes: ["ID", "name", ...extraAttrs],
 });
+const IncludeForArticles = (model, throughModel = null, extraAttrs = []) => ({
+  model,
+  through: throughModel
+    ? {
+        model: throughModel,
+        attributes: ["nbArticle", "nbArticleCommande"],
+      }
+    : { attributes: [] },
+  attributes: ["ID", "name", ...extraAttrs],
+});
 
 const getAllForms = async (req, res) => {
   try {
     const forms = await Formulaire.findAll({
       where: buildWhereClause(req.user),
       include: [
-        simpleInclude(ProduitLampe, Form_prodLampe),
-        simpleInclude(ProduitAppareillage, Form_prodAppareillage),
-        simpleInclude(ProduitDisjoncteur, Form_prodDisj),
-        simpleInclude(ProduitAccessoire, Form_prodAcc),
+        IncludeForArticles(ProduitLampe, Form_prodLampe),
+        IncludeForArticles(ProduitAppareillage, Form_prodAppareillage),
+        IncludeForArticles(ProduitDisjoncteur, Form_prodDisj),
+        IncludeForArticles(ProduitAccessoire, Form_prodAcc),
 
         simpleInclude(ConcurrentLampe),
         simpleInclude(ConcurrentAppareillage),
@@ -82,6 +93,11 @@ const getAllForms = async (req, res) => {
           model: Cadeau,
           through: { model: CadeauForm, attributes: ["quantity"] },
           attributes: ["ID", "name"],
+        },
+        {
+          model: Critere,
+          through: { attributes: [] },
+          attributes: ["id", "nom"],
         },
       ],
     });
