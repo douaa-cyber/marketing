@@ -79,8 +79,8 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
 
-  const [hovered, setHovered] = useState(false); // desktop
-  const [isOpen, setIsOpen] = useState(false); // mobile
+  const [hovered, setHovered] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [openItems, setOpenItems] = useState({});
 
   const isSidebarOpen = hovered || isOpen;
@@ -103,7 +103,7 @@ export default function Sidebar() {
 
   const handleNavigate = (href) => {
     navigate(href);
-    setIsOpen(false); // ferme sidebar sur mobile
+    setIsOpen(false);
   };
 
   const handleLogout = async () => {
@@ -113,7 +113,6 @@ export default function Sidebar() {
         credentials: "include",
       });
       setUser(null);
-      sessionStorage.removeItem("dashboard_refreshed");
 
       navigate("/login");
     } catch (err) {

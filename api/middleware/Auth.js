@@ -11,7 +11,7 @@ const authMiddleware = (req, res, next) => {
       id: decoded.sub,
       role: decoded.role,
     };
-    console.log("user is ", req.user);
+
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid or expired token" });

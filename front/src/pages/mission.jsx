@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,12 +9,19 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, ChevronDown, Check } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ChevronDown,
+  Check,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Ensure you have this shadcn component
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -43,20 +51,73 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-/* ================= UTIL ================= */
+/* ================= UTILS ================= */
 const formatDateTimeLocal = (date) => {
   if (!date) return "";
   return new Date(date).toISOString().slice(0, 16);
 };
 
-/* ================= TABLE COLUMNS ================= */
+const initialFormState = {
+  Objectif: "",
+  date_deb: "",
+  date_fin: "",
+  region: "",
+  wilaya: "",
+  status: "ENCOURS",
+  agent_id: null,
+  responsable_id: null,
+  vehicule_id: null,
+  Immatriculation: "",
+  clientAVisite: "",
+};
+
+/* ================= COLUMNS ================= */
 const columns = (onEdit, onDelete) => [
-  { accessorKey: "Objectif", header: "Objectif" },
-  { accessorKey: "date_deb", header: "Date Début" },
-  { accessorKey: "date_fin", header: "Date Fin" },
+  {
+    accessorKey: "Objectif",
+    header: "Objectif",
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original.Objectif}</span>
+    ),
+  },
+  {
+    accessorKey: "date_deb",
+    header: "Début",
+    cell: ({ row }) =>
+      new Date(row.original.date_deb).toLocaleDateString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+  },
+  {
+    accessorKey: "date_fin",
+    header: "Fin",
+    cell: ({ row }) =>
+      new Date(row.original.date_fin).toLocaleDateString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+  },
   { accessorKey: "region", header: "Région" },
   { accessorKey: "wilaya", header: "Wilaya" },
-  { accessorKey: "status", header: "Statut" },
+  {
+    accessorKey: "status",
+    header: "Statut",
+    cell: ({ row }) => (
+      <span
+        className={cn(
+          "px-2 py-1 rounded-full text-xs font-semibold",
+          row.original.status === "TERMINE"
+            ? "bg-green-100 text-green-700"
+            : row.original.status === "ANNULE"
+              ? "bg-red-100 text-red-700"
+              : "bg-blue-100 text-blue-700",
+        )}
+      >
+        {row.original.status}
+      </span>
+    ),
+  },
   {
     id: "actions",
     cell: ({ row }) => (
@@ -66,32 +127,36 @@ const columns = (onEdit, onDelete) => [
           variant="outline"
           onClick={() => onEdit(row.original)}
         >
-          <Pencil size={16} />
+          <Pencil size={16} className="text-blue-600" />
         </Button>
         <Button
           size="icon"
-          variant="destructive"
+          variant="outline"
           onClick={() => onDelete(row.original)}
         >
-          <Trash2 size={16} />
+          <Trash2 size={16} className="text-red-600" />
         </Button>
       </div>
     ),
   },
 ];
+const RequiredLabel = ({ children }) => (
+  <Label>
+    {children} <span className="text-red-500">*</span>
+  </Label>
+);
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState([]);
   const [agents, setAgents] = useState([]);
   const [wilayas, setWilayas] = useState([]);
-  const [Vehicule, setVehicule] = useState([]);
+  const [vehicules, setVehicules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
 
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  // Popover States
   const [openAgentCombo, setOpenAgentCombo] = useState(false);
   const [openRespCombo, setOpenRespCombo] = useState(false);
   const [openWiCombo, setOpenWiCombo] = useState(false);
@@ -99,79 +164,39 @@ export default function MissionsPage() {
 
   const [selectedMission, setSelectedMission] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [form, setForm] = useState(initialFormState);
 
-  const [form, setForm] = useState({
-    Objectif: "",
-    date_deb: "",
-    date_fin: "",
-    region: "",
-    wilaya: "",
-    status: "ENCOURS",
-    agent_id: null,
-    responsable_id: null,
-    vehicule_id: null,
-    Immatriculation: "",
-    clientAVisite: null,
-  });
-
-  /* ================= FETCH ================= */
-  const fetchMissions = async () => {
+  /* ================= FETCH DATA ================= */
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/mission/all`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setMissions(data);
+      const [mRes, aRes, vRes, wRes] = await Promise.all([
+        fetch(`${URL}/api/mission/all`, { credentials: "include" }),
+        fetch(`${URL}/api/user/agents`, { credentials: "include" }),
+        fetch(`${URL}/api/vehicule/all`, { credentials: "include" }),
+        fetch(`${URL}/api/location/wilayas`, { credentials: "include" }),
+      ]);
+
+      const [mD, aD, vD, wD] = await Promise.all([
+        mRes.json(),
+        aRes.json(),
+        vRes.json(),
+        wRes.json(),
+      ]);
+
+      setMissions(mD);
+      setAgents(aD);
+      setVehicules(vD);
+      setWilayas(wD);
     } catch (err) {
-      console.error(err);
-      setMissions([]);
+      toast.error("Erreur lors de la récupération des données");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAgents = async () => {
-    try {
-      const res = await fetch(`${URL}/api/user/agents`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setAgents(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchVehicule = async () => {
-    try {
-      const res = await fetch(`${URL}/api/vehicule/all`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setVehicule(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchWilayas = async () => {
-    try {
-      const res = await fetch(`${URL}/api/location/wilayas`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setWilayas(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchMissions();
-    fetchAgents();
-    fetchVehicule();
-    fetchWilayas();
+    fetchData();
   }, []);
 
   /* ================= HANDLERS ================= */
@@ -185,44 +210,76 @@ export default function MissionsPage() {
       });
     } else {
       setSelectedMission(null);
-      setForm({
-        Objectif: "",
-        date_deb: "",
-        date_fin: "",
-        region: "",
-        wilaya: "",
-        status: "ENCOURS",
-        agent_id: null,
-        responsable_id: null,
-        vehicule_id: null,
-        Immatriculation: "",
-        clientAVisite: null,
-      });
+      setForm(initialFormState);
     }
     setOpenDialog(true);
   };
 
-  const handleSubmit = async () => {
-    const url = selectedMission
-      ? `${URL}/api/mission/${selectedMission.id}`
-      : `${URL}/api/mission`;
-    await fetch(url, {
-      method: selectedMission ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(form),
+  const handleVehiculeSelect = (v) => {
+    setForm({
+      ...form,
+      vehicule_id: v.id,
+      Immatriculation: v.immatriculation || "", // Assurez-vous que le champ existe dans votre API
     });
-    setOpenDialog(false);
-    fetchMissions();
+    setOpenVehiCombo(false);
+  };
+
+  const handleSubmit = async () => {
+    // Validation
+    if (
+      !form.Objectif ||
+      !form.date_deb ||
+      !form.date_fin ||
+      !form.wilaya ||
+      !form.vehicule_id
+    ) {
+      return toast.warning("Veuillez remplir les champs obligatoires");
+    }
+
+    if (new Date(form.date_deb) >= new Date(form.date_fin)) {
+      return toast.error("La date de début doit être avant la date de fin");
+    }
+
+    try {
+      const isEdit = !!selectedMission;
+      const url = isEdit
+        ? `${URL}/api/mission/${selectedMission.id}`
+        : `${URL}/api/mission`;
+
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        toast.success(isEdit ? "Mission mise à jour" : "Mission créée");
+        setOpenDialog(false);
+        setForm(initialFormState);
+        fetchData(); // Refresh list
+      } else {
+        toast.error("Erreur lors de l'enregistrement");
+      }
+    } catch (err) {
+      toast.error("Serveur injoignable");
+    }
   };
 
   const confirmDelete = async () => {
-    await fetch(`${URL}/api/mission/${deleteTarget.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    setOpenDeleteDialog(false);
-    fetchMissions();
+    try {
+      const res = await fetch(`${URL}/api/mission/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        toast.info("Mission supprimée avec succès");
+        setOpenDeleteDialog(false);
+        fetchData();
+      }
+    } catch (err) {
+      toast.error("Erreur de suppression");
+    }
   };
 
   const table = useReactTable({
@@ -232,32 +289,47 @@ export default function MissionsPage() {
       setOpenDeleteDialog(true);
     }),
     state: { globalFilter },
-    globalFilterFn: (row, _, value) =>
-      row.original.Objectif.toLowerCase().includes(value.toLowerCase()),
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  if (loading) return <p className="p-6 text-center">Chargement...</p>;
+  if (loading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+      </div>
+    );
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Missions</h1>
-        <Button onClick={() => handleEdit(null)}>Créer une mission</Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Gestion des Missions
+          </h1>
+          <p className="text-sm text-gray-500 text-muted-foreground">
+            Gérez vos tournées et agents sur le terrain
+          </p>
+        </div>
+        <Button onClick={() => handleEdit(null)} className="gap-2">
+          <Plus size={18} /> Créer une mission
+        </Button>
       </div>
 
-      <Input
-        placeholder="Rechercher par objectif..."
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter(e.target.value)}
-        className="max-w-sm bg-white"
-      />
+      <div className="flex items-center gap-4">
+        <Input
+          placeholder="Rechercher par objectif..."
+          value={globalFilter ?? ""}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="max-w-sm bg-white"
+        />
+      </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-white shadow-sm">
+      <div className="rounded-md border bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50">
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((h) => (
@@ -271,7 +343,10 @@ export default function MissionsPage() {
           <TableBody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/40 transition">
+                <TableRow
+                  key={row.id}
+                  className="hover:bg-gray-50/50 transition-colors"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -284,8 +359,8 @@ export default function MissionsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10">
-                  Aucune mission trouvée
+                <TableCell colSpan={7} className="h-24 text-center">
+                  Aucun résultat trouvé.
                 </TableCell>
               </TableRow>
             )}
@@ -294,18 +369,18 @@ export default function MissionsPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-end space-x-2">
         <Button
-          size="sm"
           variant="outline"
+          size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           Précédent
         </Button>
         <Button
-          size="sm"
           variant="outline"
+          size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
@@ -313,27 +388,27 @@ export default function MissionsPage() {
         </Button>
       </div>
 
-      {/* ================= DIALOG CREATE / EDIT ================= */}
+      {/* CREATE/EDIT DIALOG */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedMission ? "Modifier" : "Créer"} la Mission
+              {selectedMission ? "Modifier la Mission" : " Nouvelle Mission"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="col-span-2 space-y-1">
-              <Label>Objectif de la mission</Label>
+          <div className="grid grid-cols-2 gap-6 py-4">
+            <div className="col-span-2 space-y-2">
+              <RequiredLabel>Objectif de la mission</RequiredLabel>
               <Input
-                placeholder="Ex: Tourné Marketing"
                 value={form.Objectif}
                 onChange={(e) => setForm({ ...form, Objectif: e.target.value })}
+                placeholder="Ex: Tourné Marketing"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label>Date de début</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Date de début</RequiredLabel>
               <Input
                 type="datetime-local"
                 value={form.date_deb}
@@ -341,8 +416,8 @@ export default function MissionsPage() {
               />
             </div>
 
-            <div className="space-y-1">
-              <Label>Date de fin</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Date de fin</RequiredLabel>
               <Input
                 type="datetime-local"
                 value={form.date_fin}
@@ -350,27 +425,23 @@ export default function MissionsPage() {
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="region">Région</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Région</RequiredLabel>
               <select
-                id="region"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 border rounded-md px-3 text-sm"
                 value={form.region}
                 onChange={(e) => setForm({ ...form, region: e.target.value })}
               >
-                <option value="" disabled>
-                  Sélectionner une région
-                </option>
+                <option value="">Choisir...</option>
                 <option value="Nord">Nord</option>
                 <option value="Est">Est</option>
                 <option value="Ouest">Ouest</option>
-                <option value="Kabylie">Kabylie</option>
                 <option value="Sud">Sud</option>
               </select>
             </div>
 
-            <div className="space-y-1">
-              <Label>Wilaya</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Wilaya</RequiredLabel>
               <Popover open={openWiCombo} onOpenChange={setOpenWiCombo}>
                 <PopoverTrigger asChild>
                   <Button
@@ -378,15 +449,15 @@ export default function MissionsPage() {
                     className="w-full justify-between font-normal"
                   >
                     {wilayas.find((w) => w.wilaya === form.wilaya)?.wilaya ||
-                      "Sélectionner une wilaya"}
-                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                      "Sélectionner..."}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0" align="start">
+                <PopoverContent className="p-0 pointer-events-auto">
                   <Command>
-                    <CommandInput placeholder="Chercher wilaya..." />
-                    <CommandEmpty>Aucune wilaya trouvée.</CommandEmpty>
-                    <CommandGroup className="max-h-60 overflow-y-auto">
+                    <CommandInput placeholder="Chercher..." />
+                    <CommandEmpty>Aucune wilaya.</CommandEmpty>
+                    <CommandGroup className="max-h-48 overflow-auto">
                       {wilayas.map((w) => (
                         <CommandItem
                           key={w.wilaya}
@@ -412,21 +483,8 @@ export default function MissionsPage() {
               </Popover>
             </div>
 
-            <div className="space-y-1">
-              <Label>Statut</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-              >
-                <option value="ENCOURS">ENCOURS</option>
-                <option value="TERMINE">TERMINE</option>
-                <option value="ANNULE">ANNULE</option>
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <Label>Agent Responsable</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Responsable</RequiredLabel>
               <Popover open={openRespCombo} onOpenChange={setOpenRespCombo}>
                 <PopoverTrigger asChild>
                   <Button
@@ -438,10 +496,10 @@ export default function MissionsPage() {
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0">
+                <PopoverContent className="p-0 pointer-events-auto">
                   <Command>
-                    <CommandInput placeholder="Chercher agent..." />
-                    <CommandGroup>
+                    <CommandInput placeholder="Chercher..." />
+                    <CommandGroup className="max-h-48 overflow-auto">
                       {agents.map((a) => (
                         <CommandItem
                           key={a.id}
@@ -450,14 +508,6 @@ export default function MissionsPage() {
                             setOpenRespCombo(false);
                           }}
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              form.responsable_id === a.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
                           {a.fullname}
                         </CommandItem>
                       ))}
@@ -467,8 +517,8 @@ export default function MissionsPage() {
               </Popover>
             </div>
 
-            <div className="space-y-1">
-              <Label>Agent Compagnion</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Agent Accompagnant</RequiredLabel>
               <Popover open={openAgentCombo} onOpenChange={setOpenAgentCombo}>
                 <PopoverTrigger asChild>
                   <Button
@@ -480,10 +530,10 @@ export default function MissionsPage() {
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0">
+                <PopoverContent className="p-0 pointer-events-auto">
                   <Command>
-                    <CommandInput placeholder="Chercher agent..." />
-                    <CommandGroup>
+                    <CommandInput placeholder="Chercher..." />
+                    <CommandGroup className="max-h-48 overflow-auto">
                       {agents.map((a) => (
                         <CommandItem
                           key={a.id}
@@ -492,14 +542,6 @@ export default function MissionsPage() {
                             setOpenAgentCombo(false);
                           }}
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              form.agent_id === a.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
                           {a.fullname}
                         </CommandItem>
                       ))}
@@ -509,40 +551,29 @@ export default function MissionsPage() {
               </Popover>
             </div>
 
-            <div className="space-y-1">
-              <Label>Véhicule</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Véhicule</RequiredLabel>
               <Popover open={openVehiCombo} onOpenChange={setOpenVehiCombo}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className="w-full justify-between font-normal"
                   >
-                    {Vehicule.find((v) => v.id === form.vehicule_id)?.marque ||
+                    {vehicules.find((v) => v.id === form.vehicule_id)?.marque ||
                       "Sélectionner..."}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0">
+                <PopoverContent className="p-0 pointer-events-auto">
                   <Command>
-                    <CommandInput placeholder="Chercher véhicule..." />
-                    <CommandGroup>
-                      {Vehicule.map((v) => (
+                    <CommandInput placeholder="Chercher..." />
+                    <CommandGroup className="max-h-48 overflow-auto">
+                      {vehicules.map((v) => (
                         <CommandItem
                           key={v.id}
-                          onSelect={() => {
-                            setForm({ ...form, vehicule_id: v.id });
-                            setOpenVehiCombo(false);
-                          }}
+                          onSelect={() => handleVehiculeSelect(v)}
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              form.vehicule_id === v.id
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {v.marque}
+                          {v.marque} ({v.immatriculation})
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -551,50 +582,70 @@ export default function MissionsPage() {
               </Popover>
             </div>
 
-            <div className="space-y-1">
-              <Label>Immatriculation</Label>
+            <div className="space-y-2">
+              <RequiredLabel>Immatriculation</RequiredLabel>
               <Input
                 value={form.Immatriculation}
-                placeholder="Ex: 00123-116-16"
-                onChange={(e) =>
-                  setForm({ ...form, Immatriculation: e.target.value })
-                }
+                readOnly
+                className="bg-gray-50 text-gray-500"
+                placeholder="Ex: 999548-122-16"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Client A Visite</Label>
+
+            <div className="space-y-2">
+              <RequiredLabel>Nombre de clients à visiter</RequiredLabel>
               <Input
-                value={form.clientAVisite}
-                placeholder="Ex: 80"
+                type="number"
+                value={form.clientAVisite || ""}
                 onChange={(e) =>
                   setForm({ ...form, clientAVisite: e.target.value })
                 }
               />
             </div>
+
+            {selectedMission && (
+              <div className="col-span-2 space-y-2">
+                <Label>Statut</Label>
+                <select
+                  className="w-full h-10 border rounded-md px-3"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                >
+                  <option value="ENCOURS">ENCOURS</option>
+                  <option value="TERMINE">TERMINE</option>
+                  <option value="ANNULE">ANNULE</option>
+                </select>
+              </div>
+            )}
           </div>
 
-          <DialogFooter>
-            <Button onClick={handleSubmit} className="w-full sm:w-auto">
+          <DialogFooter className="mt-4">
+            <Button variant="ghost" onClick={() => setOpenDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSubmit}>
               {selectedMission
-                ? "Sauvegarder les modifications"
-                : "Créer la mission"}
+                ? "Appliquer les changements"
+                : "Enregistrer la mission"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ================= DIALOG DELETE ================= */}
+      {/* DELETE CONFIRM */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmer la suppression</DialogTitle>
           </DialogHeader>
-          <p className="py-4 text-gray-600">
-            Êtes-vous sûr de vouloir supprimer la mission :{" "}
-            <strong>{deleteTarget?.Objectif}</strong> ? Cette action est
-            irréversible.
+          <p className="text-muted-foreground text-sm">
+            Voulez-vous vraiment supprimer la mission{" "}
+            <span className="font-bold text-gray-800">
+              "{deleteTarget?.Objectif}"
+            </span>{" "}
+            ?
           </p>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setOpenDeleteDialog(false)}
@@ -602,7 +653,7 @@ export default function MissionsPage() {
               Annuler
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              Supprimer
+              Supprimer définitivement
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -9,7 +9,6 @@ const login = async (req, res) => {
     const user = await User.unscoped().findOne({
       where: { username },
     });
-    console.log(user);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -26,7 +25,7 @@ const login = async (req, res) => {
         role: user.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" },
     );
 
     res.cookie("token", token, {
@@ -34,11 +33,17 @@ const login = async (req, res) => {
       secure: false,
       sameSite: "lax",
       domain: hostname,
-      maxAge: 3600000,
+      maxAge: 24 * 60 * 60 * 1000,
     });
-
+    const userResponse = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      fullname: user.fullname,
+    };
     res.status(200).json({
       message: "Login successful",
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

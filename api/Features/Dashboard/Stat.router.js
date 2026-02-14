@@ -13,7 +13,7 @@ router.get(
 router.get(
   "/stats",
   authMiddleware,
-  authorize("admin", "responsable"),
+  authorize("admin", "responsable", "marketeur"),
   StatController.AcceuilStat,
 );
 router.get(

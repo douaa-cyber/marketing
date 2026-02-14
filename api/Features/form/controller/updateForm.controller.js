@@ -235,7 +235,7 @@ const updateForm = async (req, res) => {
     await Promise.all(
       actions
         .map((act) => {
-          const actId = Number(act.ActionMarketingId);
+          const actId = Number(act.actionId || act.ActionMarketingId);
           if (!actId) return null;
 
           return Form_Action.create({

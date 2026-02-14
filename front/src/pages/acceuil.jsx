@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ClipboardCheck,
   TrendingUp,
@@ -52,68 +53,67 @@ export default function Accueil() {
   const [stats, setStats] = useState({ TotalMission: 0, TotalForm: 0 });
   const [activeMission, setActiveMission] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const hasRefreshed = sessionStorage.getItem("dashboard_refreshed");
-    if (hasRefreshed) return;
-
-    const timer = setTimeout(() => {
-      sessionStorage.setItem("dashboard_refreshed", "true");
-      window.location.reload();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
+    if (!authLoading && !user) {
+      navigate("/login"); // Push to login page
+    }
+  }, [user, authLoading, navigate]);
   useEffect(() => {
     const fetchData = async () => {
-      // Bloque si l'authentification travaille encore
-      if (authLoading) return;
-
-      // Arrête si on a fini de charger mais qu'il n'y a pas d'utilisateur
-      if (!user?.id) {
-        setDataLoading(false);
-        return;
-      }
+      if (authLoading || !user?.id) return;
 
       try {
-        setDataLoading(true); // On affiche le loader local le temps du fetch
+        setDataLoading(true);
         const [statsRes, missionRes] = await Promise.all([
           fetch(`${URL}/api/dashboard/stats`, { credentials: "include" }),
           fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" }),
         ]);
 
+        // If you see the console log, it means missionRes.ok was likely true
         if (statsRes.ok && missionRes.ok) {
           const statsData = await statsRes.json();
           const missions = await missionRes.json();
-          console.log(missions);
+
           setStats({
             TotalMission: statsData.TotalMission || 0,
             TotalForm: statsData.TotalForm || 0,
           });
           setActiveMission(Array.isArray(missions) ? missions[0] : missions);
+
+          // ADD THIS LINE HERE to be safe, though finally should catch it
+          setDataLoading(false);
+        } else {
+          // If one fails, we still need to stop the spinner
+          console.error("One of the requests failed");
+          setDataLoading(false);
         }
       } catch (e) {
         console.error("Erreur fetch dashboard:", e);
+        setDataLoading(false); // Ensure loading stops on network error
       } finally {
         setDataLoading(false);
       }
     };
 
     fetchData();
-  }, [user?.id, authLoading]); // Ces deux dépendances garantissent la réactivité
+  }, [user, authLoading]);
 
-  // Écran de chargement unique et propre
-  if (authLoading || dataLoading) {
+  if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 text-muted-foreground animate-pulse font-medium">
-        Chargement du tableau de bord...
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 text-muted-foreground font-medium italic">
+        Vérification de l'identité...
       </div>
     );
   }
-
+  if (!user) return null;
+  if (dataLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 text-muted-foreground animate-pulse font-medium">
+        Initialisation du tableau de bord...
+      </div>
+    );
+  }
   return (
     <div className="p-6 space-y-8 bg-gray-50/50 min-h-screen font-sans">
       {/* Header Section */}

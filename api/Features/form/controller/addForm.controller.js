@@ -19,9 +19,9 @@ const createForm = async (req, res) => {
   try {
     const body = req.body;
     const imagePath = req.file ? req.file.path : null;
-    const plaques = body.plaques == "1" ? "true" : "false";
-    const espacepub = body.espacepub == "1" ? "true" : "false";
-    const packDetaillant = body.packDetaillant == "1" ? "true" : "false";
+    const plaques = body.plaques;
+    const espacepub = body.espacepub;
+    const packDetaillant = body.packDetaillant;
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};

@@ -37,7 +37,7 @@ export default function Login() {
       const res = await fetch(`${URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // important for cookies
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
 
@@ -48,8 +48,7 @@ export default function Login() {
         return;
       }
 
-      // **Update the user context**
-      setUser(data.user || data); // depends on backend response structure
+      setUser(data.user || data);
 
       // Navigate after login
       navigate("/");

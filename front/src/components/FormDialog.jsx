@@ -3,6 +3,8 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "react-toastify";
+
 import {
   Dialog,
   DialogContent,
@@ -33,9 +35,15 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { URL } from "@/api";
+import { Label } from "./ui/label";
 
 const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
 
+const RequiredLabel = ({ children }) => (
+  <Label>
+    {children} <span className="text-red-500">*</span>
+  </Label>
+);
 export default function FormDialog({
   open,
   onOpenChange,
@@ -241,71 +249,6 @@ export default function FormDialog({
         "",
     },
   });
-  const validateStep1 = () => {
-    const newErrors = {};
-
-    if (!form.mission_id) newErrors.mission_id = "La mission est obligatoire";
-    if (!form.Fullname.trim())
-      newErrors.Fullname = "Le nom du client est obligatoire";
-    if (!form.Tel.trim()) newErrors.Tel = "Le téléphone est obligatoire";
-    if (!form.latitude.trim()) newErrors.latitude = "Latitude obligatoire";
-    if (!form.longitude.trim()) newErrors.longitude = "Longitude obligatoire";
-    if (!form.algeriaCitiesId)
-      newErrors.algeriaCitiesId = "La ville est obligatoire";
-    if (!form.ActiviteId) newErrors.ActiviteId = "L'activité est obligatoire";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  const validateStep2 = () => {
-    const newErrors = {};
-    const cat = activeCategory;
-    const data = selected[cat];
-
-    if (data.nbr_article === "" || Number(data.nbr_article) < 0) {
-      newErrors[`nbr_article_${cat}`] = "Nombre d'articles obligatoire";
-    }
-
-    if (
-      data.nbr_article_commande === "" ||
-      Number(data.nbr_article_commande) < 0
-    ) {
-      newErrors[`nbr_article_commande_${cat}`] =
-        "Nombre d'articles commandés obligatoire";
-    }
-
-    if (Number(data.nbr_article_commande) > Number(data.nbr_article)) {
-      newErrors[`nbr_article_commande_${cat}`] =
-        "La commande ne peut pas dépasser le stock";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  const validateStep3 = () => {
-    const newErrors = {};
-
-    if (!form.sourceAppro || form.sourceAppro.length === 0) {
-      newErrors.sourceAppro = "La source d'approvisionnement est obligatoire";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  const validateStep4 = () => {
-    const newErrors = {};
-
-    if (!form.criteres || form.criteres.length === 0) {
-      newErrors.criteres = "Vous devez sélectionner au moins un critère";
-    }
-
-    if (!form.actions || form.actions.length === 0) {
-      newErrors.actions = "Vous devez sélectionner au moins une action";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   useEffect(() => {
     if (selectedFormulaire) {
@@ -344,11 +287,6 @@ export default function FormDialog({
   }, [selectedFormulaire, open]);
 
   const handleNext = () => {
-    if (step === 1 && !validateStep1()) return;
-    if (step === 2 && !validateStep2()) return;
-    if (step === 3 && !validateStep3()) return;
-    if (step === 4 && !validateStep4()) return;
-
     setStep((s) => Math.min(s + 1, 4));
   };
 
@@ -393,6 +331,67 @@ export default function FormDialog({
     }));
 
   const handleSubmit = async () => {
+    const missingFields = [];
+
+    if (!form.mission_id) missingFields.push("Mission");
+    if (!form.Fullname?.trim()) missingFields.push("Nom Client");
+    if (!form.Tel?.trim()) missingFields.push("Téléphone");
+    if (!form.latitude || !form.longitude)
+      missingFields.push("Géo-localisation");
+    if (!form.algeriaCitiesId) missingFields.push("Ville");
+    if (!form.ActiviteId) missingFields.push("Activité");
+
+    categories.forEach((cat) => {
+      const catData = selected[cat];
+
+      const hasSelection =
+        catData.produits.length > 0 ||
+        catData.concurrents.length > 0 ||
+        catData.prodConcurrents.length > 0;
+
+      if (hasSelection) {
+        if (!catData.nbr_article) {
+          missingFields.push(`Nombre d'articles pour ${cat}`);
+        }
+        if (!catData.nbr_article_commande) {
+          missingFields.push(`Nombre d'articles commandés pour ${cat}`);
+        }
+
+        if (catData.nbr_article && catData.nbr_article_commande) {
+          const nbr = Number(catData.nbr_article);
+          const cmd = Number(catData.nbr_article_commande);
+
+          if (cmd > nbr) {
+            missingFields.push(
+              `Pour ${cat}, la commande (${cmd}) ne peut pas dépasser le nombre d'articles (${nbr})`,
+            );
+          }
+        }
+      }
+    });
+
+    if (form.sourceAppro.length === 0)
+      missingFields.push("Source d'approvisionnement");
+
+    if (form.criteres.length === 0) missingFields.push("Critères d'évaluation");
+    if (form.actions.length === 0) missingFields.push("Actions à entreprendre");
+
+    // 1. Affichage du Warning si champs manquants
+    if (missingFields.length > 0) {
+      return toast.warning(
+        <div>
+          <strong>Champs manquants :</strong>
+          <ul className="list-disc ml-4 text-xs mt-1">
+            {missingFields.slice(0, 3).map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+            {missingFields.length > 3 && (
+              <li>et {missingFields.length - 3} autres...</li>
+            )}
+          </ul>
+        </div>,
+      );
+    }
     const formData = new FormData();
 
     const payload = {
@@ -420,16 +419,26 @@ export default function FormDialog({
       ? `${URL}/api/form/${selectedFormulaire.ID}`
       : `${URL}/api/form`;
     const method = selectedFormulaire ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      body: formData,
-      credentials: "include",
-    });
-    if (res.ok) {
-      onSuccess?.();
-      setStep(1);
-      onOpenChange(false);
+    try {
+      const res = await fetch(url, {
+        method,
+        body: formData,
+        credentials: "include",
+      });
+      if (res.ok) {
+        toast.success(
+          selectedFormulaire ? "Mise à jour réussie !" : "Visite enregistrée !",
+        );
+        onSuccess?.();
+        setStep(1);
+        onOpenChange(false);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.message || "Erreur lors de l'enregistrement");
+      }
+    } catch (error) {
+      console.error("Erreur fetch:", error);
+      toast.error("Impossible de contacter le serveur");
     }
   };
 
@@ -475,7 +484,9 @@ export default function FormDialog({
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2 space-y-1">
-                    <label className="text-sm font-medium">Mission</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Mission
+                    </RequiredLabel>
                     <select
                       className="w-full border rounded-md p-2 bg-white"
                       value={form.mission_id || ""}
@@ -490,26 +501,22 @@ export default function FormDialog({
                         </option>
                       ))}
                     </select>
-                    {errors.mission_id && (
-                      <p className="text-red-500 text-sm">
-                        {errors.mission_id}
-                      </p>
-                    )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Nom Client</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Nom Client
+                    </RequiredLabel>
                     <Input
                       value={form.Fullname}
                       onChange={(e) =>
                         setForm({ ...form, Fullname: e.target.value })
                       }
                     />
-                    {errors.Fullname && (
-                      <p className="text-red-500 text-sm">{errors.Fullname}</p>
-                    )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Téléphone</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Téléphone
+                    </RequiredLabel>
                     <Input
                       value={form.Tel}
                       maxLength="10"
@@ -517,9 +524,6 @@ export default function FormDialog({
                         setForm({ ...form, Tel: e.target.value })
                       }
                     />
-                    {errors.Tel && (
-                      <p className="text-red-500 text-sm">{errors.Tel}</p>
-                    )}
                   </div>
                   <div className="sm:col-span-2 space-y-1">
                     <label className="text-sm font-medium">Nom Magasin</label>
@@ -531,7 +535,9 @@ export default function FormDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Latitude</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Latitude
+                    </RequiredLabel>
                     <Input
                       value={form.latitude}
                       onChange={(e) =>
@@ -539,12 +545,11 @@ export default function FormDialog({
                       }
                       placeholder="Géo-localisation..."
                     />
-                    {errors.latitude && (
-                      <p className="text-red-500 text-sm">{errors.latitude}</p>
-                    )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Longitude</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Longitude
+                    </RequiredLabel>
                     <Input
                       value={form.longitude}
                       onChange={(e) =>
@@ -552,12 +557,11 @@ export default function FormDialog({
                       }
                       placeholder="Géo-localisation..."
                     />
-                    {errors.longitude && (
-                      <p className="text-red-500 text-sm">{errors.longitude}</p>
-                    )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Ville</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Ville
+                    </RequiredLabel>
                     <Popover
                       open={cityPopoverOpen}
                       onOpenChange={setCityPopoverOpen}
@@ -602,14 +606,11 @@ export default function FormDialog({
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    {errors.algeriaCitiesId && (
-                      <p className="text-red-500 text-sm">
-                        {errors.algeriaCitiesId}
-                      </p>
-                    )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Activité</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Activité
+                    </RequiredLabel>
                     <select
                       className="w-full border rounded-md p-2 bg-white"
                       value={form.ActiviteId || ""}
@@ -624,11 +625,6 @@ export default function FormDialog({
                         </option>
                       ))}
                     </select>
-                    {errors.ActiviteId && (
-                      <p className="text-red-500 text-sm">
-                        {errors.ActiviteId}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -652,9 +648,9 @@ export default function FormDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">
+                    <RequiredLabel className="text-sm font-medium">
                       Nombre d'articles
-                    </label>
+                    </RequiredLabel>
                     <Input
                       type="number"
                       min="0"
@@ -688,9 +684,9 @@ export default function FormDialog({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">
+                    <RequiredLabel className="text-sm font-medium">
                       Nombre d'articles commandés
-                    </label>
+                    </RequiredLabel>
                     <Input
                       type="number"
                       min="0"
@@ -715,12 +711,6 @@ export default function FormDialog({
                           : ""
                       }
                     />
-
-                    {errors[`nbr_article_commande_${activeCategory}`] && (
-                      <p className="text-red-500 text-sm">
-                        {errors[`nbr_article_commande_${activeCategory}`]}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -779,9 +769,9 @@ export default function FormDialog({
             {step === 3 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="space-y-3">
-                  <label className="font-bold text-sm text-slate-600">
+                  <RequiredLabel className="font-bold text-sm text-slate-600">
                     Source d'approvisionnement
-                  </label>
+                  </RequiredLabel>
                   <Popover
                     open={sourcePopoverOpen}
                     onOpenChange={setSourcePopoverOpen}
@@ -854,11 +844,6 @@ export default function FormDialog({
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  {errors.sourceAppro && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.sourceAppro}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -948,16 +933,14 @@ export default function FormDialog({
                 {/* CRITÈRES D'ÉVALUATION */}
                 <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-700">
+                    <RequiredLabel className="text-sm font-bold text-slate-700">
                       Critères d'évaluation
-                    </h3>
+                    </RequiredLabel>
                     <p className="text-xs text-slate-400">
                       Sélectionnez les points observés chez le client
                     </p>
                   </div>
-                  {errors.criteres && (
-                    <p className="text-red-500 text-sm">{errors.criteres}</p>
-                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {criteriaList.map((crit) => {
                       const isChecked = form.criteres.includes(crit.id);
@@ -1004,16 +987,14 @@ export default function FormDialog({
                 {/* ACTIONS */}
                 <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-700">
+                    <RequiredLabel className="text-sm font-bold text-slate-700">
                       Actions à entreprendre
-                    </h3>
+                    </RequiredLabel>
                     <p className="text-xs text-slate-400">
                       Sélectionnez les actions recommandées
                     </p>
                   </div>
-                  {errors.actions && (
-                    <p className="text-red-500 text-sm">{errors.actions}</p>
-                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {actionsList.map((action) => {
                       const isChecked = form.actions.includes(action.id);
