@@ -29,6 +29,7 @@ const Form_prodAcc = require("../model/Form_ProdAccessoire");
 const Cadeau = require("../../Cadeau/model/Cadeau");
 const CadeauForm = require("../model/Form_Cadeau");
 const Critere = require("../../Critere/critere.model");
+const Action = require("../../ActionMarketing/action.model");
 
 const buildWhereClause = (user) => {
   if (!user) return {};
@@ -96,6 +97,11 @@ const getAllForms = async (req, res) => {
         },
         {
           model: Critere,
+          through: { attributes: [] },
+          attributes: ["id", "nom"],
+        },
+        {
+          model: Action,
           through: { attributes: [] },
           attributes: ["id", "nom"],
         },

@@ -267,7 +267,7 @@ const getRuptureStockStats = async (req, res) => {
 
       return { ...client, famillesMoyennes };
     });
-
+    finalResult.sort((a, b) => a.clientName.localeCompare(b.clientName));
     res.status(200).json(finalResult);
   } catch (error) {
     console.error(error);

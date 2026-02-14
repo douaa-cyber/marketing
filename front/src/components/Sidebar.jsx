@@ -77,7 +77,7 @@ const items = [
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
 
   const [hovered, setHovered] = useState(false); // desktop
   const [isOpen, setIsOpen] = useState(false); // mobile
@@ -85,6 +85,18 @@ export default function Sidebar() {
 
   const isSidebarOpen = hovered || isOpen;
 
+  const filteredItems = items.filter((item) => {
+    if (user?.role === "marketeur") {
+      if (
+        item.title === "Donnes de base" ||
+        item.title === "Mission" ||
+        item.title === "Dashboard"
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
   const toggleItem = (title) => {
     setOpenItems((prev) => ({ ...prev, [title]: !prev[title] }));
   };
@@ -147,7 +159,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-1 overflow-auto">
-          {items.map((item) => {
+          {filteredItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
 

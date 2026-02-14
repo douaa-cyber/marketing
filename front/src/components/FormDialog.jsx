@@ -58,7 +58,10 @@ export default function FormDialog({
   const [cadeauxList, setCadeauxList] = useState([]);
   const [cadeauxOpen, setCadeauxOpen] = useState(false);
 
-  const [criteriaList, setCriteriaList] = useState([]); // Liste des critères depuis l'API
+  const [criteriaList, setCriteriaList] = useState([]);
+  const [actionsList, setActionsList] = useState([]);
+  const [errors, setErrors] = useState({});
+
   const [activeCategory, setActiveCategory] = useState("lampe");
 
   const [data, setData] = useState({
@@ -88,6 +91,7 @@ export default function FormDialog({
     SatisfactionCli: 0,
     evaluconcurrent: 0,
     criteres: [],
+    actions: [],
     commentaire: "",
   };
 
@@ -116,28 +120,33 @@ export default function FormDialog({
     // Chargement des données de base
     const fetchBaseData = async () => {
       try {
-        const [villes, cadeaux, sources, acts, crit] = await Promise.all([
-          fetch(`${URL}/api/location/ville`, { credentials: "include" }).then(
-            (r) => r.json(),
-          ),
-          fetch(`${URL}/api/cadeau/all`, { credentials: "include" }).then((r) =>
-            r.json(),
-          ),
-          fetch(`${URL}/api/sourceAppro/all`, { credentials: "include" }).then(
-            (r) => r.json(),
-          ),
-          fetch(`${URL}/api/activite/all`, { credentials: "include" }).then(
-            (r) => r.json(),
-          ),
-          fetch(`${URL}/api/criteria`, { credentials: "include" }).then((r) =>
-            r.json(),
-          ), // Fetch critères
-        ]);
+        const [villes, cadeaux, sources, acts, crit, actions] =
+          await Promise.all([
+            fetch(`${URL}/api/location/ville`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/cadeau/all`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/sourceAppro/all`, {
+              credentials: "include",
+            }).then((r) => r.json()),
+            fetch(`${URL}/api/activite/all`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/criteria`, { credentials: "include" }).then((r) =>
+              r.json(),
+            ), // Fetch critères
+            fetch(`${URL}/api/action`, { credentials: "include" }).then((r) =>
+              r.json(),
+            ), // Fetch critères
+          ]);
         setCities(villes || []);
         setCadeauxList(cadeaux || []);
         setSourcesList(sources || []);
         setActivites(acts || []);
         setCriteriaList(crit || []);
+        setActionsList(actions || []);
       } catch (err) {
         console.error("Erreur lors du chargement des données initiales", err);
       }
@@ -232,12 +241,87 @@ export default function FormDialog({
         "",
     },
   });
+  const validateStep1 = () => {
+    const newErrors = {};
+
+    if (!form.mission_id) newErrors.mission_id = "La mission est obligatoire";
+    if (!form.Fullname.trim())
+      newErrors.Fullname = "Le nom du client est obligatoire";
+    if (!form.Tel.trim()) newErrors.Tel = "Le téléphone est obligatoire";
+    if (!form.latitude.trim()) newErrors.latitude = "Latitude obligatoire";
+    if (!form.longitude.trim()) newErrors.longitude = "Longitude obligatoire";
+    if (!form.algeriaCitiesId)
+      newErrors.algeriaCitiesId = "La ville est obligatoire";
+    if (!form.ActiviteId) newErrors.ActiviteId = "L'activité est obligatoire";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const validateStep2 = () => {
+    const newErrors = {};
+    const cat = activeCategory;
+    const data = selected[cat];
+
+    if (data.nbr_article === "" || Number(data.nbr_article) < 0) {
+      newErrors[`nbr_article_${cat}`] = "Nombre d'articles obligatoire";
+    }
+
+    if (
+      data.nbr_article_commande === "" ||
+      Number(data.nbr_article_commande) < 0
+    ) {
+      newErrors[`nbr_article_commande_${cat}`] =
+        "Nombre d'articles commandés obligatoire";
+    }
+
+    if (Number(data.nbr_article_commande) > Number(data.nbr_article)) {
+      newErrors[`nbr_article_commande_${cat}`] =
+        "La commande ne peut pas dépasser le stock";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const validateStep3 = () => {
+    const newErrors = {};
+
+    if (!form.sourceAppro || form.sourceAppro.length === 0) {
+      newErrors.sourceAppro = "La source d'approvisionnement est obligatoire";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const validateStep4 = () => {
+    const newErrors = {};
+
+    if (!form.criteres || form.criteres.length === 0) {
+      newErrors.criteres = "Vous devez sélectionner au moins un critère";
+    }
+
+    if (!form.actions || form.actions.length === 0) {
+      newErrors.actions = "Vous devez sélectionner au moins une action";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   useEffect(() => {
     if (selectedFormulaire) {
       setForm({
         ...initialFormState,
         ...selectedFormulaire,
+        plaque:
+          selectedFormulaire.plaque === "true" ||
+          selectedFormulaire.plaque === true,
+        espacepub:
+          selectedFormulaire.espacepub === "true" ||
+          selectedFormulaire.espacepub === true,
+        packDetaillant:
+          selectedFormulaire.packDetaillant === "true" ||
+          selectedFormulaire.packDetaillant === true,
+
         sourceAppro: selectedFormulaire.SourceAppros?.map((s) => s.ID) || [],
         cadeaux:
           selectedFormulaire.cadeaus?.map((c) => ({
@@ -245,6 +329,7 @@ export default function FormDialog({
             qty: c.cadeau_form.quantity,
           })) || [],
         criteres: selectedFormulaire.Criteres?.map((c) => c.id) || [],
+        actions: selectedFormulaire.ActionMarketings?.map((a) => a.id) || [],
       });
       setSelected(mapFormulaireToSelected(selectedFormulaire));
     } else {
@@ -258,7 +343,15 @@ export default function FormDialog({
     }
   }, [selectedFormulaire, open]);
 
-  const handleNext = () => setStep((s) => Math.min(s + 1, 4));
+  const handleNext = () => {
+    if (step === 1 && !validateStep1()) return;
+    if (step === 2 && !validateStep2()) return;
+    if (step === 3 && !validateStep3()) return;
+    if (step === 4 && !validateStep4()) return;
+
+    setStep((s) => Math.min(s + 1, 4));
+  };
+
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
 
   // ----------------- Normalisation pour Backend -----------------
@@ -293,13 +386,21 @@ export default function FormDialog({
   const normalizeCriteres = (criteresIds) =>
     criteresIds.map((id) => ({ critereId: Number(id), is_checked: 1 }));
 
+  const normalizeActions = (actionsIds) =>
+    actionsIds.map((id) => ({
+      actionId: Number(id),
+      is_checked: 1,
+    }));
+
   const handleSubmit = async () => {
     const formData = new FormData();
+
     const payload = {
       ...form,
       selections: normalizeSelections(selected),
       cadeaux: normalizeCadeaux(form.cadeaux),
       criteres: normalizeCriteres(form.criteres),
+      actions: normalizeActions(form.actions),
     };
 
     Object.keys(payload).forEach((key) => {
@@ -389,6 +490,11 @@ export default function FormDialog({
                         </option>
                       ))}
                     </select>
+                    {errors.mission_id && (
+                      <p className="text-red-500 text-sm">
+                        {errors.mission_id}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Nom Client</label>
@@ -398,6 +504,9 @@ export default function FormDialog({
                         setForm({ ...form, Fullname: e.target.value })
                       }
                     />
+                    {errors.Fullname && (
+                      <p className="text-red-500 text-sm">{errors.Fullname}</p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Téléphone</label>
@@ -408,6 +517,9 @@ export default function FormDialog({
                         setForm({ ...form, Tel: e.target.value })
                       }
                     />
+                    {errors.Tel && (
+                      <p className="text-red-500 text-sm">{errors.Tel}</p>
+                    )}
                   </div>
                   <div className="sm:col-span-2 space-y-1">
                     <label className="text-sm font-medium">Nom Magasin</label>
@@ -427,6 +539,9 @@ export default function FormDialog({
                       }
                       placeholder="Géo-localisation..."
                     />
+                    {errors.latitude && (
+                      <p className="text-red-500 text-sm">{errors.latitude}</p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Longitude</label>
@@ -437,6 +552,9 @@ export default function FormDialog({
                       }
                       placeholder="Géo-localisation..."
                     />
+                    {errors.longitude && (
+                      <p className="text-red-500 text-sm">{errors.longitude}</p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Ville</label>
@@ -484,6 +602,11 @@ export default function FormDialog({
                         </Command>
                       </PopoverContent>
                     </Popover>
+                    {errors.algeriaCitiesId && (
+                      <p className="text-red-500 text-sm">
+                        {errors.algeriaCitiesId}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Activité</label>
@@ -501,6 +624,11 @@ export default function FormDialog({
                         </option>
                       ))}
                     </select>
+                    {errors.ActiviteId && (
+                      <p className="text-red-500 text-sm">
+                        {errors.ActiviteId}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -531,16 +659,32 @@ export default function FormDialog({
                       type="number"
                       min="0"
                       value={selected[activeCategory].nbr_article}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setSelected({
                           ...selected,
                           [activeCategory]: {
                             ...selected[activeCategory],
                             nbr_article: e.target.value,
                           },
-                        })
+                        });
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`nbr_article_${activeCategory}`]: null,
+                        }));
+                      }}
+                      className={
+                        errors[`nbr_article_${activeCategory}`]
+                          ? "border-red-500"
+                          : ""
                       }
                     />
+
+                    {errors[`nbr_article_${activeCategory}`] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[`nbr_article_${activeCategory}`]}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -551,16 +695,32 @@ export default function FormDialog({
                       type="number"
                       min="0"
                       value={selected[activeCategory].nbr_article_commande}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setSelected({
                           ...selected,
                           [activeCategory]: {
                             ...selected[activeCategory],
                             nbr_article_commande: e.target.value,
                           },
-                        })
+                        });
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`nbr_article_commande_${activeCategory}`]: null,
+                        }));
+                      }}
+                      className={
+                        errors[`nbr_article_commande_${activeCategory}`]
+                          ? "border-red-500"
+                          : ""
                       }
                     />
+
+                    {errors[`nbr_article_commande_${activeCategory}`] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[`nbr_article_commande_${activeCategory}`]}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -694,6 +854,11 @@ export default function FormDialog({
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  {errors.sourceAppro && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.sourceAppro}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -711,7 +876,7 @@ export default function FormDialog({
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  {["plaques", "espacepub", "packDetaillant"].map((k) => (
+                  {["plaque", "espacepub", "packDetaillant"].map((k) => (
                     <label
                       key={k}
                       className={`flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${form[k] ? "bg-blue-50 border-blue-500" : "bg-white"}`}
@@ -790,7 +955,9 @@ export default function FormDialog({
                       Sélectionnez les points observés chez le client
                     </p>
                   </div>
-
+                  {errors.criteres && (
+                    <p className="text-red-500 text-sm">{errors.criteres}</p>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {criteriaList.map((crit) => {
                       const isChecked = form.criteres.includes(crit.id);
@@ -828,6 +995,61 @@ export default function FormDialog({
 
                           <span className="text-sm font-medium">
                             {crit.nom}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* ACTIONS */}
+                <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-700">
+                      Actions à entreprendre
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Sélectionnez les actions recommandées
+                    </p>
+                  </div>
+                  {errors.actions && (
+                    <p className="text-red-500 text-sm">{errors.actions}</p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {actionsList.map((action) => {
+                      const isChecked = form.actions.includes(action.id);
+
+                      return (
+                        <div
+                          key={action.id}
+                          onClick={() => {
+                            const next = isChecked
+                              ? form.actions.filter((id) => id !== action.id)
+                              : [...form.actions, action.id];
+
+                            setForm({ ...form, actions: next });
+                          }}
+                          className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
+            ${
+              isChecked
+                ? "bg-green-50 border-green-500 text-green-700 shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:border-green-300 hover:bg-slate-50"
+            }`}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-md border flex items-center justify-center
+              ${
+                isChecked
+                  ? "bg-green-600 border-green-600"
+                  : "bg-white border-slate-300"
+              }`}
+                          >
+                            {isChecked && (
+                              <Check className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+
+                          <span className="text-sm font-medium">
+                            {action.nom}
                           </span>
                         </div>
                       );

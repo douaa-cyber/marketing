@@ -88,6 +88,7 @@ export default function Accueil() {
         if (statsRes.ok && missionRes.ok) {
           const statsData = await statsRes.json();
           const missions = await missionRes.json();
+          console.log(missions);
           setStats({
             TotalMission: statsData.TotalMission || 0,
             TotalForm: statsData.TotalForm || 0,
@@ -182,10 +183,24 @@ export default function Accueil() {
 
         {activeMission ? (
           <Card className="border-none shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-white to-gray-50 transition hover:shadow-2xl">
-            <div className=" px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900">
-                {activeMission.Objectif}
-              </h3>
+            <div className="px-6 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                  {activeMission.Objectif}
+                </h3>
+
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-0 text-sm md:text-md text-gray-500 italic mt-1">
+                  <span>
+                    {activeMission.region} — {activeMission.wilaya}
+                  </span>
+
+                  <span className="hidden md:inline mx-2 text-gray-300">|</span>
+
+                  <span className="text-primary/80 font-medium md:font-normal">
+                    Client à visiter : {activeMission.clientAVisite}
+                  </span>
+                </div>
+              </div>
               <Badge className="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border-emerald-200">
                 En cours
               </Badge>

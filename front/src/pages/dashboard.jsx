@@ -53,12 +53,17 @@ const DashboardPage = () => {
     const fetchComparison = async () => {
       setComparisonLoading(true);
       try {
+        const fetchOptions = {
+          credentials: "include",
+        };
         const [resQ, resM] = await Promise.all([
           fetch(
             `${API_BASE}/api/dashboard/ScoreMarchandising?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${selectedAgent}`,
+            fetchOptions,
           ),
           fetch(
             `${API_BASE}/api/dashboard/action?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${selectedAgent}`,
+            fetchOptions,
           ),
         ]);
 
@@ -77,12 +82,17 @@ const DashboardPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const fetchOptions = {
+        credentials: "include",
+      };
       const [resA, resR] = await Promise.all([
         fetch(
           `${API_BASE}/api/dashboard/dashboard?dateDebut=${dates.start}&dateFin=${dates.end}`,
+          fetchOptions,
         ),
         fetch(
           `${API_BASE}/api/dashboard/TauxRupture?startDate=${dates.start}&endDate=${dates.end}`,
+          fetchOptions,
         ),
       ]);
       setAgents(await resA.json());
@@ -215,67 +225,83 @@ const DashboardPage = () => {
 
       {/* GRAPHIQUES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <section className="bg-white p-6 rounded-2xl border shadow-sm h-[400px]">
-          <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+        <section className="bg-white p-6 rounded-2xl border shadow-sm h-[400px] flex flex-col">
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <BarChart3 size={20} className="text-indigo-600" /> Couverture
             Terrain %
           </h2>
-          <ResponsiveContainer width="100%" height="85%">
-            <BarChart
-              data={sortedAgents.slice(0, 10)}
-              margin={{ top: 20, right: 20, left: -10, bottom: 40 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#E2E8F0"
-              />
 
-              <XAxis
-                dataKey="fullname"
-                tick={{ fill: "#64748B", fontSize: 11 }}
-                angle={-25}
-                textAnchor="end"
-                interval={0}
-              />
-
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fill: "#64748B", fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-              />
-
-              <Tooltip
-                cursor={{ fill: "rgba(99,102,241,0.05)" }}
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
-                }}
-              />
-
-              <Bar
-                dataKey="taux"
-                radius={[8, 8, 0, 0]}
-                barSize={32}
-                animationDuration={800}
+          {/* Container graphique */}
+          <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={sortedAgents.slice(0, 10)}
+                margin={{ top: 20, right: 20, left: -10, bottom: 40 }}
               >
-                {sortedAgents.slice(0, 10).map((e, i) => (
-                  <Cell
-                    key={i}
-                    fill={
-                      e.taux >= 85
-                        ? "#10B981"
-                        : e.taux >= 60
-                          ? "#6366F1"
-                          : "#EF4444"
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#E2E8F0"
+                />
+                <XAxis
+                  dataKey="fullname"
+                  tick={{ fill: "#64748B", fontSize: 11 }}
+                  angle={-25}
+                  textAnchor="end"
+                  interval={0}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fill: "#64748B", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  cursor={{ fill: "rgba(99,102,241,0.05)" }}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
+                  }}
+                />
+                <Bar
+                  dataKey="taux"
+                  radius={[8, 8, 0, 0]}
+                  barSize={32}
+                  animationDuration={800}
+                >
+                  {sortedAgents.slice(0, 10).map((e, i) => (
+                    <Cell
+                      key={i}
+                      fill={
+                        e.taux >= 85
+                          ? "#10B981"
+                          : e.taux >= 60
+                            ? "#6366F1"
+                            : "#EF4444"
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Légende */}
+          <div className="flex justify-center gap-6 mt-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 bg-red-500 rounded-sm"></span>
+              <span className="text-sm text-slate-600">Indiscipliné</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 bg-blue-500 rounded-sm"></span>
+              <span className="text-sm text-slate-600">Très bon</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 bg-green-500 rounded-sm"></span>
+              <span className="text-sm text-slate-600">Acceptable</span>
+            </div>
+          </div>
         </section>
 
         <section className="bg-white p-6 rounded-2xl border shadow-sm h-[400px] flex flex-col">
@@ -324,7 +350,7 @@ const DashboardPage = () => {
       <section className="space-y-4">
         <div className="flex justify-between items-center px-1">
           <h2 className="text-lg font-bold flex items-center gap-2">
-            <Users className="text-indigo-600" size={20} /> Top Performeurs
+            <Users className="text-indigo-600" size={20} /> Top 3 Performeurs
           </h2>
           <Button
             onClick={() => setView("all-agents")}

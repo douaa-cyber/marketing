@@ -42,7 +42,7 @@ function App() {
         <Route
           path="/Users"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <User />
               </Layout>
@@ -52,7 +52,7 @@ function App() {
         <Route
           path="/ProdAcc"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdAcc />
               </Layout>
@@ -62,7 +62,7 @@ function App() {
         <Route
           path="/ProdApp"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdApp />
               </Layout>
@@ -72,7 +72,7 @@ function App() {
         <Route
           path="/ProdDisj"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdDisj />
               </Layout>
@@ -82,7 +82,7 @@ function App() {
         <Route
           path="/ProdLamp"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdLamp />
               </Layout>
@@ -92,7 +92,7 @@ function App() {
         <Route
           path="/ConcuAcc"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ConcuAcc />
               </Layout>
@@ -102,7 +102,7 @@ function App() {
         <Route
           path="/ConcuApp"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ConcuApp />
               </Layout>
@@ -112,7 +112,7 @@ function App() {
         <Route
           path="/ConcuDisj"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ConcuDisj />
               </Layout>
@@ -122,7 +122,7 @@ function App() {
         <Route
           path="/ConcuLamp"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ConcuLamp />
               </Layout>
@@ -132,7 +132,7 @@ function App() {
         <Route
           path="/ProdConcuAcc"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdConcuAcc />
               </Layout>
@@ -142,7 +142,7 @@ function App() {
         <Route
           path="/ProdConcuApp"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdConcuApp />
               </Layout>
@@ -152,7 +152,7 @@ function App() {
         <Route
           path="/ProdConcuDisj"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdConcuDisj />
               </Layout>
@@ -162,7 +162,7 @@ function App() {
         <Route
           path="/ProdConcuLamp"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <ProdConcuLamp />
               </Layout>
@@ -172,7 +172,7 @@ function App() {
         <Route
           path="/Cadeau"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <Cadeau />
               </Layout>
@@ -182,7 +182,7 @@ function App() {
         <Route
           path="/Location"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <Location />
               </Layout>
@@ -192,7 +192,7 @@ function App() {
         <Route
           path="/SourceAppro"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <SourceAppro />
               </Layout>
@@ -202,7 +202,7 @@ function App() {
         <Route
           path="/Mission"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <MissionsPage />
               </Layout>
@@ -222,7 +222,7 @@ function App() {
         <Route
           path="/Activite"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <Activite />
               </Layout>
@@ -232,7 +232,7 @@ function App() {
         <Route
           path="/vehicule"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <Vehicule />
               </Layout>
@@ -242,7 +242,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={["admin", "responsable"]}>
               <Layout>
                 <Dashboard />
               </Layout>
