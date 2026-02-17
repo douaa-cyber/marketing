@@ -18,9 +18,14 @@ router.get(
   authorize("admin", "responsable", "marketeur"),
   Form.getAllForms,
 );
-
 router.get(
-  ":id",
+  "/lastVisite/:name",
+  authMiddleware,
+  authorize("admin", "responsable", "marketeur"),
+  Form.getLastVisiteDetail,
+);
+router.get(
+  "/:id",
   authMiddleware,
   authorize("admin", "responsable", "marketeur"),
   Form.getFormById,
@@ -31,6 +36,7 @@ router.put(
   authMiddleware,
   authorize("admin", "responsable", "marketeur"),
   upload.single("Image"),
+  convertToWebp,
   Form.updateForm,
 );
 

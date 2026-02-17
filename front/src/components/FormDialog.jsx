@@ -153,6 +153,7 @@ export default function FormDialog({
         setCadeauxList(cadeaux || []);
         setSourcesList(sources || []);
         setActivites(acts || []);
+        console.log("sources:", sources);
         setCriteriaList(crit || []);
         setActionsList(actions || []);
       } catch (err) {
@@ -329,7 +330,69 @@ export default function FormDialog({
       actionId: Number(id),
       is_checked: 1,
     }));
+  const handleFetchLastVisit = async () => {
+    if (!form.Fullname.trim()) return;
 
+    try {
+      const res = await fetch(
+        `${URL}/api/form/lastVisite/${encodeURIComponent(form.Fullname)}`,
+        {
+          credentials: "include",
+        },
+      );
+
+      if (res.ok) {
+        const lastVisit = await res.json();
+
+        if (lastVisit) {
+          toast.info(`Données récupérées pour ${form.Fullname}`);
+
+          setForm((prev) => ({
+            ...prev,
+            Tel: lastVisit.Tel || prev.Tel,
+            nom_magasin: lastVisit.nom_magasin || prev.nom_magasin,
+            algeriaCitiesId: lastVisit.algeriaCitiesId || prev.algeriaCitiesId,
+            ActiviteId: lastVisit.ActiviteId || prev.ActiviteId,
+            latitude: lastVisit.latitude || prev.latitude,
+            longitude: lastVisit.longitude || prev.longitude,
+
+            // Map Booleans (handling potential string "true"/"false" from DB)
+            espacepub:
+              lastVisit.espacepub === "true" || lastVisit.espacepub === true,
+            plaque: lastVisit.plaque === "true" || lastVisit.plaque === true,
+            packDetaillant:
+              lastVisit.packDetaillant === "true" ||
+              lastVisit.packDetaillant === true,
+
+            // Map Arrays for Step 3 & 4
+            sourceAppro: lastVisit.SourceAppros?.map((s) => s.ID) || [],
+            criteres: lastVisit.Criteres?.map((c) => c.id) || [],
+            actions: lastVisit.ActionMarketings?.map((a) => a.id) || [],
+
+            // Map Cadeaux (handling the pivot table quantity)
+            cadeaux:
+              lastVisit.cadeaus?.map((c) => ({
+                id: c.ID,
+                qty: c.cadeau_form?.quantity || 0,
+              })) || [],
+
+            // Evaluation stars
+            SatisfactionCli: lastVisit.SatisfactionCli || 0,
+            evalueBms: lastVisit.evalueBms || 0,
+            evaluconcurrent: lastVisit.evaluconcurrent || 0,
+          }));
+
+          // 2. Update Categories (Lampes, Appareillages, etc.)
+          setSelected(mapFormulaireToSelected(lastVisit));
+        } else {
+          toast.secondary("Aucune visite précédente trouvée pour ce nom.");
+        }
+      }
+    } catch (err) {
+      console.error("Erreur récup last visit:", err);
+      toast.error("Impossible de récupérer les détails de la dernière visite");
+    }
+  };
   const handleSubmit = async () => {
     const missingFields = [];
 
@@ -506,12 +569,24 @@ export default function FormDialog({
                     <RequiredLabel className="text-sm font-medium">
                       Nom Client
                     </RequiredLabel>
-                    <Input
-                      value={form.Fullname}
-                      onChange={(e) =>
-                        setForm({ ...form, Fullname: e.target.value })
-                      }
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.Fullname}
+                        onChange={(e) =>
+                          setForm({ ...form, Fullname: e.target.value })
+                        }
+                        placeholder="Entrez le nom du client..."
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleFetchLastVisit}
+                        title="Récupérer dernière visite"
+                      >
+                        <Search className="w-4 h-4 text-blue-600" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-1">
                     <RequiredLabel className="text-sm font-medium">
@@ -649,7 +724,7 @@ export default function FormDialog({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-1">
                     <RequiredLabel className="text-sm font-medium">
-                      Nombre d'articles
+                      Total Gamme
                     </RequiredLabel>
                     <Input
                       type="number"
@@ -685,7 +760,7 @@ export default function FormDialog({
 
                   <div className="space-y-1">
                     <RequiredLabel className="text-sm font-medium">
-                      Nombre d'articles commandés
+                      Nombre de gamme disponible
                     </RequiredLabel>
                     <Input
                       type="number"
@@ -836,7 +911,7 @@ export default function FormDialog({
                                   className={`mr-2 h-4 w-4 ${form.sourceAppro.includes(s.ID) ? "opacity-100" : "opacity-0"}`}
                                 />
                                 <span className="capitalize">
-                                  {s.name} - {s.surname}
+                                  {s.name} - ( {s.Surname} )
                                 </span>
                               </CommandItem>
                             ))}
@@ -1097,19 +1172,24 @@ export default function FormDialog({
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={!!sel}
-                        onChange={() => {
-                          setForm((p) => ({
-                            ...p,
-                            cadeaux: sel
-                              ? p.cadeaux.filter((i) => i.id !== c.ID)
-                              : [...p.cadeaux, { id: c.ID, qty: 1 }],
-                          }));
-                        }}
-                      />
-                      <span className="text-sm font-medium">{c.name}</span>
+                      <label className="flex items-center gap-3 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={!!sel}
+                          onChange={() => {
+                            setForm((p) => ({
+                              ...p,
+                              cadeaux: sel
+                                ? p.cadeaux.filter((i) => i.id !== c.ID)
+                                : [...p.cadeaux, { id: c.ID, qty: 1 }],
+                            }));
+                          }}
+                        />
+
+                        <span className="text-sm font-medium select-none">
+                          {c.name}
+                        </span>
+                      </label>
                     </div>
                     {sel && (
                       <Input

@@ -122,7 +122,7 @@ const getClientScoresByPeriod = async (req, res) => {
     const clientsMap = {};
 
     formulaires.forEach((f) => {
-      const clientKey = f.nom_magasin || f.Fullname;
+      const clientKey = f.Fullname;
       const nbCoches = f.Criteres ? f.Criteres.length : 0;
       const scoreVisite = parseFloat((nbCoches * pointsParCoche).toFixed(2));
 
@@ -210,7 +210,7 @@ const getRuptureStockStats = async (req, res) => {
     const clientsMap = {};
 
     formulaires.forEach((f) => {
-      const clientKey = f.nom_magasin || f.Fullname || "Client Inconnu";
+      const clientKey = f.Fullname || "Client Inconnu";
 
       const calculateFamilyScore = (rows) => {
         if (!rows || rows.length === 0) return 0;
@@ -296,10 +296,10 @@ const getActionByPeriod = async (req, res) => {
     });
 
     const clientsMap = {};
-
+    console.log(JSON.stringify(formulaires, null, 2));
     formulaires.forEach((f) => {
-      const clientKey = f.nom_magasin || f.Fullname;
-      const nbCoches = f.Action ? f.Action.length : 0;
+      const clientKey = f.Fullname;
+      const nbCoches = f.ActionMarketings ? f.ActionMarketings.length : 0;
       const scoreVisite = parseFloat((nbCoches * pointsParCoche).toFixed(2));
 
       if (!clientsMap[clientKey]) {

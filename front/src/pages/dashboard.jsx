@@ -53,17 +53,18 @@ const DashboardPage = () => {
     const fetchComparison = async () => {
       setComparisonLoading(true);
       try {
-        const fetchOptions = {
-          credentials: "include",
-        };
         const [resQ, resM] = await Promise.all([
           fetch(
             `${API_BASE}/api/dashboard/ScoreMarchandising?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${selectedAgent}`,
-            fetchOptions,
+            {
+              credentials: "include",
+            },
           ),
           fetch(
             `${API_BASE}/api/dashboard/action?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${selectedAgent}`,
-            fetchOptions,
+            {
+              credentials: "include",
+            },
           ),
         ]);
 

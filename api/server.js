@@ -2,7 +2,7 @@ const express = require("express");
 const { db } = require("./relation");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-
+const path = require("path");
 const AuthRoute = require("./Features/Auth/route/Auth.route");
 const CadeauRoute = require("./Features/Cadeau/route/Cadeau.route");
 const ConcurrentRoute = require("./Features/Concurrent/route/Concurrent.route");
@@ -40,6 +40,8 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", AuthRoute);
 app.use("/api/cadeau", CadeauRoute);

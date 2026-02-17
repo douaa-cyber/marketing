@@ -182,7 +182,10 @@ export default function Accueil() {
         </h2>
 
         {activeMission ? (
-          <Card className="border-none shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-white to-gray-50 transition hover:shadow-2xl">
+          <Card
+            className="border-none shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-white to-gray-50 transition hover:shadow-2xl cursor-pointer group hover:scale-[1.01]"
+            onClick={() => navigate("/Form")}
+          >
             <div className="px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 leading-tight">

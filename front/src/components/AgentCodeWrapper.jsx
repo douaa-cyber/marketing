@@ -17,9 +17,15 @@ const AgentDialogWrapper = ({ agent, dates, children }) => {
       const [resQ, resM] = await Promise.all([
         fetch(
           `${API_BASE}/api/dashboard/ScoreMarchandising?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${agent.id}`,
+          {
+            credentials: "include",
+          },
         ),
         fetch(
           `${API_BASE}/api/dashboard/action?startDate=${dates.start}&endDate=${dates.end}&utilisateur_id=${agent.id}`,
+          {
+            credentials: "include",
+          },
         ),
       ]);
       setQualityData(await resQ.json());

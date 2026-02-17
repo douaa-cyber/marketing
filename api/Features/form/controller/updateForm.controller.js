@@ -20,8 +20,10 @@ const updateForm = async (req, res) => {
   try {
     const formId = parseInt(req.params.id);
     const body = req.body;
-    console.log(body);
-    const imagePath = req.file ? req.file.path : undefined;
+    const file = req.file;
+    const form = await Form.findByPk(formId);
+    if (!form) return res.status(404).json({ error: "Formulaire introuvable" });
+
     const plaques = body.plaque;
     const espacepub = body.espacepub;
     const packDetaillant = body.packDetaillant;
@@ -53,8 +55,18 @@ const updateForm = async (req, res) => {
         : 0,
       commentaire: body.commentaire || null,
     };
-    if (imagePath) {
-      updatedForm.Image = imagePath;
+    if (file && file.path) {
+      const ext = path.extname(file.originalname) || ".webp";
+      const newFilename = `form-${form.ID}${ext}`;
+      const newPath = path.join(path.dirname(file.path), newFilename);
+
+      if (form.Image && fs.existsSync(form.Image)) {
+        fs.unlinkSync(form.Image);
+      }
+
+      fs.renameSync(file.path, newPath);
+
+      updatedForm.Image = newPath;
     }
     await Form.update(updatedForm, { where: { ID: formId } });
 
