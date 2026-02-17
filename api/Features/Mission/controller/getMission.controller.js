@@ -23,6 +23,8 @@ const getMissionById = async (req, res) => {
         "Objectif",
         "agent_id",
         "responsable_id",
+        "region",
+        "wilaya",
         "date_deb",
         "date_fin",
         "clientAVisite",

@@ -27,14 +27,18 @@ const SourceAppro = sequelize.define(
       allowNull: true,
     },
     type: {
-      type: DataTypes.ENUM("Exist", "ExistNot"), //exist   means la source exist dans lERP sinon si new.
+      type: DataTypes.ENUM("Exist", "ExistNot"),
       allowNull: false,
+    },
+    mode_vente: {
+      type: DataTypes.ENUM("distribution_direct", "super_gros", "demi_gros"),
+      allowNull: true,
     },
   },
   {
     timestamps: true,
     freezeTableName: true,
-  }
+  },
 );
 
 module.exports = SourceAppro;

@@ -36,6 +36,7 @@ const Criteria = require("../Features/Critere/critere.model.js");
 const Form_Critere = require("../Features/form/model/Form_critere.js");
 const Form_Action = require("../Features/form/model/Form_action.js");
 const Action = require("../Features/ActionMarketing/action.model.js");
+const Activity = require("../Features/Activite/model/Activite.js");
 /* ========= MISSIONS ========= */
 User.hasMany(Mission, {
   foreignKey: "agent_id",
@@ -236,6 +237,16 @@ AlgeriaCities.hasMany(Formulaire, {
 Formulaire.belongsTo(AlgeriaCities, {
   foreignKey: "algeriaCitiesId",
   as: "city",
+});
+
+/* ========= Activities ========= */
+
+Activity.hasMany(Formulaire, {
+  foreignKey: "ActiviteId",
+});
+
+Formulaire.belongsTo(Activity, {
+  foreignKey: "ActiviteId",
 });
 
 /* ========= CADEAUX ========= */

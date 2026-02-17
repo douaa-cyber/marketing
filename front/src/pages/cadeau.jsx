@@ -125,7 +125,7 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(`http://localhost:3000/api/cadeau/${deleteProductTarget.ID}`, {
+    await fetch(`${URL}/api/cadeau/${deleteProductTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -136,7 +136,7 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(`http://localhost:3000/api/cadeau/${selectedProduct.ID}`, {
+      await fetch(`${URL}/api/cadeau/${selectedProduct.ID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -200,7 +200,7 @@ export default function ProductsPage() {
                   <TableHead key={header.id} className="text-center">
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </TableHead>
                 ))}
@@ -215,7 +215,7 @@ export default function ProductsPage() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

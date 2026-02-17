@@ -29,7 +29,10 @@ const Form_prodAcc = require("../model/Form_ProdAccessoire");
 const Cadeau = require("../../Cadeau/model/Cadeau");
 const CadeauForm = require("../model/Form_Cadeau");
 const Critere = require("../../Critere/critere.model");
-
+const Action = require("../../ActionMarketing/action.model");
+const Locat = require("../../Location/model/AlgeriaCities");
+const Activity = require("../../Activite/model/Activite");
+const User = require("../../User/model/User");
 const buildWhereClause = (user) => {
   if (!user) return {};
 
@@ -99,6 +102,25 @@ const getAllForms = async (req, res) => {
           through: { attributes: [] },
           attributes: ["id", "nom"],
         },
+        {
+          model: Action,
+          through: { attributes: [] },
+          attributes: ["id", "nom"],
+        },
+        {
+          model: Locat,
+          as: "city",
+          attributes: ["id", "wilaya", "Commune"],
+        },
+        {
+          model: Activity,
+          attributes: ["id", "name"],
+        },
+        {
+          model: User,
+          as: "agent",
+          attributes: ["id", "fullname"],
+        },
       ],
     });
 
@@ -136,7 +158,59 @@ const getFormById = async (req, res) => {
   }
 };
 
+const getLastVisiteDetail = async (req, res) => {
+  try {
+    const { name } = req.params;
+    const LastForm = await Formulaire.findOne({
+      where: {
+        Fullname: name,
+      },
+      include: [
+        IncludeForArticles(ProduitLampe, Form_prodLampe),
+        IncludeForArticles(ProduitAppareillage, Form_prodAppareillage),
+        IncludeForArticles(ProduitDisjoncteur, Form_prodDisj),
+        IncludeForArticles(ProduitAccessoire, Form_prodAcc),
+
+        simpleInclude(ConcurrentLampe),
+        simpleInclude(ConcurrentAppareillage),
+        simpleInclude(ConcurrentDisjoncteur),
+        simpleInclude(ConcurrentAccessoire),
+
+        simpleInclude(ProdConcurrentLampe),
+        simpleInclude(ProdConcurrentAppareillage),
+        simpleInclude(ProdConcurrentDisj),
+        simpleInclude(ProdConcurrentAccessoire),
+
+        {
+          model: SourceAppro,
+          through: { attributes: [] },
+          attributes: ["ID", "name", "surname"],
+        },
+        {
+          model: Cadeau,
+          through: { model: CadeauForm, attributes: ["quantity"] },
+          attributes: ["ID", "name"],
+        },
+        {
+          model: Critere,
+          through: { attributes: [] },
+          attributes: ["id", "nom"],
+        },
+        {
+          model: Action,
+          through: { attributes: [] },
+          attributes: ["id", "nom"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+    res.json(LastForm);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 module.exports = {
   getAllForms,
   getFormById,
+  getLastVisiteDetail,
 };

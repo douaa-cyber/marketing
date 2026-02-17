@@ -14,18 +14,22 @@ const Form_ProdConcuAcc = require("../model/Form_ProdConcuAcc");
 const Form_SourceAppro = require("../model/Form_SourceAppro");
 const Form_Cadeau = require("../model/Form_Cadeau");
 const Form_Critere = require("../model/Form_critere");
+const Form_Action = require("../model/Form_action");
+const fs = require("fs");
+const path = require("path");
 const createForm = async (req, res) => {
   try {
     const body = req.body;
     const imagePath = req.file ? req.file.path : null;
-    const plaques = body.plaques == "1" ? "true" : "false";
-    const espacepub = body.espacepub == "1" ? "true" : "false";
-    const packDetaillant = body.packDetaillant == "1" ? "true" : "false";
+    const plaques = body.plaques;
+    const espacepub = body.espacepub;
+    const packDetaillant = body.packDetaillant;
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};
     const criteres = body.criteres ? JSON.parse(body.criteres) : [];
-    console.log("data created", req.body);
+    const actions = body.actions ? JSON.parse(body.actions) : [];
+
     const form = await Form.create({
       utilisateur_id: parseInt(body.utilisateur_id),
       mission_id: parseInt(body.mission_id),
@@ -52,6 +56,16 @@ const createForm = async (req, res) => {
       commentaire: body.commentaire || null,
     });
 
+    if (req.file && req.file.path) {
+      const ext = path.extname(req.file.path) || ".webp";
+      const newFilename = `form-${form.ID}${ext}`;
+      const newPath = path.join(path.dirname(req.file.path), newFilename);
+
+      fs.renameSync(req.file.path, newPath);
+
+      form.Image = path.join("uploads", newFilename);
+      await form.save();
+    }
     // Parcours des catégories
     for (const cat of Object.keys(selections)) {
       const sel = selections[cat];
@@ -61,35 +75,37 @@ const createForm = async (req, res) => {
         (sel.produits || [])
           .map((p) => {
             const id = Number(p.produitId);
+            const nbArticle = sel.nbr_article ?? 0;
+            const nbArticleCommande = sel.nbr_article_commande ?? 0;
             if (!id) return null;
             switch (cat) {
               case "lampe":
                 return form_ProduitLampe.create({
                   formulaireID: form.ID,
                   ProduitLampeID: id,
-                  nbArticle: sel.nbr_article,
-                  nbArticleCommande: sel.nbr_article_commande,
+                  nbArticle: nbArticle,
+                  nbArticleCommande: nbArticleCommande,
                 });
               case "appareillage":
                 return Form_ProdAppareillage.create({
                   formulaireID: form.ID,
                   ProduitAppareillageID: id,
-                  nbArticle: sel.nbr_article,
-                  nbArticleCommande: sel.nbr_article_commande,
+                  nbArticle: nbArticle,
+                  nbArticleCommande: nbArticleCommande,
                 });
               case "disjoncteur":
                 return Form_ProdDisjoncteur.create({
                   formulaireID: form.ID,
                   ProduitDisjoncteurID: id,
-                  nbArticle: sel.nbr_article,
-                  nbArticleCommande: sel.nbr_article_commande,
+                  nbArticle: nbArticle,
+                  nbArticleCommande: nbArticleCommande,
                 });
               case "accessoire":
                 return Form_ProdAccessoire.create({
                   formulaireID: form.ID,
                   ProduitAccessoireID: id,
-                  nbArticle: sel.nbr_article,
-                  nbArticleCommande: sel.nbr_article_commande,
+                  nbArticle: nbArticle,
+                  nbArticleCommande: nbArticleCommande,
                 });
             }
           })
@@ -202,6 +218,20 @@ const createForm = async (req, res) => {
             formulaireID: form.ID,
             CritereId: critId,
             is_checked: crit.is_checked ? 1 : 0,
+          });
+        })
+        .filter(Boolean),
+    );
+    await Promise.all(
+      actions
+        .map((act) => {
+          const actId = Number(act.actionId);
+          if (!actId) return null;
+
+          return Form_Action.create({
+            formulaireID: form.ID,
+            ActionMarketingId: actId,
+            is_checked: act.is_checked ? 1 : 0,
           });
         })
         .filter(Boolean),

@@ -1,13 +1,37 @@
 const express = require("express");
 const router = express.Router();
-//const { authMiddleware, authorize } = require("../../../middleware");
 const ActiviteController = require("../controller/index");
 const authMiddleware = require("../../../middleware/Auth");
-
-router.get("/all", authMiddleware, ActiviteController.GetAllActivite);
-router.get("/:id", authMiddleware, ActiviteController.GetActiviteById);
-router.post("/", authMiddleware, ActiviteController.createActivite);
-router.put("/:id", authMiddleware, ActiviteController.UpdateActivite);
-router.delete("/:id", authMiddleware, ActiviteController.deleteActivite);
+const authorize = require("../../../middleware/authorize");
+router.get(
+  "/all",
+  authMiddleware,
+  authorize("admin", "responsable", "marketeur"),
+  ActiviteController.GetAllActivite,
+);
+router.get(
+  "/:id",
+  authMiddleware,
+  authorize("admin", "responsable", "marketeur"),
+  ActiviteController.GetActiviteById,
+);
+router.post(
+  "/",
+  authMiddleware,
+  authorize("admin", "responsable"),
+  ActiviteController.createActivite,
+);
+router.put(
+  "/:id",
+  authMiddleware,
+  authorize("admin", "responsable"),
+  ActiviteController.UpdateActivite,
+);
+router.delete(
+  "/:id",
+  authMiddleware,
+  authorize("admin", "responsable"),
+  ActiviteController.deleteActivite,
+);
 
 module.exports = router;

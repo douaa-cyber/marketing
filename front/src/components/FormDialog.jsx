@@ -3,6 +3,8 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "react-toastify";
+
 import {
   Dialog,
   DialogContent,
@@ -33,9 +35,15 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { URL } from "@/api";
+import { Label } from "./ui/label";
 
 const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
 
+const RequiredLabel = ({ children }) => (
+  <Label>
+    {children} <span className="text-red-500">*</span>
+  </Label>
+);
 export default function FormDialog({
   open,
   onOpenChange,
@@ -58,7 +66,10 @@ export default function FormDialog({
   const [cadeauxList, setCadeauxList] = useState([]);
   const [cadeauxOpen, setCadeauxOpen] = useState(false);
 
-  const [criteriaList, setCriteriaList] = useState([]); // Liste des critères depuis l'API
+  const [criteriaList, setCriteriaList] = useState([]);
+  const [actionsList, setActionsList] = useState([]);
+  const [errors, setErrors] = useState({});
+
   const [activeCategory, setActiveCategory] = useState("lampe");
 
   const [data, setData] = useState({
@@ -88,6 +99,7 @@ export default function FormDialog({
     SatisfactionCli: 0,
     evaluconcurrent: 0,
     criteres: [],
+    actions: [],
     commentaire: "",
   };
 
@@ -116,28 +128,34 @@ export default function FormDialog({
     // Chargement des données de base
     const fetchBaseData = async () => {
       try {
-        const [villes, cadeaux, sources, acts, crit] = await Promise.all([
-          fetch(`${URL}/api/location/ville`, { credentials: "include" }).then(
-            (r) => r.json(),
-          ),
-          fetch(`${URL}/api/cadeau/all`, { credentials: "include" }).then((r) =>
-            r.json(),
-          ),
-          fetch(`${URL}/api/sourceAppro/all`, { credentials: "include" }).then(
-            (r) => r.json(),
-          ),
-          fetch(`${URL}/api/activite/all`, { credentials: "include" }).then(
-            (r) => r.json(),
-          ),
-          fetch(`${URL}/api/criteria`, { credentials: "include" }).then((r) =>
-            r.json(),
-          ), // Fetch critères
-        ]);
+        const [villes, cadeaux, sources, acts, crit, actions] =
+          await Promise.all([
+            fetch(`${URL}/api/location/ville`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/cadeau/all`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/sourceAppro/all`, {
+              credentials: "include",
+            }).then((r) => r.json()),
+            fetch(`${URL}/api/activite/all`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/criteria`, { credentials: "include" }).then((r) =>
+              r.json(),
+            ), // Fetch critères
+            fetch(`${URL}/api/action`, { credentials: "include" }).then((r) =>
+              r.json(),
+            ), // Fetch critères
+          ]);
         setCities(villes || []);
         setCadeauxList(cadeaux || []);
         setSourcesList(sources || []);
         setActivites(acts || []);
+        console.log("sources:", sources);
         setCriteriaList(crit || []);
+        setActionsList(actions || []);
       } catch (err) {
         console.error("Erreur lors du chargement des données initiales", err);
       }
@@ -238,6 +256,16 @@ export default function FormDialog({
       setForm({
         ...initialFormState,
         ...selectedFormulaire,
+        plaque:
+          selectedFormulaire.plaque === "true" ||
+          selectedFormulaire.plaque === true,
+        espacepub:
+          selectedFormulaire.espacepub === "true" ||
+          selectedFormulaire.espacepub === true,
+        packDetaillant:
+          selectedFormulaire.packDetaillant === "true" ||
+          selectedFormulaire.packDetaillant === true,
+
         sourceAppro: selectedFormulaire.SourceAppros?.map((s) => s.ID) || [],
         cadeaux:
           selectedFormulaire.cadeaus?.map((c) => ({
@@ -245,6 +273,7 @@ export default function FormDialog({
             qty: c.cadeau_form.quantity,
           })) || [],
         criteres: selectedFormulaire.Criteres?.map((c) => c.id) || [],
+        actions: selectedFormulaire.ActionMarketings?.map((a) => a.id) || [],
       });
       setSelected(mapFormulaireToSelected(selectedFormulaire));
     } else {
@@ -258,7 +287,10 @@ export default function FormDialog({
     }
   }, [selectedFormulaire, open]);
 
-  const handleNext = () => setStep((s) => Math.min(s + 1, 4));
+  const handleNext = () => {
+    setStep((s) => Math.min(s + 1, 4));
+  };
+
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
 
   // ----------------- Normalisation pour Backend -----------------
@@ -293,13 +325,144 @@ export default function FormDialog({
   const normalizeCriteres = (criteresIds) =>
     criteresIds.map((id) => ({ critereId: Number(id), is_checked: 1 }));
 
+  const normalizeActions = (actionsIds) =>
+    actionsIds.map((id) => ({
+      actionId: Number(id),
+      is_checked: 1,
+    }));
+  const handleFetchLastVisit = async () => {
+    if (!form.Fullname.trim()) return;
+
+    try {
+      const res = await fetch(
+        `${URL}/api/form/lastVisite/${encodeURIComponent(form.Fullname)}`,
+        {
+          credentials: "include",
+        },
+      );
+
+      if (res.ok) {
+        const lastVisit = await res.json();
+
+        if (lastVisit) {
+          toast.info(`Données récupérées pour ${form.Fullname}`);
+
+          setForm((prev) => ({
+            ...prev,
+            Tel: lastVisit.Tel || prev.Tel,
+            nom_magasin: lastVisit.nom_magasin || prev.nom_magasin,
+            algeriaCitiesId: lastVisit.algeriaCitiesId || prev.algeriaCitiesId,
+            ActiviteId: lastVisit.ActiviteId || prev.ActiviteId,
+            latitude: lastVisit.latitude || prev.latitude,
+            longitude: lastVisit.longitude || prev.longitude,
+
+            // Map Booleans (handling potential string "true"/"false" from DB)
+            espacepub:
+              lastVisit.espacepub === "true" || lastVisit.espacepub === true,
+            plaque: lastVisit.plaque === "true" || lastVisit.plaque === true,
+            packDetaillant:
+              lastVisit.packDetaillant === "true" ||
+              lastVisit.packDetaillant === true,
+
+            // Map Arrays for Step 3 & 4
+            sourceAppro: lastVisit.SourceAppros?.map((s) => s.ID) || [],
+            criteres: lastVisit.Criteres?.map((c) => c.id) || [],
+            actions: lastVisit.ActionMarketings?.map((a) => a.id) || [],
+
+            // Map Cadeaux (handling the pivot table quantity)
+            cadeaux:
+              lastVisit.cadeaus?.map((c) => ({
+                id: c.ID,
+                qty: c.cadeau_form?.quantity || 0,
+              })) || [],
+
+            // Evaluation stars
+            SatisfactionCli: lastVisit.SatisfactionCli || 0,
+            evalueBms: lastVisit.evalueBms || 0,
+            evaluconcurrent: lastVisit.evaluconcurrent || 0,
+          }));
+
+          // 2. Update Categories (Lampes, Appareillages, etc.)
+          setSelected(mapFormulaireToSelected(lastVisit));
+        } else {
+          toast.secondary("Aucune visite précédente trouvée pour ce nom.");
+        }
+      }
+    } catch (err) {
+      console.error("Erreur récup last visit:", err);
+      toast.error("Impossible de récupérer les détails de la dernière visite");
+    }
+  };
   const handleSubmit = async () => {
+    const missingFields = [];
+
+    if (!form.mission_id) missingFields.push("Mission");
+    if (!form.Fullname?.trim()) missingFields.push("Nom Client");
+    if (!form.Tel?.trim()) missingFields.push("Téléphone");
+    if (!form.latitude || !form.longitude)
+      missingFields.push("Géo-localisation");
+    if (!form.algeriaCitiesId) missingFields.push("Ville");
+    if (!form.ActiviteId) missingFields.push("Activité");
+
+    categories.forEach((cat) => {
+      const catData = selected[cat];
+
+      const hasSelection =
+        catData.produits.length > 0 ||
+        catData.concurrents.length > 0 ||
+        catData.prodConcurrents.length > 0;
+
+      if (hasSelection) {
+        if (!catData.nbr_article) {
+          missingFields.push(`Nombre d'articles pour ${cat}`);
+        }
+        if (!catData.nbr_article_commande) {
+          missingFields.push(`Nombre d'articles commandés pour ${cat}`);
+        }
+
+        if (catData.nbr_article && catData.nbr_article_commande) {
+          const nbr = Number(catData.nbr_article);
+          const cmd = Number(catData.nbr_article_commande);
+
+          if (cmd > nbr) {
+            missingFields.push(
+              `Pour ${cat}, la commande (${cmd}) ne peut pas dépasser le nombre d'articles (${nbr})`,
+            );
+          }
+        }
+      }
+    });
+
+    if (form.sourceAppro.length === 0)
+      missingFields.push("Source d'approvisionnement");
+
+    if (form.criteres.length === 0) missingFields.push("Critères d'évaluation");
+    if (form.actions.length === 0) missingFields.push("Actions à entreprendre");
+
+    // 1. Affichage du Warning si champs manquants
+    if (missingFields.length > 0) {
+      return toast.warning(
+        <div>
+          <strong>Champs manquants :</strong>
+          <ul className="list-disc ml-4 text-xs mt-1">
+            {missingFields.slice(0, 3).map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+            {missingFields.length > 3 && (
+              <li>et {missingFields.length - 3} autres...</li>
+            )}
+          </ul>
+        </div>,
+      );
+    }
     const formData = new FormData();
+
     const payload = {
       ...form,
       selections: normalizeSelections(selected),
       cadeaux: normalizeCadeaux(form.cadeaux),
       criteres: normalizeCriteres(form.criteres),
+      actions: normalizeActions(form.actions),
     };
 
     Object.keys(payload).forEach((key) => {
@@ -319,16 +482,26 @@ export default function FormDialog({
       ? `${URL}/api/form/${selectedFormulaire.ID}`
       : `${URL}/api/form`;
     const method = selectedFormulaire ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      body: formData,
-      credentials: "include",
-    });
-    if (res.ok) {
-      onSuccess?.();
-      setStep(1);
-      onOpenChange(false);
+    try {
+      const res = await fetch(url, {
+        method,
+        body: formData,
+        credentials: "include",
+      });
+      if (res.ok) {
+        toast.success(
+          selectedFormulaire ? "Mise à jour réussie !" : "Visite enregistrée !",
+        );
+        onSuccess?.();
+        setStep(1);
+        onOpenChange(false);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.message || "Erreur lors de l'enregistrement");
+      }
+    } catch (error) {
+      console.error("Erreur fetch:", error);
+      toast.error("Impossible de contacter le serveur");
     }
   };
 
@@ -374,7 +547,9 @@ export default function FormDialog({
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2 space-y-1">
-                    <label className="text-sm font-medium">Mission</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Mission
+                    </RequiredLabel>
                     <select
                       className="w-full border rounded-md p-2 bg-white"
                       value={form.mission_id || ""}
@@ -391,16 +566,32 @@ export default function FormDialog({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Nom Client</label>
-                    <Input
-                      value={form.Fullname}
-                      onChange={(e) =>
-                        setForm({ ...form, Fullname: e.target.value })
-                      }
-                    />
+                    <RequiredLabel className="text-sm font-medium">
+                      Nom Client
+                    </RequiredLabel>
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.Fullname}
+                        onChange={(e) =>
+                          setForm({ ...form, Fullname: e.target.value })
+                        }
+                        placeholder="Entrez le nom du client..."
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleFetchLastVisit}
+                        title="Récupérer dernière visite"
+                      >
+                        <Search className="w-4 h-4 text-blue-600" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Téléphone</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Téléphone
+                    </RequiredLabel>
                     <Input
                       value={form.Tel}
                       maxLength="10"
@@ -419,7 +610,9 @@ export default function FormDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Latitude</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Latitude
+                    </RequiredLabel>
                     <Input
                       value={form.latitude}
                       onChange={(e) =>
@@ -429,7 +622,9 @@ export default function FormDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Longitude</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Longitude
+                    </RequiredLabel>
                     <Input
                       value={form.longitude}
                       onChange={(e) =>
@@ -439,7 +634,9 @@ export default function FormDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Ville</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Ville
+                    </RequiredLabel>
                     <Popover
                       open={cityPopoverOpen}
                       onOpenChange={setCityPopoverOpen}
@@ -486,7 +683,9 @@ export default function FormDialog({
                     </Popover>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Activité</label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Activité
+                    </RequiredLabel>
                     <select
                       className="w-full border rounded-md p-2 bg-white"
                       value={form.ActiviteId || ""}
@@ -524,41 +723,67 @@ export default function FormDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">
-                      Nombre d'articles
-                    </label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Total Gamme
+                    </RequiredLabel>
                     <Input
                       type="number"
                       min="0"
                       value={selected[activeCategory].nbr_article}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setSelected({
                           ...selected,
                           [activeCategory]: {
                             ...selected[activeCategory],
                             nbr_article: e.target.value,
                           },
-                        })
+                        });
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`nbr_article_${activeCategory}`]: null,
+                        }));
+                      }}
+                      className={
+                        errors[`nbr_article_${activeCategory}`]
+                          ? "border-red-500"
+                          : ""
                       }
                     />
+
+                    {errors[`nbr_article_${activeCategory}`] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[`nbr_article_${activeCategory}`]}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">
-                      Nombre d'articles commandés
-                    </label>
+                    <RequiredLabel className="text-sm font-medium">
+                      Nombre de gamme disponible
+                    </RequiredLabel>
                     <Input
                       type="number"
                       min="0"
                       value={selected[activeCategory].nbr_article_commande}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setSelected({
                           ...selected,
                           [activeCategory]: {
                             ...selected[activeCategory],
                             nbr_article_commande: e.target.value,
                           },
-                        })
+                        });
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          [`nbr_article_commande_${activeCategory}`]: null,
+                        }));
+                      }}
+                      className={
+                        errors[`nbr_article_commande_${activeCategory}`]
+                          ? "border-red-500"
+                          : ""
                       }
                     />
                   </div>
@@ -619,9 +844,9 @@ export default function FormDialog({
             {step === 3 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="space-y-3">
-                  <label className="font-bold text-sm text-slate-600">
+                  <RequiredLabel className="font-bold text-sm text-slate-600">
                     Source d'approvisionnement
-                  </label>
+                  </RequiredLabel>
                   <Popover
                     open={sourcePopoverOpen}
                     onOpenChange={setSourcePopoverOpen}
@@ -686,7 +911,7 @@ export default function FormDialog({
                                   className={`mr-2 h-4 w-4 ${form.sourceAppro.includes(s.ID) ? "opacity-100" : "opacity-0"}`}
                                 />
                                 <span className="capitalize">
-                                  {s.name} - {s.surname}
+                                  {s.name} - ( {s.Surname} )
                                 </span>
                               </CommandItem>
                             ))}
@@ -711,7 +936,7 @@ export default function FormDialog({
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  {["plaques", "espacepub", "packDetaillant"].map((k) => (
+                  {["plaque", "espacepub", "packDetaillant"].map((k) => (
                     <label
                       key={k}
                       className={`flex flex-col items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${form[k] ? "bg-blue-50 border-blue-500" : "bg-white"}`}
@@ -783,9 +1008,9 @@ export default function FormDialog({
                 {/* CRITÈRES D'ÉVALUATION */}
                 <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-700">
+                    <RequiredLabel className="text-sm font-bold text-slate-700">
                       Critères d'évaluation
-                    </h3>
+                    </RequiredLabel>
                     <p className="text-xs text-slate-400">
                       Sélectionnez les points observés chez le client
                     </p>
@@ -828,6 +1053,59 @@ export default function FormDialog({
 
                           <span className="text-sm font-medium">
                             {crit.nom}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* ACTIONS */}
+                <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
+                  <div>
+                    <RequiredLabel className="text-sm font-bold text-slate-700">
+                      Actions à entreprendre
+                    </RequiredLabel>
+                    <p className="text-xs text-slate-400">
+                      Sélectionnez les actions recommandées
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {actionsList.map((action) => {
+                      const isChecked = form.actions.includes(action.id);
+
+                      return (
+                        <div
+                          key={action.id}
+                          onClick={() => {
+                            const next = isChecked
+                              ? form.actions.filter((id) => id !== action.id)
+                              : [...form.actions, action.id];
+
+                            setForm({ ...form, actions: next });
+                          }}
+                          className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
+            ${
+              isChecked
+                ? "bg-green-50 border-green-500 text-green-700 shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:border-green-300 hover:bg-slate-50"
+            }`}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-md border flex items-center justify-center
+              ${
+                isChecked
+                  ? "bg-green-600 border-green-600"
+                  : "bg-white border-slate-300"
+              }`}
+                          >
+                            {isChecked && (
+                              <Check className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+
+                          <span className="text-sm font-medium">
+                            {action.nom}
                           </span>
                         </div>
                       );
@@ -894,19 +1172,24 @@ export default function FormDialog({
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={!!sel}
-                        onChange={() => {
-                          setForm((p) => ({
-                            ...p,
-                            cadeaux: sel
-                              ? p.cadeaux.filter((i) => i.id !== c.ID)
-                              : [...p.cadeaux, { id: c.ID, qty: 1 }],
-                          }));
-                        }}
-                      />
-                      <span className="text-sm font-medium">{c.name}</span>
+                      <label className="flex items-center gap-3 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={!!sel}
+                          onChange={() => {
+                            setForm((p) => ({
+                              ...p,
+                              cadeaux: sel
+                                ? p.cadeaux.filter((i) => i.id !== c.ID)
+                                : [...p.cadeaux, { id: c.ID, qty: 1 }],
+                            }));
+                          }}
+                        />
+
+                        <span className="text-sm font-medium select-none">
+                          {c.name}
+                        </span>
+                      </label>
                     </div>
                     {sel && (
                       <Input

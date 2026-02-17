@@ -2,7 +2,7 @@ const express = require("express");
 const { db } = require("./relation");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-
+const path = require("path");
 const AuthRoute = require("./Features/Auth/route/Auth.route");
 const CadeauRoute = require("./Features/Cadeau/route/Cadeau.route");
 const ConcurrentRoute = require("./Features/Concurrent/route/Concurrent.route");
@@ -29,7 +29,7 @@ app.use(
       "http://localhost:5173",
       "http://10.19.36.193:5173",
       "http://192.168.2.231:5173",
-      "http://192.168.100.27:5173",
+      "http://192.168.2.42:5173",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -40,6 +40,8 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", AuthRoute);
 app.use("/api/cadeau", CadeauRoute);
@@ -55,11 +57,12 @@ app.use("/api/user", UserRoute);
 app.use("/api/form", FormRoute);
 app.use("/api/dashboard", DashboardRoute);
 app.use("/api/criteria", CriteriaRoute);
+app.use("/api/action", ActionMarkRoute);
 
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync({ alter: true });
+    return db.sync();
   })
   .then(() => {
     app.listen(port, hostname, () => {

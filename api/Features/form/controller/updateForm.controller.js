@@ -14,20 +14,24 @@ const Form_ProdConcuAcc = require("../model/Form_ProdConcuAcc");
 const Form_SourceAppro = require("../model/Form_SourceAppro");
 const Form_Cadeau = require("../model/Form_Cadeau");
 const Form_Critere = require("../model/Form_critere");
+const Form_Action = require("../model/Form_action");
 
 const updateForm = async (req, res) => {
   try {
     const formId = parseInt(req.params.id);
     const body = req.body;
-    console.log(body);
-    const imagePath = req.file ? req.file.path : undefined;
-    const plaques = body.plaque === "0" ? "true" : "false";
-    const espacepub = body.espacepub === "0" ? "true" : "false";
-    const packDetaillant = body.packDetaillant === "0" ? "true" : "false";
+    const file = req.file;
+    const form = await Form.findByPk(formId);
+    if (!form) return res.status(404).json({ error: "Formulaire introuvable" });
+
+    const plaques = body.plaque;
+    const espacepub = body.espacepub;
+    const packDetaillant = body.packDetaillant;
     const cadeaux = body.cadeaux ? JSON.parse(body.cadeaux) : [];
     const sourceAppro = body.sourceAppro ? JSON.parse(body.sourceAppro) : [];
     const selections = body.selections ? JSON.parse(body.selections) : {};
     const criteres = body.criteres ? JSON.parse(body.criteres) : [];
+    const actions = body.actions ? JSON.parse(body.actions) : [];
 
     const updatedForm = {
       Fullname: body.Fullname,
@@ -51,8 +55,18 @@ const updateForm = async (req, res) => {
         : 0,
       commentaire: body.commentaire || null,
     };
-    if (imagePath) {
-      updatedForm.Image = imagePath;
+    if (file && file.path) {
+      const ext = path.extname(file.originalname) || ".webp";
+      const newFilename = `form-${form.ID}${ext}`;
+      const newPath = path.join(path.dirname(file.path), newFilename);
+
+      if (form.Image && fs.existsSync(form.Image)) {
+        fs.unlinkSync(form.Image);
+      }
+
+      fs.renameSync(file.path, newPath);
+
+      updatedForm.Image = newPath;
     }
     await Form.update(updatedForm, { where: { ID: formId } });
 
@@ -72,6 +86,7 @@ const updateForm = async (req, res) => {
       Form_SourceAppro.destroy({ where: { formulaireID: formId } }),
       Form_Cadeau.destroy({ where: { form_id: formId } }),
       Form_Critere.destroy({ where: { formulaireID: formId } }),
+      Form_Action.destroy({ where: { formulaireID: formId } }),
     ]);
 
     // Réinsérer toutes les nouvelles relations
@@ -83,27 +98,37 @@ const updateForm = async (req, res) => {
         (sel.produits || [])
           .map((p) => {
             const id = Number(p.produitId);
+            const nbArticle = sel.nbr_article ?? 0;
+            const nbArticleCommande = sel.nbr_article_commande ?? 0;
             if (!id) return null;
             switch (cat) {
               case "lampe":
                 return form_ProduitLampe.create({
                   formulaireID: formId,
                   ProduitLampeID: id,
+                  nbArticle,
+                  nbArticleCommande,
                 });
               case "appareillage":
                 return Form_ProdAppareillage.create({
                   formulaireID: formId,
                   ProduitAppareillageID: id,
+                  nbArticle,
+                  nbArticleCommande,
                 });
               case "disjoncteur":
                 return Form_ProdDisjoncteur.create({
                   formulaireID: formId,
                   ProduitDisjoncteurID: id,
+                  nbArticle,
+                  nbArticleCommande,
                 });
               case "accessoire":
                 return Form_ProdAccessoire.create({
                   formulaireID: formId,
                   ProduitAccessoireID: id,
+                  nbArticle,
+                  nbArticleCommande,
                 });
             }
           })
@@ -215,6 +240,20 @@ const updateForm = async (req, res) => {
             formulaireID: formId,
             CritereId: critId,
             is_checked: crit.is_checked ? 1 : 0,
+          });
+        })
+        .filter(Boolean),
+    );
+    await Promise.all(
+      actions
+        .map((act) => {
+          const actId = Number(act.actionId || act.ActionMarketingId);
+          if (!actId) return null;
+
+          return Form_Action.create({
+            formulaireID: formId,
+            ActionMarketingId: actId,
+            is_checked: act.is_checked ? 1 : 0,
           });
         })
         .filter(Boolean),
