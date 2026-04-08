@@ -78,7 +78,7 @@ export default function FormDialog({
     disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
     accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
   });
-
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const initialFormState = {
     mission_id: null,
     utilisateur_id: user?.id || null,
@@ -119,9 +119,98 @@ export default function FormDialog({
     disjoncteur: { ...defaultCategoryState },
     accessoire: { ...defaultCategoryState },
   });
-
-  // ----------------- Fetch Data -----------------
   useEffect(() => {
+    if (!user) return;
+
+    const fetchBaseData = async () => {
+      try {
+        const [villes, cadeaux, sources, acts, crit, actions] =
+          await Promise.all([
+            fetch(`${URL}/api/location/ville`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/cadeau/all`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/sourceAppro/all`, {
+              credentials: "include",
+            }).then((r) => r.json()),
+            fetch(`${URL}/api/activite/all`, { credentials: "include" }).then(
+              (r) => r.json(),
+            ),
+            fetch(`${URL}/api/criteria`, { credentials: "include" }).then((r) =>
+              r.json(),
+            ),
+            fetch(`${URL}/api/action`, { credentials: "include" }).then((r) =>
+              r.json(),
+            ),
+          ]);
+        setCities(villes || []);
+        setCadeauxList(cadeaux || []);
+        setSourcesList(sources || []);
+        setActivites(acts || []);
+        setCriteriaList(crit || []);
+        setActionsList(actions || []);
+      } catch (err) {
+        console.error("Erreur lors du chargement des données initiales", err);
+      }
+    };
+
+    fetchBaseData();
+  }, [user]);
+  useEffect(() => {
+    if (!cities.length) return; // wait for cities to load
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      setForm((prev) => ({
+        ...prev,
+        latitude: lat.toString(),
+        longitude: lng.toString(),
+      }));
+
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        );
+        const data = await res.json();
+        const detectedCity =
+          data.address?.city ||
+          data.address?.town ||
+          data.address?.village ||
+          data.address?.county;
+        if (!detectedCity) return;
+
+        const normalize = (str) =>
+          str
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+        const match = cities.find((c) =>
+          normalize(detectedCity).includes(normalize(c.name)),
+        );
+
+        if (match) {
+          setForm((prev) => ({ ...prev, algeriaCitiesId: match.id }));
+          toast.success(`Ville détectée automatiquement: ${match.name}`);
+        }
+      } catch (err) {
+        console.error("Reverse geocoding error", err);
+      }
+    });
+  }, [cities]);
+  useEffect(() => {
+    if (!user) return;
+    fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setMissions(Array.isArray(d) ? d : []))
+      .catch(() => setMissions([]));
+  }, [user]); // <-- run only once after cities loaded // <-- run only once per user
+  // ----------------- Fetch Data -----------------
+  /*  useEffect(() => {
     if (!user) return;
     setForm((prev) => ({ ...prev, utilisateur_id: user.id }));
 
@@ -169,15 +258,64 @@ export default function FormDialog({
       .catch(() => setMissions([]));
 
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        // Save lat/lng
         setForm((prev) => ({
           ...prev,
-          latitude: pos.coords.latitude.toString(),
-          longitude: pos.coords.longitude.toString(),
+          latitude: lat.toString(),
+          longitude: lng.toString(),
         }));
+
+        // Reverse Geocode from Nominatim API (free)
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+          );
+          const data = await res.json();
+
+          const detectedCity =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.county;
+
+          if (!detectedCity) return;
+
+          console.log("Detected city:", detectedCity);
+
+          // Normalize name for comparison
+          const normalize = (str) =>
+            str
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+
+          // Find match from API cities
+          const match = cities.find((c) =>
+            normalize(detectedCity).includes(normalize(c.name)),
+          );
+
+          if (match) {
+            setForm((prev) => ({
+              ...prev,
+              algeriaCitiesId: match.id,
+            }));
+
+            toast.success(`Ville détectée automatiquement: ${match.name}`);
+          } else {
+            toast.warning(
+              `Ville détectée (${detectedCity}) mais non trouvée dans la base.`,
+            );
+          }
+        } catch (err) {
+          console.error("Reverse geocoding error", err);
+        }
       });
     }
-  }, [user]);
+  }, [cities, user]); */
 
   useEffect(() => {
     const fetchCategoryData = async (cat) => {
@@ -335,9 +473,10 @@ export default function FormDialog({
 
     try {
       const res = await fetch(
-        `${URL}/api/form/lastVisite/${encodeURIComponent(form.Fullname)}`,
+        `${URL}/api/form/lastVisite/${encodeURIComponent(form.Fullname)}/${encodeURIComponent(form.Tel)}`,
         {
           credentials: "include",
+          method: "GET",
         },
       );
 
@@ -349,7 +488,6 @@ export default function FormDialog({
 
           setForm((prev) => ({
             ...prev,
-            Tel: lastVisit.Tel || prev.Tel,
             nom_magasin: lastVisit.nom_magasin || prev.nom_magasin,
             algeriaCitiesId: lastVisit.algeriaCitiesId || prev.algeriaCitiesId,
             ActiviteId: lastVisit.ActiviteId || prev.ActiviteId,
@@ -543,7 +681,7 @@ export default function FormDialog({
         <div className="flex-1 overflow-y-auto px-6 py-4 bg-slate-50/30">
           <div className="max-w-3xl mx-auto space-y-6">
             {/* STEP 1: Infos Générales */}
-            {step === 1 && (
+            {(isMobile || step === 1) && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2 space-y-1">
@@ -569,13 +707,26 @@ export default function FormDialog({
                     <RequiredLabel className="text-sm font-medium">
                       Nom Client
                     </RequiredLabel>
+
+                    <Input
+                      value={form.Fullname}
+                      onChange={(e) =>
+                        setForm({ ...form, Fullname: e.target.value })
+                      }
+                      placeholder="Entrez le nom du client..."
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <RequiredLabel className="text-sm font-medium">
+                      Téléphone
+                    </RequiredLabel>
                     <div className="flex gap-2">
                       <Input
-                        value={form.Fullname}
+                        value={form.Tel}
+                        maxLength="10"
                         onChange={(e) =>
-                          setForm({ ...form, Fullname: e.target.value })
+                          setForm({ ...form, Tel: e.target.value })
                         }
-                        placeholder="Entrez le nom du client..."
                       />
                       <Button
                         type="button"
@@ -587,18 +738,6 @@ export default function FormDialog({
                         <Search className="w-4 h-4 text-blue-600" />
                       </Button>
                     </div>
-                  </div>
-                  <div className="space-y-1">
-                    <RequiredLabel className="text-sm font-medium">
-                      Téléphone
-                    </RequiredLabel>
-                    <Input
-                      value={form.Tel}
-                      maxLength="10"
-                      onChange={(e) =>
-                        setForm({ ...form, Tel: e.target.value })
-                      }
-                    />
                   </div>
                   <div className="sm:col-span-2 space-y-1">
                     <label className="text-sm font-medium">Nom Magasin</label>
@@ -706,7 +845,7 @@ export default function FormDialog({
             )}
 
             {/* STEP 2: Produits et Concurrents */}
-            {step === 2 && (
+            {(isMobile || step === 2) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b">
                   {categories.map((cat) => (
@@ -841,7 +980,7 @@ export default function FormDialog({
             )}
 
             {/* STEP 3: Marketing et Appro */}
-            {step === 3 && (
+            {(isMobile || step === 3) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="space-y-3">
                   <RequiredLabel className="font-bold text-sm text-slate-600">
@@ -982,7 +1121,7 @@ export default function FormDialog({
             )}
 
             {/* STEP 4: Évaluation et Critères */}
-            {step === 4 && (
+            {(isMobile || step === 4) && (
               <div className="space-y-6 animate-in zoom-in-95 duration-300">
                 <div className="grid grid-cols-1 gap-4">
                   {[
@@ -1131,31 +1270,47 @@ export default function FormDialog({
           </div>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t bg-white shrink-0 flex flex-row items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={handlePrev}
-            disabled={step === 1}
-            className={step === 1 ? "invisible" : "flex items-center"}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" /> Précédent
-          </Button>
-          {step < 4 ? (
+        {/* Desktop footer (with steps) */}
+        {!isMobile && (
+          <DialogFooter className="px-6 py-4 border-t bg-white shrink-0 flex flex-row items-center justify-between">
             <Button
-              onClick={handleNext}
-              className="bg-blue-600 hover:bg-blue-700 px-10 shadow-md text-white"
+              variant="ghost"
+              onClick={handlePrev}
+              disabled={step === 1}
+              className={step === 1 ? "invisible" : "flex items-center"}
             >
-              Suivant <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronLeft className="mr-1 h-4 w-4" /> Précédent
             </Button>
-          ) : (
+
+            {step < 4 ? (
+              <Button
+                onClick={handleNext}
+                className="bg-blue-600 hover:bg-blue-700 px-10 shadow-md text-white"
+              >
+                Suivant <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                className="bg-green-600 hover:bg-green-700 px-10 shadow-md text-white"
+              >
+                Valider
+              </Button>
+            )}
+          </DialogFooter>
+        )}
+
+        {/* Mobile footer — only show "Valider" */}
+        {isMobile && (
+          <DialogFooter className="px-6 py-4 border-t bg-white shrink-0 flex justify-end">
             <Button
               onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 px-10 shadow-md text-white"
+              className="bg-green-600 hover:bg-green-700 px-10 shadow-md text-white w-full"
             >
               Valider
             </Button>
-          )}
-        </DialogFooter>
+          </DialogFooter>
+        )}
 
         {/* MODAL CADEAUX */}
         <Dialog open={cadeauxOpen} onOpenChange={setCadeauxOpen}>

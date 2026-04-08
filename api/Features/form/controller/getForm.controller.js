@@ -160,10 +160,11 @@ const getFormById = async (req, res) => {
 
 const getLastVisiteDetail = async (req, res) => {
   try {
-    const { name } = req.params;
+    const { name, tel } = req.params;
     const LastForm = await Formulaire.findOne({
       where: {
         Fullname: name,
+        Tel: tel,
       },
       include: [
         IncludeForArticles(ProduitLampe, Form_prodLampe),
