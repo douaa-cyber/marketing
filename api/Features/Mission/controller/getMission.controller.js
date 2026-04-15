@@ -1,8 +1,11 @@
+const Objectif = require("../../Objectif/objectif.model");
 const Mission = require("../model/Mission");
 const { Op } = require("sequelize");
 const getAllMissions = async (req, res) => {
   try {
-    const missions = await Mission.findAll();
+    const missions = await Mission.findAll({
+      include: [{ model: Objectif, attributes: ["name"] }],
+    });
     res.status(200).json(missions);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -18,9 +21,10 @@ const getMissionById = async (req, res) => {
         status: "ENCOURS",
         [Op.or]: [{ responsable_id: userId }, { agent_id: userId }],
       },
+      include: [{ model: Objectif, attributes: ["name"] }],
+      order: [["date_deb", "DESC"]],
       attributes: [
         "id",
-        "Objectif",
         "agent_id",
         "responsable_id",
         "region",

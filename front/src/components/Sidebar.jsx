@@ -21,6 +21,7 @@ import {
   MapPin,
   Car,
   LayoutDashboard,
+  TableProperties,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,7 @@ const items = [
       },
       { title: "Source Approvisionement", href: "/SourceAppro", icon: Truck },
       { title: "Activite", href: "/Activite", icon: Columns },
+      { title: "Objectif Mission", href: "/objectif", icon: TableProperties },
       { title: "Cadeau", href: "/Cadeau", icon: Gift },
       { title: "Wilaya", href: "/Location", icon: MapPin },
       { title: "vehicule", href: "/vehicule", icon: Car },

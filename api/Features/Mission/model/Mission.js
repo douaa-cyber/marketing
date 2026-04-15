@@ -10,11 +10,6 @@ const Mission = sequelize.define(
       primaryKey: true,
     },
 
-    Objectif: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-
     date_deb: {
       type: DataTypes.DATE,
       allowNull: false,

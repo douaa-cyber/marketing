@@ -150,6 +150,7 @@ export default function MissionsPage() {
   const [missions, setMissions] = useState([]);
   const [agents, setAgents] = useState([]);
   const [wilayas, setWilayas] = useState([]);
+  const [objectifs, setObjectifs] = useState([]);
   const [vehicules, setVehicules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -170,22 +171,25 @@ export default function MissionsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [mRes, aRes, vRes, wRes] = await Promise.all([
+      const [mRes, aRes, vRes, oRes, wRes] = await Promise.all([
         fetch(`${URL}/api/mission/all`, { credentials: "include" }),
         fetch(`${URL}/api/user/agents`, { credentials: "include" }),
         fetch(`${URL}/api/vehicule/all`, { credentials: "include" }),
+        fetch(`${URL}/api/objectif/all`, { credentials: "include" }),
         fetch(`${URL}/api/location/wilayas`, { credentials: "include" }),
       ]);
 
-      const [mD, aD, vD, wD] = await Promise.all([
+      const [mD, aD, vD, OD, wD] = await Promise.all([
         mRes.json(),
         aRes.json(),
         vRes.json(),
+        oRes.json(),
         wRes.json(),
       ]);
 
       setMissions(mD);
       setAgents(aD);
+      setObjectifs(OD);
       setVehicules(vD);
       setWilayas(wD);
     } catch (err) {
@@ -405,6 +409,46 @@ export default function MissionsPage() {
                 onChange={(e) => setForm({ ...form, Objectif: e.target.value })}
                 placeholder="Ex: Tourné Marketing"
               />
+
+              <Popover open={openWiCombo} onOpenChange={setOpenWiCombo}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                  >
+                    {wilayas.find((w) => w.wilaya === form.wilaya)?.wilaya ||
+                      "Sélectionner..."}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 pointer-events-auto">
+                  <Command>
+                    <CommandInput placeholder="Chercher..." />
+                    <CommandEmpty>Aucune wilaya.</CommandEmpty>
+                    <CommandGroup className="max-h-48 overflow-auto">
+                      {wilayas.map((w) => (
+                        <CommandItem
+                          key={w.wilaya}
+                          onSelect={() => {
+                            setForm({ ...form, wilaya: w.wilaya });
+                            setOpenWiCombo(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              form.wilaya === w.wilaya
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          {w.wilaya}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">

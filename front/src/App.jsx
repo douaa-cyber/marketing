@@ -24,6 +24,7 @@ import Activite from "./pages/activite";
 import Form from "./pages/Form";
 import Vehicule from "./pages/vehicule";
 import Dashboard from "./pages/dashboard";
+import Objectif from "./pages/objectif";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 function App() {
@@ -238,6 +239,16 @@ function App() {
               <PrivateRoute allowedRoles={["admin", "responsable"]}>
                 <Layout>
                   <Vehicule />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/Objectif"
+            element={
+              <PrivateRoute allowedRoles={["admin", "responsable"]}>
+                <Layout>
+                  <Objectif />
                 </Layout>
               </PrivateRoute>
             }

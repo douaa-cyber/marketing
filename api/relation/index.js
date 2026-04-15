@@ -37,6 +37,7 @@ const Form_Critere = require("../Features/form/model/Form_critere.js");
 const Form_Action = require("../Features/form/model/Form_action.js");
 const Action = require("../Features/ActionMarketing/action.model.js");
 const Activity = require("../Features/Activite/model/Activite.js");
+const Objectif = require("../Features/Objectif/objectif.model.js");
 /* ========= MISSIONS ========= */
 User.hasMany(Mission, {
   foreignKey: "agent_id",
@@ -64,6 +65,15 @@ Mission.belongsTo(Vehicule, {
 
 Vehicule.hasMany(Mission, {
   foreignKey: "vehicule_id",
+});
+
+Objectif.hasMany(Mission, {
+  foreignKey: "objectif_id",
+  as: "missions",
+});
+Mission.belongsTo(Objectif, {
+  foreignKey: "objectif_id",
+  as: "objectif",
 });
 
 /* ========= FORMULAIRES ========= */

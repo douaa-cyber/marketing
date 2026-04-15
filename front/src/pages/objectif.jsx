@@ -87,7 +87,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/activite/all`, {
+      const res = await fetch(`${URL}/api/objectif/all`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -125,7 +125,7 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(`${URL}/api/activite/${deleteProductTarget.ID}`, {
+    await fetch(`${URL}/api/objectif/${deleteProductTarget.ID}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -136,14 +136,14 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(`${URL}/api/activite/${selectedProduct.ID}`, {
+      await fetch(`${URL}/api/objectif/${selectedProduct.ID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(form),
       });
     } else {
-      await fetch(`${URL}/api/activite`, {
+      await fetch(`${URL}/api/objectif`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -174,7 +174,7 @@ export default function ProductsPage() {
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Activites</h1>
+        <h1 className="text-2xl font-bold">Gestion des Objectifs</h1>
         <Button onClick={() => handleEdit(null)}>
           <Pencil className="w-4 h-4 mr-2" /> Créer
         </Button>
@@ -183,7 +183,7 @@ export default function ProductsPage() {
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center">
         <Input
-          placeholder="Rechercher Activite..."
+          placeholder="Rechercher Cadeau..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
@@ -224,7 +224,7 @@ export default function ProductsPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-10">
-                  Aucun Activite trouvé
+                  Aucun Objectif trouvé
                 </TableCell>
               </TableRow>
             )}
@@ -257,7 +257,7 @@ export default function ProductsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedProduct ? "Modifier Activite" : "Créer Activite"}
+              {selectedProduct ? "Modifier Objectif" : "Créer Objectif"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
