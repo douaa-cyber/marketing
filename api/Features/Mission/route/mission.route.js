@@ -7,8 +7,7 @@ const authorize = require("../../../middleware/authorize");
 
 router.get(
   "/all",
-  authMiddleware,
-  authorize("admin", "responsable"),
+
   MissionController.getAllMissions,
 );
 router.get(

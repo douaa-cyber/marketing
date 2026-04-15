@@ -58,7 +58,7 @@ const formatDateTimeLocal = (date) => {
 };
 
 const initialFormState = {
-  Objectif: "",
+  Objectif_id: null,
   date_deb: "",
   date_fin: "",
   region: "",
@@ -72,13 +72,14 @@ const initialFormState = {
 };
 
 /* ================= COLUMNS ================= */
-const columns = (onEdit, onDelete) => [
+const columns = (onEdit, onDelete, objectifs) => [
   {
-    accessorKey: "Objectif",
+    accessorKey: "Objectif_id",
     header: "Objectif",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.Objectif}</span>
-    ),
+    cell: ({ row }) => {
+      const obj = objectifs.find((o) => o.id === row.original.Objectif_id);
+      return <span className="font-medium">{obj?.name || "—"}</span>;
+    },
   },
   {
     accessorKey: "date_deb",
@@ -161,6 +162,7 @@ export default function MissionsPage() {
   const [openAgentCombo, setOpenAgentCombo] = useState(false);
   const [openRespCombo, setOpenRespCombo] = useState(false);
   const [openWiCombo, setOpenWiCombo] = useState(false);
+  const [openObjCombo, setOpenObjCombo] = useState(false);
   const [openVehiCombo, setOpenVehiCombo] = useState(false);
 
   const [selectedMission, setSelectedMission] = useState(null);
@@ -231,7 +233,7 @@ export default function MissionsPage() {
   const handleSubmit = async () => {
     // Validation
     if (
-      !form.Objectif ||
+      !form.Objectif_id ||
       !form.date_deb ||
       !form.date_fin ||
       !form.wilaya ||
@@ -288,10 +290,14 @@ export default function MissionsPage() {
 
   const table = useReactTable({
     data: missions,
-    columns: columns(handleEdit, (m) => {
-      setDeleteTarget(m);
-      setOpenDeleteDialog(true);
-    }),
+    columns: columns(
+      handleEdit,
+      (m) => {
+        setDeleteTarget(m);
+        setOpenDeleteDialog(true);
+      },
+      objectifs,
+    ),
     state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
@@ -404,45 +410,42 @@ export default function MissionsPage() {
           <div className="grid grid-cols-2 gap-6 py-4">
             <div className="col-span-2 space-y-2">
               <RequiredLabel>Objectif de la mission</RequiredLabel>
-              <Input
-                value={form.Objectif}
-                onChange={(e) => setForm({ ...form, Objectif: e.target.value })}
-                placeholder="Ex: Tourné Marketing"
-              />
 
-              <Popover open={openWiCombo} onOpenChange={setOpenWiCombo}>
+              <Popover open={openObjCombo} onOpenChange={setOpenObjCombo}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className="w-full justify-between font-normal"
                   >
-                    {wilayas.find((w) => w.wilaya === form.wilaya)?.wilaya ||
+                    {objectifs.find((o) => o.ID === form.Objectif_id)?.name ||
                       "Sélectionner..."}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
+
                 <PopoverContent className="p-0 pointer-events-auto">
                   <Command>
                     <CommandInput placeholder="Chercher..." />
-                    <CommandEmpty>Aucune wilaya.</CommandEmpty>
+                    <CommandEmpty>Aucun objectif.</CommandEmpty>
+
                     <CommandGroup className="max-h-48 overflow-auto">
-                      {wilayas.map((w) => (
+                      {objectifs.map((o) => (
                         <CommandItem
-                          key={w.wilaya}
+                          key={o.ID}
                           onSelect={() => {
-                            setForm({ ...form, wilaya: w.wilaya });
-                            setOpenWiCombo(false);
+                            setForm({ ...form, Objectif_id: o.ID });
+                            setOpenObjCombo(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              form.wilaya === w.wilaya
+                              form.Objectif_id === o.ID
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
                           />
-                          {w.wilaya}
+                          {o.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -617,7 +620,7 @@ export default function MissionsPage() {
                           key={v.id}
                           onSelect={() => handleVehiculeSelect(v)}
                         >
-                          {v.marque} ({v.immatriculation})
+                          {v.marque}
                         </CommandItem>
                       ))}
                     </CommandGroup>
