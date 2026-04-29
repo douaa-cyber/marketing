@@ -1,19 +1,26 @@
-const ProdConcurrentAccessoire = require("../../model/ProdConcurrentAccessoire");
+const Categorie = require("../../../Categorie/categorie.model");
+const ProdConcurrent = require("../../model/ProdConcurrent");
 
-const getAllProdConcurrentAccessoire = async (req, res) => {
+const getAllProdConcu = async (req, res) => {
   try {
-    const items = await ProdConcurrentAccessoire.findAll();
+    const items = await ProdConcurrent.findAll({
+      include: [
+        {
+          model: Categorie,
+        },
+      ],
+    });
     res.status(200).json(items);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const getProdConcurrentAccessoireById = async (req, res) => {
+const getProdConcuById = async (req, res) => {
   try {
-    const item = await ProdConcurrentAccessoire.findByPk(req.params.id);
+    const item = await ProdConcurrent.findByPk(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "Not found" });
+      return res.status(404).json({ message: "Produit not found" });
     }
     res.status(200).json(item);
   } catch (error) {
@@ -22,6 +29,6 @@ const getProdConcurrentAccessoireById = async (req, res) => {
 };
 
 module.exports = {
-  getAllProdConcurrentAccessoire,
-  getProdConcurrentAccessoireById,
+  getAllProdConcu,
+  getProdConcuById,
 };

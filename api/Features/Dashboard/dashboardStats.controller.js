@@ -5,10 +5,9 @@ const Mission = require("../Mission/model/Mission");
 const Critere = require("../Critere/critere.model");
 const Action = require("../ActionMarketing/action.model");
 const AlgeriaCities = require("../Location/model/AlgeriaCities");
-const Form_ProdLampe = require("../form/model/Form_ProduitLampe");
-const FormProdAccessoire = require("../form/model/Form_ProdAccessoire");
-const FormProdAppareillage = require("../form/model/Form_ProdAppareillage");
-const FormProdDisj = require("../form/model/Form_ProdDisjoncteur");
+const Form_Prod = require("../form/model/Form_Prod");
+const Produit = require("../Product/model/Produit");
+const Categorie = require("../Categorie/categorie.model");
 
 const getStatsVisitesUniques = async (req, res) => {
   try {
@@ -177,7 +176,7 @@ const getClientScoresByPeriod = async (req, res) => {
   }
 };
 
-const getRuptureStockStats = async (req, res) => {
+/* const getRuptureStockStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -192,18 +191,14 @@ const getRuptureStockStats = async (req, res) => {
         { model: User, as: "agent", attributes: ["fullname"] },
         { model: AlgeriaCities, as: "city", attributes: ["wilaya", "Commune"] },
         {
-          model: Form_ProdLampe,
-          attributes: ["nbArticle", "nbArticleCommande"],
+          model: Produit,
+          through: {
+            model: Form_Prod,
+            attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
         },
-        {
-          model: FormProdAccessoire,
-          attributes: ["nbArticle", "nbArticleCommande"],
-        },
-        {
-          model: FormProdAppareillage,
-          attributes: ["nbArticle", "nbArticleCommande"],
-        },
-        { model: FormProdDisj, attributes: ["nbArticle", "nbArticleCommande"] },
       ],
     });
     console.log("forms:", formulaires);
@@ -273,8 +268,121 @@ const getRuptureStockStats = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
-};
+}; */
 
+const getRuptureStockStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const formulaires = await Formulaire.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [startDate + " 00:00:00", endDate + " 23:59:59"],
+        },
+      },
+      attributes: ["ID", "nom_magasin", "Fullname", "createdAt"],
+      include: [
+        { model: User, as: "agent", attributes: ["fullname"] },
+        { model: AlgeriaCities, as: "city", attributes: ["wilaya", "Commune"] },
+
+        // ✅ unified products
+        {
+          model: Produit,
+          through: {
+            model: Form_Prod,
+            attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [
+            {
+              model: Categorie,
+              attributes: ["id", "nom"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const clientsMap = {};
+
+    formulaires.forEach((f) => {
+      const clientKey = f.Fullname || "Client Inconnu";
+
+      const produits = f.Produits || [];
+
+      // 🔥 dynamic category calculation
+      const map = {};
+
+      produits.forEach((p) => {
+        const catName = p.Categorie?.nom || "Non classé";
+
+        if (!map[catName]) {
+          map[catName] = { total: 0, cmd: 0 };
+        }
+
+        map[catName].total += p.Form_Prod?.nbArticle || 0;
+        map[catName].cmd += p.Form_Prod?.nbArticleCommande || 0;
+      });
+
+      const scoresFamilles = {};
+
+      Object.keys(map).forEach((cat) => {
+        const { total, cmd } = map[cat];
+
+        scoresFamilles[cat] =
+          total > 0 ? parseFloat(((cmd / total) * 100).toFixed(1)) : 0;
+      });
+
+      if (!clientsMap[clientKey]) {
+        clientsMap[clientKey] = {
+          clientName: clientKey,
+          region: f.city?.Commune || "N/A",
+          wilaya: f.city?.wilaya || "N/A",
+          visites: [],
+        };
+      }
+
+      clientsMap[clientKey].visites.push({
+        date: f.createdAt.toISOString().split("T")[0],
+        agentName: f.agent?.fullname || "Anonyme",
+        scoresFamilles,
+      });
+    });
+
+    // 🔥 dynamic average per category
+    const finalResult = Object.values(clientsMap).map((client) => {
+      const allCategories = {};
+
+      client.visites.forEach((v) => {
+        Object.entries(v.scoresFamilles).forEach(([cat, value]) => {
+          if (!allCategories[cat]) allCategories[cat] = [];
+          allCategories[cat].push(value);
+        });
+      });
+
+      const famillesMoyennes = Object.entries(allCategories).map(
+        ([cat, values]) => ({
+          nom: cat,
+          taux: parseFloat(
+            (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1),
+          ),
+        }),
+      );
+
+      return {
+        ...client,
+        famillesMoyennes,
+      };
+    });
+
+    finalResult.sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+    res.status(200).json(finalResult);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
 const getActionByPeriod = async (req, res) => {
   try {
     const { startDate, endDate, utilisateur_id } = req.query;

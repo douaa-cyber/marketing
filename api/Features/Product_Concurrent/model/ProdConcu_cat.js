@@ -1,12 +1,12 @@
 const sequelize = require("../../../config/database");
 
-const Form_ProdConcuDisj = sequelize.define(
-  "Form_ProdConcuDisj",
+const ProdConcuCat = sequelize.define(
+  "ProdConcuCat",
   {},
   {
     timestamps: false,
     freezeTableName: true,
-  }
+  },
 );
 
-module.exports = Form_ProdConcuDisj;
+module.exports = ProdConcuCat;

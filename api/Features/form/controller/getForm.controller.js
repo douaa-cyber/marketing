@@ -1,30 +1,9 @@
 // Formulaire
 const Formulaire = require("../model/Formulaire");
 
-// Produits
-const ProduitLampe = require("../../Product/model/ProduitLampe");
-const ProduitAppareillage = require("../../Product/model/ProduitAppareillage");
-const ProduitDisjoncteur = require("../../Product/model/ProduitDisjoncteur");
-const ProduitAccessoire = require("../../Product/model/ProduitAccessoire");
-
-// Concurrents
-const ConcurrentLampe = require("../../Concurrent/model/ConcurrentLampe");
-const ConcurrentAppareillage = require("../../Concurrent/model/ConcurrentAppareillage");
-const ConcurrentDisjoncteur = require("../../Concurrent/model/ConcurrentDisjoncteur");
-const ConcurrentAccessoire = require("../../Concurrent/model/ConcurrentAccessoire");
-
-// Produits des concurrents
-const ProdConcurrentLampe = require("../../Product_Concurrent/model/ProdConcurrentLampe");
-const ProdConcurrentAppareillage = require("../../Product_Concurrent/model/ProdConcurrentAppareillage");
-const ProdConcurrentDisj = require("../../Product_Concurrent/model/ProdConcurrentDisjoncteur");
-const ProdConcurrentAccessoire = require("../../Product_Concurrent/model/ProdConcurrentAccessoire");
-
 // Source d'approvisionnement
 const SourceAppro = require("../../SourceAppro/model/SourceApprovisionement");
-const Form_prodLampe = require("../model/Form_ProduitLampe");
-const Form_prodAppareillage = require("../model/Form_ProdAppareillage");
-const Form_prodDisj = require("../model/Form_ProdDisjoncteur");
-const Form_prodAcc = require("../model/Form_ProdAccessoire");
+
 // Cadeaux
 const Cadeau = require("../../Cadeau/model/Cadeau");
 const CadeauForm = require("../model/Form_Cadeau");
@@ -33,6 +12,13 @@ const Action = require("../../ActionMarketing/action.model");
 const Locat = require("../../Location/model/AlgeriaCities");
 const Activity = require("../../Activite/model/Activite");
 const User = require("../../User/model/User");
+const Form_Prod = require("../model/Form_Prod");
+const Form_Concu = require("../model/Form_Concu");
+const Categorie = require("../../Categorie/categorie.model");
+const Concurrent = require("../../Concurrent/model/Concurrent");
+const Produit = require("../../Product/model/Produit");
+const ProdConcurrent = require("../../Product_Concurrent/model/ProdConcurrent");
+const Form_ProdConcu = require("../model/Form_ProdConcu");
 const buildWhereClause = (user) => {
   if (!user) return {};
 
@@ -72,20 +58,35 @@ const getAllForms = async (req, res) => {
     const forms = await Formulaire.findAll({
       where: buildWhereClause(req.user),
       include: [
-        IncludeForArticles(ProduitLampe, Form_prodLampe),
-        IncludeForArticles(ProduitAppareillage, Form_prodAppareillage),
-        IncludeForArticles(ProduitDisjoncteur, Form_prodDisj),
-        IncludeForArticles(ProduitAccessoire, Form_prodAcc),
+        {
+          model: Produit,
+          through: {
+            model: Form_Prod,
+            attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+        },
 
-        simpleInclude(ConcurrentLampe),
-        simpleInclude(ConcurrentAppareillage),
-        simpleInclude(ConcurrentDisjoncteur),
-        simpleInclude(ConcurrentAccessoire),
-
-        simpleInclude(ProdConcurrentLampe),
-        simpleInclude(ProdConcurrentAppareillage),
-        simpleInclude(ProdConcurrentDisj),
-        simpleInclude(ProdConcurrentAccessoire),
+        // ✅ Concurrents (ALL categories)
+        {
+          model: Concurrent,
+          through: {
+            model: Form_Concu,
+            attributes: ["categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+        },
+        {
+          model: ProdConcurrent,
+          through: {
+            model: Form_ProdConcu,
+            attributes: ["categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+        },
 
         {
           model: SourceAppro,
@@ -139,12 +140,22 @@ const getFormById = async (req, res) => {
       where: { ID: id },
       include: [
         {
-          model: ProduitLampe,
+          model: Produit,
           through: {
-            model: Form_prodLampe,
-            attributes: [],
+            model: Form_Prod,
+            attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
           },
           attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+        },
+        {
+          model: Concurrent,
+          through: {
+            model: Form_Concu,
+            attributes: ["categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
         },
       ],
     });
@@ -167,15 +178,26 @@ const getLastVisiteDetail = async (req, res) => {
         Tel: tel,
       },
       include: [
-        IncludeForArticles(ProduitLampe, Form_prodLampe),
-        IncludeForArticles(ProduitAppareillage, Form_prodAppareillage),
-        IncludeForArticles(ProduitDisjoncteur, Form_prodDisj),
-        IncludeForArticles(ProduitAccessoire, Form_prodAcc),
+        {
+          model: Produit,
+          through: {
+            model: Form_Prod,
+            attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+        },
 
-        simpleInclude(ConcurrentLampe),
-        simpleInclude(ConcurrentAppareillage),
-        simpleInclude(ConcurrentDisjoncteur),
-        simpleInclude(ConcurrentAccessoire),
+        // ✅ Concurrents
+        {
+          model: Concurrent,
+          through: {
+            model: Form_Concu,
+            attributes: ["categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+        },
 
         simpleInclude(ProdConcurrentLampe),
         simpleInclude(ProdConcurrentAppareillage),

@@ -1,9 +1,11 @@
 const sequelize = require("../../../config/database");
 const { DataTypes } = require("sequelize");
-
-const Form_ProdAppareillage = sequelize.define(
-  "Form_ProdAppareillage",
+const Form_Prod = sequelize.define(
+  "Form_Prod",
   {
+    formId: DataTypes.INTEGER,
+    produitId: DataTypes.INTEGER,
+    categorieId: DataTypes.INTEGER,
     nbArticle: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -19,4 +21,4 @@ const Form_ProdAppareillage = sequelize.define(
   },
 );
 
-module.exports = Form_ProdAppareillage;
+module.exports = Form_Prod;

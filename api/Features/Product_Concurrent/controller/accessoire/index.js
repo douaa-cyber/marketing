@@ -1,20 +1,18 @@
-const {
-  createProdConcurrentAccessoire,
-} = require("./addProdConcuAcc.controller");
+const { createProduitConcu } = require("./addProdConcuAcc.controller");
 
-const deleteProdConcuAcc = require("./deleteProdConcuAcc.controller");
+const deleteProdConcu = require("./deleteProdConcuAcc.controller");
 
 const {
-  getAllProdConcurrentAccessoire,
-  getProdConcurrentAccessoireById,
+  getAllProdConcu,
+  getProdConcuById,
 } = require("./getProdConcuAcc.controller");
 
-const updateProdConcuAcc = require("./updateProdConcuAcc.controller");
+const updateProdConcu = require("./updateProdConcuAcc.controller");
 
 module.exports = {
-  createProdConcurrentAccessoire,
-  deleteProdConcuAcc,
-  getAllProdConcurrentAccessoire,
-  getProdConcurrentAccessoireById,
-  updateProdConcuAcc,
+  createProduitConcu,
+  deleteProdConcu,
+  getAllProdConcu,
+  getProdConcuById,
+  updateProdConcu,
 };
