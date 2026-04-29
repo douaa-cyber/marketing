@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../config/database");
 
-const ConcurrentDisjoncteur = sequelize.define(
-  "ConcurrentDisjoncteur",
+const Categorie = sequelize.define(
+  "Categorie",
   {
     ID: {
       type: DataTypes.INTEGER,
@@ -18,7 +18,7 @@ const ConcurrentDisjoncteur = sequelize.define(
   {
     timestamps: true,
     freezeTableName: true,
-  }
+  },
 );
 
-module.exports = ConcurrentDisjoncteur;
+module.exports = Categorie;

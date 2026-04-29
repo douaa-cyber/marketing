@@ -67,7 +67,7 @@ const initialFormState = {
   agent_id: null,
   responsable_id: null,
   vehicule_id: null,
-  Immatriculation: "",
+
   clientAVisite: "",
 };
 
@@ -225,7 +225,7 @@ export default function MissionsPage() {
     setForm({
       ...form,
       vehicule_id: v.id,
-      Immatriculation: v.immatriculation || "", // Assurez-vous que le champ existe dans votre API
+      Immatriculation: v.immatriculation || "",
     });
     setOpenVehiCombo(false);
   };
@@ -551,7 +551,19 @@ export default function MissionsPage() {
                         <CommandItem
                           key={a.id}
                           onSelect={() => {
-                            setForm({ ...form, responsable_id: a.id });
+                            const selectedUser = a;
+
+                            const vehicule = vehicules.find(
+                              (v) => v.user_id === selectedUser.id,
+                            );
+
+                            setForm({
+                              ...form,
+                              responsable_id: selectedUser.id,
+                              vehicule_id: vehicule?.id || null,
+                              Immatriculation: vehicule?.immatriculation || "",
+                            });
+
                             setOpenRespCombo(false);
                           }}
                         >
@@ -600,11 +612,18 @@ export default function MissionsPage() {
 
             <div className="space-y-2">
               <RequiredLabel>Véhicule</RequiredLabel>
-              <Popover open={openVehiCombo} onOpenChange={setOpenVehiCombo}>
+              <Popover
+                open={openVehiCombo}
+                onOpenChange={(open) => {
+                  if (!form.responsable_id) return;
+                  setOpenVehiCombo(open);
+                }}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className="w-full justify-between font-normal"
+                    disabled={!form.responsable_id}
                   >
                     {vehicules.find((v) => v.id === form.vehicule_id)?.marque ||
                       "Sélectionner..."}
@@ -628,7 +647,6 @@ export default function MissionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-
             <div className="space-y-2">
               <RequiredLabel>Immatriculation</RequiredLabel>
               <Input
@@ -638,7 +656,6 @@ export default function MissionsPage() {
                 placeholder="Ex: 999548-122-16"
               />
             </div>
-
             <div className="space-y-2">
               <RequiredLabel>Nombre de clients à visiter</RequiredLabel>
               <Input

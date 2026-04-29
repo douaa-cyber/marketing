@@ -1,14 +1,16 @@
-const ConcurrentAccessoire = require("../../model/ConcurrentAccessoire");
+const Concurrent = require("../../model/Concurrent");
 
-const CreateConcurrentAcc = async (req, res) => {
+const CreateConcurrent = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, categorieId } = req.body;
 
-    const accessoire = await ConcurrentAccessoire.create({
-      name,
-    });
+    const concurrent = await Concurrent.create({ name });
 
-    return res.status(201).json(accessoire);
+    if (categorieId) {
+      await concurrent.addCategorie(categorieId);
+    }
+
+    return res.status(201).json(concurrent);
   } catch (error) {
     console.error("Create ConcurrentAccessoire error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -16,5 +18,5 @@ const CreateConcurrentAcc = async (req, res) => {
 };
 
 module.exports = {
-  CreateConcurrentAcc,
+  CreateConcurrent,
 };

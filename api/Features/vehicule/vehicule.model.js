@@ -14,6 +14,10 @@ const Vehicule = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    immatriculation: {
+      type: DataTypes.STRING(12),
+      allowNull: true,
+    },
   },
   {
     timestamps: true,

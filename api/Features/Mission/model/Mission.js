@@ -49,9 +49,7 @@ const Mission = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    Immatriculation: {
-      type: DataTypes.STRING(12),
-    },
+
     clientAVisite: {
       type: DataTypes.INTEGER,
     },

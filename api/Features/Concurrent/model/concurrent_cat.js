@@ -1,12 +1,12 @@
 const sequelize = require("../../../config/database");
 
-const Form_ConcuAccess = sequelize.define(
-  "Form_ConcuAccess",
+const ConcuCat = sequelize.define(
+  "ConcuCat",
   {},
   {
     timestamps: false,
     freezeTableName: true,
-  }
+  },
 );
 
-module.exports = Form_ConcuAccess;
+module.exports = ConcuCat;

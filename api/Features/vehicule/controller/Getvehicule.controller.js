@@ -1,8 +1,16 @@
 const Vehicule = require("../vehicule.model");
-
+const User = require("../../User/model/User");
 const getAllVehicule = async (req, res) => {
   try {
-    const vehicules = await Vehicule.findAll();
+    const vehicules = await Vehicule.findAll({
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["fullname"],
+        },
+      ],
+    });
     res.status(200).json(vehicules);
   } catch (error) {
     res.status(500).json({ error: error.message });

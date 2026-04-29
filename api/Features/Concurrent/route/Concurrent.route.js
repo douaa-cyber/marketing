@@ -12,7 +12,7 @@ router.post(
   "/accessoire",
   authMiddleware,
   authorize("admin", "responsable"),
-  ConcurrentAcc.CreateConcurrentAcc,
+  ConcurrentAcc.CreateConcurrent,
 );
 router.post(
   "/appareillage",
@@ -38,7 +38,7 @@ router.get(
   "/accessoire",
   authMiddleware,
   authorize("admin", "responsable", "marketeur"),
-  ConcurrentAcc.getAllConcurrentAccessoire,
+  ConcurrentAcc.getAllConcurrent,
 );
 router.get(
   "/appareillage",
@@ -64,7 +64,7 @@ router.get(
   "/accessoire/:id",
   authMiddleware,
   authorize("admin", "responsable", "marketeur"),
-  ConcurrentAcc.getConcurrentAccessoireById,
+  ConcurrentAcc.getConcurrentById,
 );
 router.get(
   "/appareillage/:id",
@@ -116,7 +116,7 @@ router.delete(
   "/accessoire/:id",
   authMiddleware,
   authorize("admin", "responsable"),
-  ConcurrentAcc.deleteConcurrentAccessoire,
+  ConcurrentAcc.deleteConcurrent,
 );
 router.delete(
   "/appareillage/:id",

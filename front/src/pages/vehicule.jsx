@@ -47,6 +47,20 @@ const columns = (onEdit, onDelete) => [
     ),
   },
   {
+    accessorKey: "immatriculation",
+    header: "immatriculation",
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original.immatriculation}</span>
+    ),
+  },
+  {
+    accessorKey: "user_id",
+    header: "User",
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original.user.fullname}</span>
+    ),
+  },
+  {
     id: "actions",
     header: "",
     cell: ({ row }) => (
@@ -75,12 +89,15 @@ export default function VehiculePage() {
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState(null);
+  const [users, setUsers] = useState([]);
 
   // ===== Dialog states =====
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedVehicule, setSelectedVehicule] = useState(null);
   const [form, setForm] = useState({
     marque: "",
+    immatriculation: "",
+    user_id: null,
   });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -90,12 +107,15 @@ export default function VehiculePage() {
   const fetchVehicule = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/vehicule/all`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      console.log(data);
-      setVehicule(data);
+      const [vRes, uRes] = await Promise.all([
+        fetch(`${URL}/api/vehicule/all`, { credentials: "include" }),
+        fetch(`${URL}/api/user/agents`, { credentials: "include" }),
+      ]);
+
+      const [vData, uData] = await Promise.all([vRes.json(), uRes.json()]);
+
+      setVehicule(vData);
+      setUsers(uData);
     } catch (err) {
       console.error(err);
       setVehicule([]);
@@ -114,10 +134,12 @@ export default function VehiculePage() {
       setSelectedVehicule(v);
       setForm({
         marque: v.marque,
+        immatriculation: v.immatriculation,
+        user_id: v.user_id,
       });
     } else {
       setSelectedVehicule(null);
-      setForm({ marque: "" });
+      setForm({ marque: "", immatriculation: "", user_id: null });
     }
     setOpenDialog(true);
   };
@@ -270,6 +292,28 @@ export default function VehiculePage() {
               value={form.marque}
               onChange={(e) => setForm({ ...form, marque: e.target.value })}
             />
+            <Input
+              placeholder="Immatriculation"
+              value={form.immatriculation}
+              maxlength={12}
+              onChange={(e) =>
+                setForm({ ...form, immatriculation: e.target.value })
+              }
+            />
+            <select
+              className="w-full border rounded-md p-2"
+              value={form.user_id || ""}
+              onChange={(e) =>
+                setForm({ ...form, user_id: Number(e.target.value) })
+              }
+            >
+              <option value="">Sélectionner un utilisateur</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.fullname}
+                </option>
+              ))}
+            </select>
           </div>
           <DialogFooter>
             <Button onClick={handleSubmit}>

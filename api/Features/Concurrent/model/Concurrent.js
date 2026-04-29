@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../../config/database");
 
-const ProduitDisjoncteur = sequelize.define(
-  "ProduitDisjoncteur",
+const Concurrent = sequelize.define(
+  "Concurrent",
   {
     ID: {
       type: DataTypes.INTEGER,
@@ -18,7 +18,7 @@ const ProduitDisjoncteur = sequelize.define(
   {
     timestamps: true,
     freezeTableName: true,
-  }
+  },
 );
 
-module.exports = ProduitDisjoncteur;
+module.exports = Concurrent;
