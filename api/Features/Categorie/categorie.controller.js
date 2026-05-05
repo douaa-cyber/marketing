@@ -1,4 +1,7 @@
 const Categorie = require("./categorie.model");
+const Produit = require("../Product/model/Produit");
+const Concurrent = require("../Concurrent/model/Concurrent");
+const ProdConcurrent = require("../Product_Concurrent/model/ProdConcurrent");
 
 const createCategorie = async (req, res) => {
   try {
@@ -13,12 +16,12 @@ const deleteCategorie = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const Categorie = await Categorie.findByPk(id);
-    if (!Categorie) {
+    const categorie = await Categorie.findByPk(id);
+    if (!categorie) {
       return res.status(404).json({ message: "Categorie introuvable." });
     }
 
-    await Categorie.destroy();
+    await categorie.destroy();
     res.json({ message: "Categorie supprimée." });
   } catch (error) {
     console.error("Delete Error:", error);
@@ -29,6 +32,40 @@ const deleteCategorie = async (req, res) => {
 const GetAllCategorie = async (req, res) => {
   try {
     const cad = await Categorie.findAll();
+
+    if (!cad) {
+      return res.status(404).json({ message: "Categorie introuvable." });
+    }
+
+    res.status(200).json(cad);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+const GetCategorieInfo = async (req, res) => {
+  try {
+    const cad = await Categorie.findAll({
+      include: [
+        {
+          model: Produit,
+          through: {
+            attributes: [],
+          },
+        },
+        {
+          model: Concurrent,
+          through: {
+            attributes: [],
+          },
+        },
+        {
+          model: ProdConcurrent,
+          through: {
+            attributes: [],
+          },
+        },
+      ],
+    });
 
     if (!cad) {
       return res.status(404).json({ message: "Categorie introuvable." });
@@ -83,4 +120,5 @@ module.exports = {
   deleteCategorie,
   GetAllCategorie,
   GetCategorieById,
+  GetCategorieInfo,
 };

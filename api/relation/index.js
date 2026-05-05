@@ -323,7 +323,7 @@ module.exports = {
   Produit,
   Form_Prod,
   Form_Concu,
-  Form_Concu,
+  Form_ProdConcu,
   SourceAppro,
   Form_SourceAppro,
 };

@@ -3,9 +3,17 @@ const { DataTypes } = require("sequelize");
 const Form_Concu = sequelize.define(
   "Form_Concu",
   {
-    formId: DataTypes.INTEGER,
-    concurrentId: DataTypes.INTEGER,
-    categorieId: DataTypes.INTEGER,
+    formId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+    },
+    concurrentId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+    },
+    categorieId: {
+      type: DataTypes.INTEGER,
+    },
   },
   {
     timestamps: false,

@@ -65,7 +65,7 @@ const getAllForms = async (req, res) => {
             attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
 
         // ✅ Concurrents (ALL categories)
@@ -76,7 +76,7 @@ const getAllForms = async (req, res) => {
             attributes: ["categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
         {
           model: ProdConcurrent,
@@ -85,7 +85,7 @@ const getAllForms = async (req, res) => {
             attributes: ["categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
 
         {

@@ -3,7 +3,9 @@ const Produit = require("../../model/Produit");
 const createProduit = async (req, res) => {
   try {
     const { name, categorieId } = req.body;
-    const item = await Produit.create(name);
+    const item = await Produit.create({
+      name: name,
+    });
     if (categorieId) {
       await item.addCategorie(categorieId);
     }

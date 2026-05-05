@@ -22,13 +22,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -41,16 +34,9 @@ import {
 const columns = (onEdit, onDelete) => [
   {
     accessorKey: "name",
-    header: "Nom",
-    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
-  },
-  {
-    id: "categorie",
-    header: "Catégorie",
-    // accessorFn est crucial pour que le filtrage fonctionne sur le texte de la catégorie
-    accessorFn: (row) => row.Categories?.[0]?.name || "Non classé",
+    header: "Nom de la Catégorie",
     cell: ({ row }) => (
-      <span className="text-muted-foreground">{row.getValue("categorie")}</span>
+      <span className="font-semibold">{row.original.name}</span>
     ),
   },
   {
@@ -77,188 +63,145 @@ const columns = (onEdit, onDelete) => [
   },
 ];
 
-export default function ProductsPage() {
-  const [products, setProducts] = useState([]);
+export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // États pour les filtres
   const [globalFilter, setGlobalFilter] = useState("");
-  const [columnFilters, setColumnFilters] = useState([]);
+
   // États des Dialogues
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [form, setForm] = useState({
     name: "",
-    categorieId: "",
   });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteProductTarget, setDeleteProductTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // ===== Chargement des données =====
-  const fetchData = async () => {
+  // ===== Fetch des données =====
+  const fetchCategories = async () => {
     setLoading(true);
     try {
-      const [resProd, resCat] = await Promise.all([
-        fetch(`${URL}/api/product/`, { credentials: "include" }),
-        fetch(`${URL}/api/categorie/all`, { credentials: "include" }),
-      ]);
-
-      if (resProd.ok && resCat.ok) {
-        const prodData = await resProd.json();
-        const catData = await resCat.json();
-        setProducts(prodData);
-        setCategories(catData);
+      const response = await fetch(`${URL}/api/categorie/all`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
       }
     } catch (err) {
-      console.error("Erreur lors du chargement:", err);
+      console.error("Erreur de chargement des catégories:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchCategories();
   }, []);
 
   // ===== Handlers =====
-  const handleEdit = (product) => {
-    if (product) {
-      setSelectedProduct(product);
-      setForm({
-        name: product.name,
-        categorieId: product.Categories?.[0]?.ID?.toString() || "",
-      });
+  const handleEdit = (category) => {
+    if (category) {
+      setSelectedCategory(category);
+      setForm({ name: category.name || "" });
     } else {
-      setSelectedProduct(null);
-      setForm({ name: "", categorieId: "" });
+      setSelectedCategory(null);
+      setForm({ name: "" });
     }
     setOpenDialog(true);
   };
 
-  const handleDelete = (product) => {
-    setDeleteProductTarget(product);
+  const handleDelete = (category) => {
+    setDeleteTarget(category);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (!deleteProductTarget) return;
+    if (!deleteTarget) return;
     try {
-      await fetch(`${URL}/api/product/${deleteProductTarget.ID}`, {
+      await fetch(`${URL}/api/categorie/${deleteTarget.ID}`, {
         method: "DELETE",
         credentials: "include",
       });
       setOpenDeleteDialog(false);
-      fetchData();
+      fetchCategories();
     } catch (err) {
-      console.error(err);
+      console.error("Erreur lors de la suppression:", err);
     }
   };
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
 
-    const method = selectedProduct ? "PUT" : "POST";
-    const endpoint = selectedProduct
-      ? `${URL}/api/product/${selectedProduct.ID}`
-      : `${URL}/api/product/`;
+    const method = selectedCategory ? "PUT" : "POST";
+    const endpoint = selectedCategory
+      ? `${URL}/api/categorie/${selectedCategory.ID}`
+      : `${URL}/api/categorie/`;
 
     try {
-      await fetch(endpoint, {
-        method: method,
+      const response = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          name: form.name.trim(),
-          categorieId: form.categorieId || null,
-        }),
+        body: JSON.stringify({ name: form.name.trim() }),
       });
-      setOpenDialog(false);
-      fetchData();
+
+      if (response.ok) {
+        setOpenDialog(false);
+        fetchCategories();
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Erreur lors de l'enregistrement:", err);
     }
   };
 
-  // ===== Configuration Table =====
+  // ===== Table Configuration =====
   const table = useReactTable({
-    data: products,
+    data: categories,
     columns: columns(handleEdit, handleDelete),
-    state: {
-      globalFilter,
-      columnFilters,
-    },
+    state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-2">Chargement des données...</span>
       </div>
     );
-  }
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Gestion des Produits
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Gestion des Catégories
+          </h1>
+          <p className="text-muted-foreground italic text-sm">
+            Organisez vos produits et concurrents par catégorie.
+          </p>
+        </div>
         <Button onClick={() => handleEdit(null)}>
-          <Plus className="w-4 h-4 mr-2" /> Nouveau Produit
+          <Plus className="w-4 h-4 mr-2" /> Nouvelle Catégorie
         </Button>
       </div>
 
-      {/* Barre de recherche et Filtres */}
+      {/* Toolbar */}
       <div className="flex flex-wrap gap-4 items-center">
         <Input
-          placeholder="Rechercher un produit..."
+          placeholder="Rechercher une catégorie..."
           value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm bg-white"
+          className="max-w-sm bg-white shadow-sm"
         />
-
-        {/* Filtre par Catégorie */}
-        <Select
-          value={table.getColumn("categorie")?.getFilterValue() ?? "all"}
-          onValueChange={(value) =>
-            table
-              .getColumn("categorie")
-              ?.setFilterValue(value === "all" ? "" : value)
-          }
-        >
-          <SelectTrigger className="w-[220px] bg-white text-left">
-            <SelectValue placeholder="Toutes les catégories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les catégories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.ID} value={cat.name}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Bouton de réinitialisation des filtres */}
-        {(globalFilter || columnFilters.length > 0) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setGlobalFilter("");
-              setColumnFilters([]);
-            }}
-          >
-            <X className="w-4 h-4 mr-2" /> Réinitialiser
+        {globalFilter && (
+          <Button variant="ghost" size="sm" onClick={() => setGlobalFilter("")}>
+            <X className="w-4 h-4 mr-1" /> Effacer
           </Button>
         )}
       </div>
@@ -267,9 +210,9 @@ export default function ProductsPage() {
       <div className="rounded-md border bg-white shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-slate-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((header) => (
                   <TableHead key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
@@ -283,7 +226,10 @@ export default function ProductsPage() {
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-slate-50/50">
+                <TableRow
+                  key={row.id}
+                  className="hover:bg-slate-50/50 transition-colors"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -297,10 +243,10 @@ export default function ProductsPage() {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={2}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  Aucun produit trouvé.
+                  Aucune catégorie trouvée.
                 </TableCell>
               </TableRow>
             )}
@@ -310,10 +256,6 @@ export default function ProductsPage() {
 
       {/* Pagination */}
       <div className="flex items-center justify-end space-x-2">
-        <span className="text-sm text-muted-foreground mr-2">
-          Page {table.getState().pagination.pageIndex + 1} sur{" "}
-          {table.getPageCount()}
-        </span>
         <Button
           variant="outline"
           size="sm"
@@ -332,49 +274,28 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Modal Création / Édition */}
+      {/* Modal Edit/Create */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent
-          className="sm:max-w-[425px]"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {selectedProduct ? "Modifier le produit" : "Ajouter un produit"}
+              {selectedCategory
+                ? "Modifier la catégorie"
+                : "Ajouter une catégorie"}
             </DialogTitle>
             <DialogDescription>
-              Saisissez les détails du produit ici. Le nom est obligatoire.
+              Entrez le nom de la catégorie ci-dessous.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Nom du Produit
-              </label>
+              <label className="text-sm font-medium">Nom</label>
               <Input
-                id="name"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Ex: Chargeur Rapide USB-C"
+                onChange={(e) => setForm({ name: e.target.value })}
+                placeholder="Ex: Accessoires, Appareillages..."
+                autoFocus
               />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Catégorie</label>
-              <Select
-                value={form.categorieId}
-                onValueChange={(val) => setForm({ ...form, categorieId: val })}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Choisir une catégorie" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.ID} value={cat.ID.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -388,22 +309,22 @@ export default function ProductsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Suppression */}
+      {/* Modal Delete */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmation de suppression</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est
-              irréversible.
-            </DialogDescription>
+            <DialogTitle>Supprimer la catégorie</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            Le produit{" "}
-            <span className="font-semibold text-destructive">
-              {deleteProductTarget?.name}
+            Êtes-vous sûr de vouloir supprimer la catégorie{" "}
+            <span className="font-bold text-destructive">
+              {deleteTarget?.name}
             </span>{" "}
-            sera supprimé.
+            ?
+            <p className="text-xs text-muted-foreground mt-2">
+              Attention : Cela pourrait affecter les produits liés à cette
+              catégorie.
+            </p>
           </div>
           <DialogFooter>
             <Button
@@ -413,7 +334,7 @@ export default function ProductsPage() {
               Annuler
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              Supprimer définitivement
+              Supprimer
             </Button>
           </DialogFooter>
         </DialogContent>

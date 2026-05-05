@@ -10,6 +10,12 @@ router.get(
   CategorieController.GetAllCategorie,
 );
 router.get(
+  "/info",
+  authMiddleware,
+  authorize("admin", "responsable", "marketeur"),
+  CategorieController.GetCategorieInfo,
+);
+router.get(
   "/:id",
   authMiddleware,
   authorize("admin", "responsable", "marketeur"),

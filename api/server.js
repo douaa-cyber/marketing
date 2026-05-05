@@ -19,7 +19,7 @@ const DashboardRoute = require("./Features/Dashboard/Stat.router");
 const CriteriaRoute = require("./Features/Critere/critere.routes");
 const ActionMarkRoute = require("./Features/ActionMarketing/action.routes");
 const ObjectifRoute = require("./Features/Objectif/objectif.route");
-
+const CategorieRoute = require("./Features/Categorie/categorie.routes");
 const app = express();
 const port = process.env.PORT;
 const hostname = process.env.hostname;
@@ -60,11 +60,12 @@ app.use("/api/form", FormRoute);
 app.use("/api/dashboard", DashboardRoute);
 app.use("/api/criteria", CriteriaRoute);
 app.use("/api/action", ActionMarkRoute);
+app.use("/api/categorie", CategorieRoute);
 
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync({ alter: true });
+    return db.sync();
   })
   .then(() => {
     app.listen(port, hostname, () => {

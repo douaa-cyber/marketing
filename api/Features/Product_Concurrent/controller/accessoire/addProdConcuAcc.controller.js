@@ -3,7 +3,7 @@ const ProdConcu = require("../../model/ProdConcurrent");
 const createProduitConcu = async (req, res) => {
   try {
     const { name, categorieId } = req.body;
-    const item = await ProdConcu.create(name);
+    const item = await ProdConcu.create({ name });
     if (categorieId) {
       await item.addCategorie(categorieId);
     }

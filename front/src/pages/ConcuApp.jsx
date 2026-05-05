@@ -8,17 +8,11 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, X } from "lucide-react";
 import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -27,16 +21,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// ===== Columns =====
+// ===== Définition des colonnes =====
 const columns = (onEdit, onDelete) => [
   {
     accessorKey: "name",
@@ -44,8 +45,19 @@ const columns = (onEdit, onDelete) => [
     cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
+    id: "categorie",
+    header: "Catégorie",
+    // Accès au nom de la catégorie (ajustez selon votre structure JSON)
+    accessorFn: (row) => row.Categories?.[0]?.name || "Non classé",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground italic">
+        {row.getValue("categorie")}
+      </span>
+    ),
+  },
+  {
     id: "actions",
-    header: "",
+    header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => (
       <div className="flex justify-end gap-2">
         <Button
@@ -67,145 +79,197 @@ const columns = (onEdit, onDelete) => [
   },
 ];
 
-export default function ProductsPage() {
-  const [Products, setProducts] = useState([]);
+export default function ConcurrentsPage() {
+  const [concurrents, setConcurrents] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(null);
 
-  // ===== Dialog states =====
+  // États de filtrage
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilters, setColumnFilters] = useState([]);
+
+  // États des Dialogues
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedConcurrent, setSelectedConcurrent] = useState(null);
   const [form, setForm] = useState({
     name: "",
+    categorieId: "",
   });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteProductTarget, setDeleteProductTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // ===== Fetch API =====
-  const fetchProducts = async () => {
+  // ===== Fetch des données =====
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/concurrent/appareillage`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setProducts(data);
+      const [resConc, resCat] = await Promise.all([
+        fetch(`${URL}/api/concurrent/`, { credentials: "include" }),
+        fetch(`${URL}/api/categorie/all`, { credentials: "include" }), // Assurez-vous que cet endpoint existe
+      ]);
+
+      if (resConc.ok && resCat.ok) {
+        const concData = await resConc.json();
+        const catData = await resCat.json();
+        setConcurrents(concData);
+        setCategories(catData);
+      }
     } catch (err) {
-      console.error(err);
-      setProducts([]);
+      console.error("Erreur de chargement:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchData();
   }, []);
 
   // ===== Handlers =====
-  const handleEdit = (Product) => {
-    if (Product) {
-      setSelectedProduct(Product);
+  const handleEdit = (concurrent) => {
+    if (concurrent) {
+      setSelectedConcurrent(concurrent);
       setForm({
-        name: Product.name,
+        name: concurrent.name,
+        categorieId: concurrent.Categories?.[0]?.ID?.toString() || "",
       });
     } else {
-      setSelectedProduct(null);
-      setForm({ name: "" });
+      setSelectedConcurrent(null);
+      setForm({ name: "", categorieId: "" });
     }
     setOpenDialog(true);
   };
 
-  const handleDelete = (Product) => {
-    setDeleteProductTarget(Product);
+  const handleDelete = (concurrent) => {
+    setDeleteTarget(concurrent);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (!deleteProductTarget) return;
-    await fetch(
-      `${URL}/api/concurrent/appareillage/${deleteProductTarget.ID}`,
-      {
+    if (!deleteTarget) return;
+    try {
+      await fetch(`${URL}/api/concurrent/${deleteTarget.ID}`, {
         method: "DELETE",
         credentials: "include",
-      }
-    );
-    setOpenDeleteDialog(false);
-    fetchProducts();
+      });
+      setOpenDeleteDialog(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSubmit = async () => {
-    if (selectedProduct) {
-      // Update
-      await fetch(`${URL}/api/concurrent/appareillage/${selectedProduct.ID}`, {
-        method: "PUT",
+    if (!form.name.trim()) return;
+
+    const method = selectedConcurrent ? "PUT" : "POST";
+    const endpoint = selectedConcurrent
+      ? `${URL}/api/concurrent/${selectedConcurrent.ID}`
+      : `${URL}/api/concurrent/`;
+
+    try {
+      await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          categorieId: form.categorieId || null,
+        }),
       });
-    } else {
-      await fetch(`${URL}/api/concurrent/appareillage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+      setOpenDialog(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
     }
-    setOpenDialog(false);
-    fetchProducts();
   };
 
-  // ===== Table =====
+  // ===== Table Configuration =====
   const table = useReactTable({
-    data: Products,
+    data: concurrents,
     columns: columns(handleEdit, handleDelete),
-    state: { globalFilter },
-    globalFilterFn: (row, _, value) =>
-      row.original.name.toLowerCase().includes(value.toLowerCase()),
+    state: {
+      globalFilter,
+      columnFilters,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const rows = table.getRowModel().rows;
-
-  if (loading) return <p className="p-6">Loading...</p>;
+  if (loading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
-          Gestion des Concurrents Appareillages
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight">Concurrents</h1>
         <Button onClick={() => handleEdit(null)}>
-          <Pencil className="w-4 h-4 mr-2" /> Créer
+          <Plus className="w-4 h-4 mr-2" /> Nouveau Concurrent
         </Button>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center">
+      {/* Toolbar - Filtres */}
+      <div className="flex flex-wrap gap-4 items-center">
         <Input
-          placeholder="Rechercher Produits..."
-          value={globalFilter}
+          placeholder="Rechercher..."
+          value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm"
+          className="max-w-sm bg-white"
         />
+
+        <Select
+          value={table.getColumn("categorie")?.getFilterValue() ?? "all"}
+          onValueChange={(val) =>
+            table
+              .getColumn("categorie")
+              ?.setFilterValue(val === "all" ? "" : val)
+          }
+        >
+          <SelectTrigger className="w-[200px] bg-white">
+            <SelectValue placeholder="Toutes les catégories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les catégories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.ID} value={cat.name}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {(globalFilter || columnFilters.length > 0) && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setGlobalFilter("");
+              setColumnFilters([]);
+            }}
+          >
+            <X className="w-4 h-4 mr-1" /> Effacer
+          </Button>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-white shadow-sm">
+      {/* Tableau */}
+      <div className="rounded-md border bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-muted/50">
+          <TableHeader className="bg-slate-50">
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
-                  <TableHead key={header.id} className="text-center">
+                  <TableHead key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </TableHead>
                 ))}
@@ -213,14 +277,14 @@ export default function ProductsPage() {
             ))}
           </TableHeader>
           <TableBody>
-            {rows.length ? (
-              rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/40 transition">
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -228,8 +292,8 @@ export default function ProductsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
-                  Aucun Produit trouvé
+                <TableCell colSpan={3} className="h-24 text-center">
+                  Aucun résultat.
                 </TableCell>
               </TableRow>
             )}
@@ -238,18 +302,18 @@ export default function ProductsPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-end space-x-2">
         <Button
-          size="sm"
           variant="outline"
+          size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           Précédent
         </Button>
         <Button
-          size="sm"
           variant="outline"
+          size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
@@ -257,39 +321,63 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Dialog Création / Edition */}
+      {/* Modal Edit/Create */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {selectedProduct ? "Modifier Produit" : "Créer Produit"}
+              {selectedConcurrent ? "Modifier" : "Ajouter"} Concurrent
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            <Input
-              placeholder="name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Nom</label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Nom du concurrent"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Catégorie associée</label>
+              <Select
+                value={form.categorieId}
+                onValueChange={(val) => setForm({ ...form, categorieId: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.ID} value={cat.ID.toString()}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSubmit}>
-              {selectedProduct ? "Modifier" : "Créer"}
+            <Button variant="outline" onClick={() => setOpenDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSubmit} disabled={!form.name.trim()}>
+              Enregistrer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Confirmation Suppression */}
+      {/* Modal Delete */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmation</DialogTitle>
           </DialogHeader>
-          <p className="py-4">
-            Voulez-vous vraiment supprimer{" "}
-            <strong>{deleteProductTarget?.name}</strong> ?
-          </p>
+          <div className="py-4">
+            Supprimer le concurrent{" "}
+            <span className="font-bold">{deleteTarget?.name}</span> ?
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
