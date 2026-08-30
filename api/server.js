@@ -30,7 +30,7 @@ app.use(
       "https://marketing-frontend-93hu.onrender.com",
     ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
     allowedHeaders: ["Content-Type"],
   }),
 );
