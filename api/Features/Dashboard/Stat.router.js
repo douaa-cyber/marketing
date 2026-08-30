@@ -3,7 +3,7 @@ const router = express.Router();
 const authMiddleware = require("../../middleware/Auth");
 const StatController = require("./AcceuilStats.controller");
 const DashboardController = require("./dashboardStats.controller");
-const authorize = require("../../middleware/authorize");
+const authorize = require("../../middleware/Authorize");
 router.get(
   "/dashboard",
   authMiddleware,
