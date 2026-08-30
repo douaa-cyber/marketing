@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../../../middleware/Auth");
 const { upload, convertToWebp } = require("../../../middleware/upload");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 router.post(
   "/",
   authMiddleware,

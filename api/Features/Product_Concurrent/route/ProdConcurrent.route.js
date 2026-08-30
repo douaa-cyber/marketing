@@ -4,7 +4,7 @@ const router = express.Router();
 const AccController = require("../controller/accessoire/index");
 
 const authMiddleware = require("../../../middleware/Auth");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 
 // --- ROUTES ACCESSOIRE ---
 router.get(

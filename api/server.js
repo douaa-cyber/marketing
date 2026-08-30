@@ -27,10 +27,7 @@ const hostname = process.env.hostname;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "http://10.51.149.193:5173",
-      "http://10.78.166.193:5173",
-      "http://192.168.2.42:5173",
+      "https://marketing-frontend-93hu.onrender.com",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -60,12 +57,14 @@ app.use("/api/form", FormRoute);
 app.use("/api/dashboard", DashboardRoute);
 app.use("/api/criteria", CriteriaRoute);
 app.use("/api/action", ActionMarkRoute);
-app.use("/api/categorie", CategorieRoute);
+app.get("/test",async(req,res)=>{
+  res.send("its working");
+});
 
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync({ alter: false });
+    return db.sync({force:true});
   })
   .then(() => {
     app.listen(port, hostname, () => {

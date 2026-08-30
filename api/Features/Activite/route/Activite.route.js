@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const ActiviteController = require("../controller/index");
 const authMiddleware = require("../../../middleware/Auth");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 router.get(
   "/all",
   authMiddleware,

@@ -3,7 +3,7 @@ const router = express.Router();
 const Concurrent = require("../controller/accessoire/index");
 
 const authMiddleware = require("../../../middleware/Auth");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 // --- create routes ---
 
 router.post(
