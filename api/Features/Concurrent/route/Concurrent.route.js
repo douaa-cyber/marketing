@@ -5,7 +5,7 @@ const ConcurrentApp = require("../controller/appareillage/index");
 const ConcurrentDisj = require("../controller/disjoncteur/index");
 const ConcurrentLamp = require("../controller/lampe/index");
 const authMiddleware = require("../../../middleware/Auth");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 // --- create routes ---
 
 router.post(
