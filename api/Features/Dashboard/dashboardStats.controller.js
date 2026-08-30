@@ -285,7 +285,6 @@ const getRuptureStockStats = async (req, res) => {
         { model: User, as: "agent", attributes: ["fullname"] },
         { model: AlgeriaCities, as: "city", attributes: ["wilaya", "Commune"] },
 
-        // ✅ unified products
         {
           model: Produit,
           through: {
@@ -296,7 +295,7 @@ const getRuptureStockStats = async (req, res) => {
           include: [
             {
               model: Categorie,
-              attributes: ["id", "nom"],
+              attributes: ["id", "name"],
             },
           ],
         },

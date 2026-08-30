@@ -58,7 +58,7 @@ const formatDateTimeLocal = (date) => {
 };
 
 const initialFormState = {
-  Objectif_id: null,
+  objectif_id: null,
   date_deb: "",
   date_fin: "",
   region: "",
@@ -233,7 +233,7 @@ export default function MissionsPage() {
   const handleSubmit = async () => {
     // Validation
     if (
-      !form.Objectif_id ||
+      !form.objectif_id ||
       !form.date_deb ||
       !form.date_fin ||
       !form.wilaya ||
@@ -417,7 +417,7 @@ export default function MissionsPage() {
                     variant="outline"
                     className="w-full justify-between font-normal"
                   >
-                    {objectifs.find((o) => o.ID === form.Objectif_id)?.name ||
+                    {objectifs.find((o) => o.ID === form.objectif_id)?.name ||
                       "Sélectionner..."}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
@@ -433,14 +433,14 @@ export default function MissionsPage() {
                         <CommandItem
                           key={o.ID}
                           onSelect={() => {
-                            setForm({ ...form, Objectif_id: o.ID });
+                            setForm({ ...form, objectif_id: o.ID });
                             setOpenObjCombo(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              form.Objectif_id === o.ID
+                              form.objectif_id === o.ID
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}

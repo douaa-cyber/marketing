@@ -146,7 +146,7 @@ const getFormById = async (req, res) => {
             attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
         {
           model: Concurrent,
@@ -155,7 +155,7 @@ const getFormById = async (req, res) => {
             attributes: ["categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
       ],
     });
@@ -185,7 +185,7 @@ const getLastVisiteDetail = async (req, res) => {
             attributes: ["nbArticle", "nbArticleCommande", "categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
 
         // ✅ Concurrents
@@ -196,14 +196,17 @@ const getLastVisiteDetail = async (req, res) => {
             attributes: ["categorieId"],
           },
           attributes: ["ID", "name"],
-          include: [{ model: Categorie, attributes: ["id", "nom"] }],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
         },
-
-        simpleInclude(ProdConcurrentLampe),
-        simpleInclude(ProdConcurrentAppareillage),
-        simpleInclude(ProdConcurrentDisj),
-        simpleInclude(ProdConcurrentAccessoire),
-
+        {
+          model: ProdConcurrent,
+          through: {
+            model: Form_ProdConcu,
+            attributes: ["categorieId"],
+          },
+          attributes: ["ID", "name"],
+          include: [{ model: Categorie, attributes: ["id", "name"] }],
+        },
         {
           model: SourceAppro,
           through: { attributes: [] },

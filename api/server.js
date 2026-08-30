@@ -65,7 +65,7 @@ app.use("/api/categorie", CategorieRoute);
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync();
+    return db.sync({ alter: false });
   })
   .then(() => {
     app.listen(port, hostname, () => {

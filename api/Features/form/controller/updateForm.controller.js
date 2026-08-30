@@ -116,7 +116,7 @@ const updateForm = async (req, res) => {
 
             return Form_ProdConcu.create({
               formId,
-              prodConcuId,
+              prodConcuId: id,
               categorieId,
             });
           })

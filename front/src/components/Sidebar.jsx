@@ -70,11 +70,7 @@ export default function Sidebar() {
 
   const filteredItems = items.filter((item) => {
     if (user?.role === "marketeur") {
-      if (
-        item.title === "Donnes de base" ||
-        item.title === "Mission" ||
-        item.title === "Dashboard"
-      ) {
+      if (item.title === "Donnes de base" || item.title === "Dashboard") {
         return false;
       }
     }

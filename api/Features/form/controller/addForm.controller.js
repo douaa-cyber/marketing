@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const Form_Concu = require("../model/Form_Concu");
 const Form_Prod = require("../model/Form_Prod");
+const Form_ProdConcu = require("../model/Form_ProdConcu");
 const createForm = async (req, res) => {
   try {
     const body = req.body;
@@ -91,25 +92,12 @@ const createForm = async (req, res) => {
         }),
       );
 
-      await Promise.all(
-        (sel.prodConcurrents || []).map((c) => {
-          const concurrentId = Number(c.concurrentId);
-          if (!concurrentId) return null;
-
-          return Form_Concu.create({
-            formId: form.ID,
-            concurrentId,
-            categorieId,
-          });
-        }),
-      );
-
       // ProdConcurrents
       await Promise.all(
         (sel.prodConcurrents || []).map((pc) => {
           const id = Number(pc.prodConcurrentId);
           if (!id) return null;
-          return Form_Concu.create({
+          return Form_ProdConcu.create({
             formId: form.ID,
             prodConcuId: id,
             categorieId,

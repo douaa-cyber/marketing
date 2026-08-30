@@ -130,7 +130,9 @@ function App() {
           <Route
             path="/Mission"
             element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
+              <PrivateRoute
+                allowedRoles={["admin", "responsable", "marketeur"]}
+              >
                 <Layout>
                   <MissionsPage />
                 </Layout>

@@ -37,8 +37,6 @@ import { Badge } from "@/components/ui/badge";
 import { URL } from "@/api";
 import { Label } from "./ui/label";
 
-const categories = ["lampe", "appareillage", "disjoncteur", "accessoire"];
-
 const RequiredLabel = ({ children }) => (
   <Label>
     {children} <span className="text-red-500">*</span>
@@ -52,11 +50,12 @@ export default function FormDialog({
 }) {
   const { user, loading: userLoading } = useContext(AuthContext);
   const [step, setStep] = useState(1);
-
+  const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-
+  // Remplacez votre état selected par celui-ci
+  const [selected, setSelected] = useState({});
   const [activites, setActivites] = useState([]);
   const [missions, setMissions] = useState([]);
   const [sourcesList, setSourcesList] = useState([]);
@@ -70,14 +69,8 @@ export default function FormDialog({
   const [actionsList, setActionsList] = useState([]);
   const [errors, setErrors] = useState({});
 
-  const [activeCategory, setActiveCategory] = useState("lampe");
+  const [activeCategory, setActiveCategory] = useState(null);
 
-  const [data, setData] = useState({
-    lampe: { produits: [], concurrents: [], prodConcurrents: [] },
-    appareillage: { produits: [], concurrents: [], prodConcurrents: [] },
-    disjoncteur: { produits: [], concurrents: [], prodConcurrents: [] },
-    accessoire: { produits: [], concurrents: [], prodConcurrents: [] },
-  });
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const initialFormState = {
     mission_id: null,
@@ -113,12 +106,6 @@ export default function FormDialog({
     nbr_article_commande: "",
   };
 
-  const [selected, setSelected] = useState({
-    lampe: { ...defaultCategoryState },
-    appareillage: { ...defaultCategoryState },
-    disjoncteur: { ...defaultCategoryState },
-    accessoire: { ...defaultCategoryState },
-  });
   useEffect(() => {
     if (!user) return;
 
@@ -158,6 +145,31 @@ export default function FormDialog({
 
     fetchBaseData();
   }, [user]);
+
+  // Modifiez le useEffect qui gère le chargement des catégories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${URL}/api/categorie/info`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setCategories(data);
+
+        // Initialisation dynamique de l'état selected pour chaque catégorie reçue
+        const initialSelected = {};
+        data.forEach((cat) => {
+          initialSelected[cat.ID] = { ...defaultCategoryState };
+        });
+        setSelected(initialSelected);
+
+        if (data.length > 0) setActiveCategory(data[0].ID);
+      } catch (err) {
+        console.error("Error loading categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
   useEffect(() => {
     if (!cities.length) return; // wait for cities to load
     if (!navigator.geolocation) return;
@@ -206,7 +218,18 @@ export default function FormDialog({
     if (!user) return;
     fetch(`${URL}/api/mission/${user.id}`, { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => setMissions(Array.isArray(d) ? d : []))
+      .then((d) => {
+        const parsed = Array.isArray(d)
+          ? d.map((m) => ({
+              ...m,
+              objectif:
+                typeof m.objectif === "string"
+                  ? JSON.parse(m.objectif)
+                  : m.objectif,
+            }))
+          : [];
+        setMissions(parsed);
+      })
       .catch(() => setMissions([]));
   }, [user]); // <-- run only once after cities loaded // <-- run only once per user
   // ----------------- Fetch Data -----------------
@@ -317,113 +340,85 @@ export default function FormDialog({
     }
   }, [cities, user]); */
 
-  useEffect(() => {
-    const fetchCategoryData = async (cat) => {
-      try {
-        const [produitsRes, concurrentsRes, prodConcurrentsRes] =
-          await Promise.all([
-            fetch(`${URL}/api/product/${cat}`, { credentials: "include" }),
-            fetch(`${URL}/api/concurrent/${cat}`, { credentials: "include" }),
-            fetch(`${URL}/api/productConcu/${cat}`, { credentials: "include" }),
-          ]);
-        const [produits, concurrents, prodConcurrents] = await Promise.all([
-          produitsRes.json(),
-          concurrentsRes.json(),
-          prodConcurrentsRes.json(),
-        ]);
-        setData((prev) => ({
-          ...prev,
-          [cat]: { produits, concurrents, prodConcurrents },
-        }));
-      } catch (err) {
-        console.error(err);
+  const currentCategory =
+    categories.find((c) => c.ID === activeCategory) || null; // ----------------- Mapping Edition -----------------
+  const mapFormulaireToSelected = (f) => {
+    const result = {};
+
+    // Initialiser toutes les catégories à vide
+    categories.forEach((cat) => {
+      result[cat.ID] = { ...defaultCategoryState };
+    });
+
+    // Grouper les Produits par categorieId
+    (f.Produits || []).forEach((p) => {
+      const catId = p.Form_Prod?.categorieId;
+      if (!catId || !result[catId]) return;
+
+      if (!result[catId].produits.includes(String(p.ID))) {
+        result[catId].produits.push(String(p.ID));
       }
-    };
-    fetchCategoryData(activeCategory);
-  }, [activeCategory]);
 
-  // ----------------- Mapping Edition -----------------
-  const mapFormulaireToSelected = (f) => ({
-    lampe: {
-      produits: f.ProduitLampes?.map((p) => String(p.ID)) || [],
-      concurrents: f.ConcurrentLampes?.map((c) => String(c.ID)) || [],
-      prodConcurrents: f.ProdConcurrentLampes?.map((pc) => String(pc.ID)) || [],
-      nbr_article:
-        f.ProduitLampes?.[0]?.Form_ProdLampe?.nbArticle?.toString() || "",
-      nbr_article_commande:
-        f.ProduitLampes?.[0]?.Form_ProdLampe?.nbArticleCommande?.toString() ||
-        "",
-    },
-    appareillage: {
-      produits: f.ProduitAppareillages?.map((p) => String(p.ID)) || [],
-      concurrents: f.ConcurrentAppareillages?.map((c) => String(c.ID)) || [],
-      prodConcurrents:
-        f.ProdConcurrentAppareillages?.map((pc) => String(pc.ID)) || [],
-      nbr_article:
-        f.ProduitAppareillages?.[0]?.Form_ProdAppareillage?.nbArticle?.toString() ||
-        "",
-      nbr_article_commande:
-        f.ProduitAppareillages?.[0]?.Form_ProdAppareillage?.nbArticleCommande?.toString() ||
-        "",
-    },
-    disjoncteur: {
-      produits: f.ProduitDisjoncteurs?.map((p) => String(p.ID)) || [],
-      concurrents: f.ConcurrentDisjoncteurs?.map((c) => String(c.ID)) || [],
-      prodConcurrents: f.ProdConcurrentDisjs?.map((pc) => String(pc.ID)) || [],
-      nbr_article:
-        f.ProduitDisjoncteurs?.[0]?.Form_ProdDisj?.nbArticle?.toString() || "",
-      nbr_article_commande:
-        f.ProduitDisjoncteurs?.[0]?.Form_ProdDisj?.nbArticleCommande?.toString() ||
-        "",
-    },
-    accessoire: {
-      produits: f.ProduitAccessoires?.map((p) => String(p.ID)) || [],
-      concurrents: f.ConcurrentAccessoires?.map((c) => String(c.ID)) || [],
-      prodConcurrents:
-        f.ProdConcurrentAccessoires?.map((pc) => String(pc.ID)) || [],
-      nbr_article:
-        f.ProduitAccessoires?.[0]?.Form_ProdAcc?.nbArticle?.toString() || "",
-      nbr_article_commande:
-        f.ProduitAccessoires?.[0]?.Form_ProdAcc?.nbArticleCommande?.toString() ||
-        "",
-    },
-  });
+      // nbr_article / commande depuis la jointure
+      if (!result[catId].nbr_article) {
+        result[catId].nbr_article = p.Form_Prod?.nbArticle?.toString() || "";
+      }
+      if (!result[catId].nbr_article_commande) {
+        result[catId].nbr_article_commande =
+          p.Form_Prod?.nbArticleCommande?.toString() || "";
+      }
+    });
 
+    // Grouper les Concurrents par categorieId
+    (f.Concurrents || []).forEach((c) => {
+      const catId = c.Form_Concu?.categorieId;
+      if (!catId || !result[catId]) return;
+
+      if (!result[catId].concurrents.includes(String(c.ID))) {
+        result[catId].concurrents.push(String(c.ID));
+      }
+    });
+
+    // Grouper les ProdConcurrents par categorieId
+    (f.ProdConcurrents || []).forEach((pc) => {
+      const catId = pc.Form_ProdConcu?.categorieId;
+      if (!catId || !result[catId]) return;
+
+      if (!result[catId].prodConcurrents.includes(String(pc.ID))) {
+        result[catId].prodConcurrents.push(String(pc.ID));
+      }
+    });
+
+    return result;
+  };
   useEffect(() => {
-    if (selectedFormulaire) {
-      setForm({
-        ...initialFormState,
-        ...selectedFormulaire,
-        plaque:
-          selectedFormulaire.plaque === "true" ||
-          selectedFormulaire.plaque === true,
-        espacepub:
-          selectedFormulaire.espacepub === "true" ||
-          selectedFormulaire.espacepub === true,
-        packDetaillant:
-          selectedFormulaire.packDetaillant === "true" ||
-          selectedFormulaire.packDetaillant === true,
+    if (!selectedFormulaire || categories.length === 0) return; // ← attendre categories
 
-        sourceAppro: selectedFormulaire.SourceAppros?.map((s) => s.ID) || [],
-        cadeaux:
-          selectedFormulaire.cadeaus?.map((c) => ({
-            id: c.ID,
-            qty: c.cadeau_form.quantity,
-          })) || [],
-        criteres: selectedFormulaire.Criteres?.map((c) => c.id) || [],
-        actions: selectedFormulaire.ActionMarketings?.map((a) => a.id) || [],
-      });
-      setSelected(mapFormulaireToSelected(selectedFormulaire));
-    } else {
-      setForm(initialFormState);
-      setSelected({
-        lampe: { ...defaultCategoryState },
-        appareillage: { ...defaultCategoryState },
-        disjoncteur: { ...defaultCategoryState },
-        accessoire: { ...defaultCategoryState },
-      });
-    }
-  }, [selectedFormulaire, open]);
+    setForm({
+      ...initialFormState,
+      ...selectedFormulaire,
+      plaques:
+        selectedFormulaire.plaques === "true" ||
+        selectedFormulaire.plaques === true,
+      espacepub:
+        selectedFormulaire.espacepub === "true" ||
+        selectedFormulaire.espacepub === true,
+      packDetaillant:
+        selectedFormulaire.packDetaillant === "true" ||
+        selectedFormulaire.packDetaillant === true,
+      sourceAppro: selectedFormulaire.SourceAppros?.map((s) => s.ID) || [],
+      cadeaux:
+        selectedFormulaire.cadeaus?.map((c) => ({
+          // vérifier le bon nom de clé
+          id: c.ID,
+          qty: c.cadeau_form?.quantity || c.cadeau_form?.quantity || 1,
+        })) || [],
+      criteres: selectedFormulaire.Criteres?.map((c) => c.id) || [],
+      actions: selectedFormulaire.ActionMarketings?.map((a) => a.id) || [],
+    });
+
+    setSelected(mapFormulaireToSelected(selectedFormulaire));
+  }, [selectedFormulaire, open, categories]); // ← ajouter categories ici
 
   const handleNext = () => {
     setStep((s) => Math.min(s + 1, 4));
@@ -436,9 +431,10 @@ export default function FormDialog({
     const out = {};
 
     categories.forEach((cat) => {
-      const catData = sel[cat] || defaultCategoryState;
+      const catData = sel[cat.ID] || defaultCategoryState;
 
-      out[cat] = {
+      out[cat.ID] = {
+        categorieId: cat.ID,
         produits: (catData.produits || []).map((id) => ({
           produitId: Number(id),
         })),
@@ -543,7 +539,7 @@ export default function FormDialog({
     if (!form.ActiviteId) missingFields.push("Activité");
 
     categories.forEach((cat) => {
-      const catData = selected[cat];
+      const catData = selected[cat.ID];
 
       const hasSelection =
         catData.produits.length > 0 ||
@@ -698,7 +694,7 @@ export default function FormDialog({
                       <option value="">Sélectionner Mission</option>
                       {missions.map((m) => (
                         <option key={m.id} value={m.id}>
-                          {m.Objectif}
+                          {m.objectif?.name}
                         </option>
                       ))}
                     </select>
@@ -845,140 +841,141 @@ export default function FormDialog({
             )}
 
             {/* STEP 2: Produits et Concurrents */}
+            {/* STEP 2: Produits et Concurrents */}
             {(isMobile || step === 2) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                {/* Onglets des catégories */}
                 <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b">
                   {categories.map((cat) => (
                     <Button
-                      key={cat}
-                      variant={activeCategory === cat ? "default" : "outline"}
-                      onClick={() => setActiveCategory(cat)}
-                      className="capitalize shrink-0"
+                      key={cat.ID}
+                      variant={
+                        activeCategory === cat.ID ? "default" : "outline"
+                      }
+                      onClick={() => setActiveCategory(cat.ID)}
+                      className="shrink-0"
                     >
-                      {cat}
+                      {cat.name}
                     </Button>
                   ))}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-1">
-                    <RequiredLabel className="text-sm font-medium">
-                      Total Gamme
-                    </RequiredLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={selected[activeCategory].nbr_article}
-                      onChange={(e) => {
-                        setSelected({
-                          ...selected,
-                          [activeCategory]: {
-                            ...selected[activeCategory],
-                            nbr_article: e.target.value,
-                          },
-                        });
-
-                        setErrors((prev) => ({
-                          ...prev,
-                          [`nbr_article_${activeCategory}`]: null,
-                        }));
-                      }}
-                      className={
-                        errors[`nbr_article_${activeCategory}`]
-                          ? "border-red-500"
-                          : ""
-                      }
-                    />
-
-                    {errors[`nbr_article_${activeCategory}`] && (
-                      <p className="text-red-500 text-sm">
-                        {errors[`nbr_article_${activeCategory}`]}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <RequiredLabel className="text-sm font-medium">
-                      Nombre de gamme disponible
-                    </RequiredLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={selected[activeCategory].nbr_article_commande}
-                      onChange={(e) => {
-                        setSelected({
-                          ...selected,
-                          [activeCategory]: {
-                            ...selected[activeCategory],
-                            nbr_article_commande: e.target.value,
-                          },
-                        });
-
-                        setErrors((prev) => ({
-                          ...prev,
-                          [`nbr_article_commande_${activeCategory}`]: null,
-                        }));
-                      }}
-                      className={
-                        errors[`nbr_article_commande_${activeCategory}`]
-                          ? "border-red-500"
-                          : ""
-                      }
-                    />
-                  </div>
-                </div>
-
-                {["produits", "concurrents", "prodConcurrents"].map((key) => (
-                  <div key={key} className="space-y-3">
-                    <h3 className="font-bold text-xs uppercase text-slate-400 tracking-wider">
-                      {key === "produits"
-                        ? "Nos Produits"
-                        : key === "concurrents"
-                          ? "Concurrents"
-                          : "Produits Concurrents"}
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {data[activeCategory][key].map((item) => {
-                        const isSelected = selected[activeCategory][
-                          key
-                        ].includes(String(item.ID));
-                        return (
-                          <div
-                            key={item.ID}
-                            onClick={() => {
-                              const list = selected[activeCategory][key];
-                              const next = isSelected
-                                ? list.filter((id) => id !== String(item.ID))
-                                : [...list, String(item.ID)];
-                              setSelected({
-                                ...selected,
-                                [activeCategory]: {
-                                  ...selected[activeCategory],
-                                  [key]: next,
-                                },
-                              });
-                            }}
-                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? "bg-blue-50 border-blue-500 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:border-blue-300"}`}
-                          >
-                            <div
-                              className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? "bg-blue-600 border-blue-600" : "bg-white"}`}
-                            >
-                              {isSelected && (
-                                <Check className="w-3 h-3 text-white" />
-                              )}
-                            </div>
-                            <span className="text-sm font-medium">
-                              {item.name}
-                            </span>
-                          </div>
-                        );
-                      })}
+                {/* Inputs numériques pour la catégorie active */}
+                {activeCategory && selected[activeCategory] && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-1">
+                        <RequiredLabel className="text-sm font-medium">
+                          Total Gamme
+                        </RequiredLabel>
+                        <Input
+                          type="number"
+                          value={selected[activeCategory].nbr_article}
+                          onChange={(e) =>
+                            setSelected({
+                              ...selected,
+                              [activeCategory]: {
+                                ...selected[activeCategory],
+                                nbr_article: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <RequiredLabel className="text-sm font-medium">
+                          Disponibles
+                        </RequiredLabel>
+                        <Input
+                          type="number"
+                          value={selected[activeCategory].nbr_article_commande}
+                          onChange={(e) =>
+                            setSelected({
+                              ...selected,
+                              [activeCategory]: {
+                                ...selected[activeCategory],
+                                nbr_article_commande: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+
+                    {/* Affichage dynamique des 3 listes de l'API */}
+                    {currentCategory &&
+                      [
+                        {
+                          key: "Produits",
+                          label: "Nos Produits",
+                          stateKey: "produits",
+                        },
+                        {
+                          key: "Concurrents",
+                          label: "Concurrents",
+                          stateKey: "concurrents",
+                        },
+                        {
+                          key: "ProdConcurrents",
+                          label: "Produits Concurrents",
+                          stateKey: "prodConcurrents",
+                        },
+                      ].map((group) => (
+                        <div key={group.key} className="space-y-3">
+                          <h3 className="font-bold text-xs uppercase text-slate-400 tracking-wider">
+                            {group.label}
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {currentCategory[group.key]?.map((item) => {
+                              const isSelected = selected[activeCategory][
+                                group.stateKey
+                              ]?.includes(String(item.ID));
+                              return (
+                                <div
+                                  key={item.ID}
+                                  onClick={() => {
+                                    const list =
+                                      selected[activeCategory][group.stateKey];
+                                    const next = isSelected
+                                      ? list.filter(
+                                          (id) => id !== String(item.ID),
+                                        )
+                                      : [...list, String(item.ID)];
+
+                                    setSelected({
+                                      ...selected,
+                                      [activeCategory]: {
+                                        ...selected[activeCategory],
+                                        [group.stateKey]: next,
+                                      },
+                                    });
+                                  }}
+                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                                    isSelected
+                                      ? "bg-blue-50 border-blue-500 text-blue-700"
+                                      : "bg-white border-slate-200"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? "bg-blue-600 border-blue-600" : "bg-white"}`}
+                                  >
+                                    {isSelected && (
+                                      <Check className="w-3 h-3 text-white" />
+                                    )}
+                                  </div>
+                                  <span className="text-sm font-medium">
+                                    {item.name || "Sans nom"}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </>
+                )}
               </div>
             )}
-
             {/* STEP 3: Marketing et Appro */}
             {(isMobile || step === 3) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -1126,7 +1123,7 @@ export default function FormDialog({
                 <div className="grid grid-cols-1 gap-4">
                   {[
                     { l: "Satisfaction Client", k: "SatisfactionCli" },
-                    { l: "Évaluation BMS", k: "evalueBms" },
+                    { l: "Évaluation Company", k: "evalueBms" },
                     { l: "Produit Concurrent", k: "evaluconcurrent" },
                   ].map((item) => (
                     <div

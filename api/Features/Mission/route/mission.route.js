@@ -19,19 +19,19 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  authorize("admin", "responsable"),
+  authorize("admin", "responsable", "marketeur"),
   MissionController.addM,
 );
 router.put(
   "/:id",
   authMiddleware,
-  authorize("admin", "responsable"),
+  authorize("admin", "responsable", "marketeur"),
   MissionController.updateM,
 );
 router.delete(
   "/:id",
   authMiddleware,
-  authorize("admin", "responsable"),
+  authorize("admin", "responsable", "marketeur"),
   MissionController.deleteM,
 );
 
