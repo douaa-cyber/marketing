@@ -3,7 +3,7 @@ const router = express.Router();
 //const { authMiddleware, authorize } = require("../../../middleware");
 const MissionController = require("../controller/index");
 const authMiddleware = require("../../../middleware/Auth");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 
 router.get(
   "/all",
