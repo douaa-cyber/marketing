@@ -6,7 +6,7 @@ const AppController = require("../controller/appareillage/index");
 const DisjController = require("../controller/disjoncteur/index");
 const LampController = require("../controller/lampe/index");
 const authMiddleware = require("../../../middleware/Auth");
-const authorize = require("../../../middleware/authorize");
+const authorize = require("../../../middleware/Authorize");
 
 // --- ROUTES ACCESSOIRE ---
 router.get(
