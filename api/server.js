@@ -57,6 +57,7 @@ app.use("/api/form", FormRoute);
 app.use("/api/dashboard", DashboardRoute);
 app.use("/api/criteria", CriteriaRoute);
 app.use("/api/action", ActionMarkRoute);
+app.use("/api/categorie", CategorieRoute);
 app.get("/test",async(req,res)=>{
   res.send("its working");
 });
