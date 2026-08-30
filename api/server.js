@@ -62,7 +62,7 @@ app.get("/test",async(req,res)=>{
 db.authenticate()
   .then(() => {
     console.log("DB connected");
-    return db.sync({alter:true});
+    return db.sync({force:true});
   })
   .then(() => {
     app.listen(port, hostname, () => {
