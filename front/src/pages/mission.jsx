@@ -58,7 +58,7 @@ const formatDateTimeLocal = (date) => {
 };
 
 const initialFormState = {
-  Objectif: "",
+  objectif_id: null,
   date_deb: "",
   date_fin: "",
   region: "",
@@ -67,18 +67,19 @@ const initialFormState = {
   agent_id: null,
   responsable_id: null,
   vehicule_id: null,
-  Immatriculation: "",
+
   clientAVisite: "",
 };
 
 /* ================= COLUMNS ================= */
-const columns = (onEdit, onDelete) => [
+const columns = (onEdit, onDelete, objectifs) => [
   {
-    accessorKey: "Objectif",
+    accessorKey: "Objectif_id",
     header: "Objectif",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.Objectif}</span>
-    ),
+    cell: ({ row }) => {
+      const obj = objectifs.find((o) => o.id === row.original.Objectif_id);
+      return <span className="font-medium">{obj?.name || "—"}</span>;
+    },
   },
   {
     accessorKey: "date_deb",
@@ -150,6 +151,7 @@ export default function MissionsPage() {
   const [missions, setMissions] = useState([]);
   const [agents, setAgents] = useState([]);
   const [wilayas, setWilayas] = useState([]);
+  const [objectifs, setObjectifs] = useState([]);
   const [vehicules, setVehicules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -160,6 +162,7 @@ export default function MissionsPage() {
   const [openAgentCombo, setOpenAgentCombo] = useState(false);
   const [openRespCombo, setOpenRespCombo] = useState(false);
   const [openWiCombo, setOpenWiCombo] = useState(false);
+  const [openObjCombo, setOpenObjCombo] = useState(false);
   const [openVehiCombo, setOpenVehiCombo] = useState(false);
 
   const [selectedMission, setSelectedMission] = useState(null);
@@ -170,22 +173,25 @@ export default function MissionsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [mRes, aRes, vRes, wRes] = await Promise.all([
+      const [mRes, aRes, vRes, oRes, wRes] = await Promise.all([
         fetch(`${URL}/api/mission/all`, { credentials: "include" }),
         fetch(`${URL}/api/user/agents`, { credentials: "include" }),
         fetch(`${URL}/api/vehicule/all`, { credentials: "include" }),
+        fetch(`${URL}/api/objectif/all`, { credentials: "include" }),
         fetch(`${URL}/api/location/wilayas`, { credentials: "include" }),
       ]);
 
-      const [mD, aD, vD, wD] = await Promise.all([
+      const [mD, aD, vD, OD, wD] = await Promise.all([
         mRes.json(),
         aRes.json(),
         vRes.json(),
+        oRes.json(),
         wRes.json(),
       ]);
 
       setMissions(mD);
       setAgents(aD);
+      setObjectifs(OD);
       setVehicules(vD);
       setWilayas(wD);
     } catch (err) {
@@ -219,7 +225,7 @@ export default function MissionsPage() {
     setForm({
       ...form,
       vehicule_id: v.id,
-      Immatriculation: v.immatriculation || "", // Assurez-vous que le champ existe dans votre API
+      Immatriculation: v.immatriculation || "",
     });
     setOpenVehiCombo(false);
   };
@@ -227,7 +233,7 @@ export default function MissionsPage() {
   const handleSubmit = async () => {
     // Validation
     if (
-      !form.Objectif ||
+      !form.objectif_id ||
       !form.date_deb ||
       !form.date_fin ||
       !form.wilaya ||
@@ -284,10 +290,14 @@ export default function MissionsPage() {
 
   const table = useReactTable({
     data: missions,
-    columns: columns(handleEdit, (m) => {
-      setDeleteTarget(m);
-      setOpenDeleteDialog(true);
-    }),
+    columns: columns(
+      handleEdit,
+      (m) => {
+        setDeleteTarget(m);
+        setOpenDeleteDialog(true);
+      },
+      objectifs,
+    ),
     state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
@@ -400,11 +410,48 @@ export default function MissionsPage() {
           <div className="grid grid-cols-2 gap-6 py-4">
             <div className="col-span-2 space-y-2">
               <RequiredLabel>Objectif de la mission</RequiredLabel>
-              <Input
-                value={form.Objectif}
-                onChange={(e) => setForm({ ...form, Objectif: e.target.value })}
-                placeholder="Ex: Tourné Marketing"
-              />
+
+              <Popover open={openObjCombo} onOpenChange={setOpenObjCombo}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                  >
+                    {objectifs.find((o) => o.ID === form.objectif_id)?.name ||
+                      "Sélectionner..."}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="p-0 pointer-events-auto">
+                  <Command>
+                    <CommandInput placeholder="Chercher..." />
+                    <CommandEmpty>Aucun objectif.</CommandEmpty>
+
+                    <CommandGroup className="max-h-48 overflow-auto">
+                      {objectifs.map((o) => (
+                        <CommandItem
+                          key={o.ID}
+                          onSelect={() => {
+                            setForm({ ...form, objectif_id: o.ID });
+                            setOpenObjCombo(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              form.objectif_id === o.ID
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          {o.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
@@ -504,7 +551,19 @@ export default function MissionsPage() {
                         <CommandItem
                           key={a.id}
                           onSelect={() => {
-                            setForm({ ...form, responsable_id: a.id });
+                            const selectedUser = a;
+
+                            const vehicule = vehicules.find(
+                              (v) => v.user_id === selectedUser.id,
+                            );
+
+                            setForm({
+                              ...form,
+                              responsable_id: selectedUser.id,
+                              vehicule_id: vehicule?.id || null,
+                              Immatriculation: vehicule?.immatriculation || "",
+                            });
+
                             setOpenRespCombo(false);
                           }}
                         >
@@ -553,11 +612,18 @@ export default function MissionsPage() {
 
             <div className="space-y-2">
               <RequiredLabel>Véhicule</RequiredLabel>
-              <Popover open={openVehiCombo} onOpenChange={setOpenVehiCombo}>
+              <Popover
+                open={openVehiCombo}
+                onOpenChange={(open) => {
+                  if (!form.responsable_id) return;
+                  setOpenVehiCombo(open);
+                }}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className="w-full justify-between font-normal"
+                    disabled={!form.responsable_id}
                   >
                     {vehicules.find((v) => v.id === form.vehicule_id)?.marque ||
                       "Sélectionner..."}
@@ -573,7 +639,7 @@ export default function MissionsPage() {
                           key={v.id}
                           onSelect={() => handleVehiculeSelect(v)}
                         >
-                          {v.marque} ({v.immatriculation})
+                          {v.marque}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -581,7 +647,6 @@ export default function MissionsPage() {
                 </PopoverContent>
               </Popover>
             </div>
-
             <div className="space-y-2">
               <RequiredLabel>Immatriculation</RequiredLabel>
               <Input
@@ -591,7 +656,6 @@ export default function MissionsPage() {
                 placeholder="Ex: 999548-122-16"
               />
             </div>
-
             <div className="space-y-2">
               <RequiredLabel>Nombre de clients à visiter</RequiredLabel>
               <Input

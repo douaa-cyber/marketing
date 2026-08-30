@@ -24,8 +24,10 @@ import Activite from "./pages/activite";
 import Form from "./pages/Form";
 import Vehicule from "./pages/vehicule";
 import Dashboard from "./pages/dashboard";
+import Objectif from "./pages/objectif";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CategoriesPage from "./pages/Categorie";
 function App() {
   return (
     <>
@@ -53,7 +55,7 @@ function App() {
             }
           />
           <Route
-            path="/ProdAcc"
+            path="/Produit"
             element={
               <PrivateRoute allowedRoles={["admin", "responsable"]}>
                 <Layout>
@@ -62,48 +64,9 @@ function App() {
               </PrivateRoute>
             }
           />
+
           <Route
-            path="/ProdApp"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ProdApp />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ProdDisj"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ProdDisj />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ProdLamp"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ProdLamp />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ConcuAcc"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ConcuAcc />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ConcuApp"
+            path="/Concurrent"
             element={
               <PrivateRoute allowedRoles={["admin", "responsable"]}>
                 <Layout>
@@ -112,28 +75,9 @@ function App() {
               </PrivateRoute>
             }
           />
+
           <Route
-            path="/ConcuDisj"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ConcuDisj />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ConcuLamp"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ConcuLamp />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ProdConcuAcc"
+            path="/ProdConcu"
             element={
               <PrivateRoute allowedRoles={["admin", "responsable"]}>
                 <Layout>
@@ -142,42 +86,23 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
-            path="/ProdConcuApp"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ProdConcuApp />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ProdConcuDisj"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ProdConcuDisj />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/ProdConcuLamp"
-            element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
-                <Layout>
-                  <ProdConcuLamp />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
+
           <Route
             path="/Cadeau"
             element={
               <PrivateRoute allowedRoles={["admin", "responsable"]}>
                 <Layout>
                   <Cadeau />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/categorie"
+            element={
+              <PrivateRoute allowedRoles={["admin", "responsable"]}>
+                <Layout>
+                  <CategoriesPage />
                 </Layout>
               </PrivateRoute>
             }
@@ -205,7 +130,9 @@ function App() {
           <Route
             path="/Mission"
             element={
-              <PrivateRoute allowedRoles={["admin", "responsable"]}>
+              <PrivateRoute
+                allowedRoles={["admin", "responsable", "marketeur"]}
+              >
                 <Layout>
                   <MissionsPage />
                 </Layout>
@@ -238,6 +165,16 @@ function App() {
               <PrivateRoute allowedRoles={["admin", "responsable"]}>
                 <Layout>
                   <Vehicule />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/Objectif"
+            element={
+              <PrivateRoute allowedRoles={["admin", "responsable"]}>
+                <Layout>
+                  <Objectif />
                 </Layout>
               </PrivateRoute>
             }

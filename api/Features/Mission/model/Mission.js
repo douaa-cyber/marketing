@@ -10,11 +10,6 @@ const Mission = sequelize.define(
       primaryKey: true,
     },
 
-    Objectif: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-
     date_deb: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -54,9 +49,7 @@ const Mission = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    Immatriculation: {
-      type: DataTypes.STRING(12),
-    },
+
     clientAVisite: {
       type: DataTypes.INTEGER,
     },

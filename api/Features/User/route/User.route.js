@@ -19,7 +19,7 @@ router.get(
 router.get(
   "/agents",
   authMiddleware,
-  authorize("admin", "responsable"),
+  authorize("admin", "responsable", "marketeur"),
   UserController.getAllUsersFullnameAndUsername,
 );
 router.get(

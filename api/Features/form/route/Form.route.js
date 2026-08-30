@@ -19,7 +19,7 @@ router.get(
   Form.getAllForms,
 );
 router.get(
-  "/lastVisite/:name",
+  "/lastVisite/:name/:tel",
   authMiddleware,
   authorize("admin", "responsable", "marketeur"),
   Form.getLastVisiteDetail,

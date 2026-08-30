@@ -18,7 +18,8 @@ const VehiculeRoute = require("./Features/vehicule/vehicule.route");
 const DashboardRoute = require("./Features/Dashboard/Stat.router");
 const CriteriaRoute = require("./Features/Critere/critere.routes");
 const ActionMarkRoute = require("./Features/ActionMarketing/action.routes");
-
+const ObjectifRoute = require("./Features/Objectif/objectif.route");
+const CategorieRoute = require("./Features/Categorie/categorie.routes");
 const app = express();
 const port = process.env.PORT;
 const hostname = process.env.hostname;
@@ -42,6 +43,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", AuthRoute);
 app.use("/api/cadeau", CadeauRoute);
+app.use("/api/objectif", ObjectifRoute);
 app.use("/api/activite", ActiviteRoute);
 app.use("/api/concurrent", ConcurrentRoute);
 app.use("/api/location", LocationRoute);

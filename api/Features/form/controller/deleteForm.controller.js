@@ -1,17 +1,6 @@
 // controllers/deleteForm.controller.js
 const Form = require("../model/Formulaire");
-const Form_ProdAccessoire = require("../model/Form_ProdAccessoire");
-const Form_ProdAppareillage = require("../model/Form_ProdAppareillage");
-const form_ProduitLampe = require("../model/Form_ProduitLampe");
-const Form_ProdDisjoncteur = require("../model/Form_ProdDisjoncteur");
-const Form_ConcuLampe = require("../model/Form_ConcuLampe");
-const Form_ConcuApp = require("../model/Form_ConcuApp");
-const Form_ConcuDisjoncteur = require("../model/Form_ConcuDisjoncteur");
-const Form_ConcuAccess = require("../model/Form_ConcuAccess");
-const Form_ProdConcuLampe = require("../model/Form_ProdConcuLampe");
-const Form_ProdConcuApp = require("../model/Form_ProdConcuApp");
-const Form_ProdConcuDisj = require("../model/Form_ProdConcuDisj");
-const Form_ProdConcuAcc = require("../model/Form_ProdConcuAcc");
+
 const Form_SourceAppro = require("../model/Form_SourceAppro");
 const Form_Cadeau = require("../model/Form_Cadeau");
 

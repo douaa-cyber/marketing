@@ -22,7 +22,6 @@ const getUserById = async (req, res) => {
 const getAllUsersFullnameAndUsername = async (req, res) => {
   try {
     const agents = await User.findAll({
-      where: { role: "marketeur" },
       attributes: ["fullname", "username", "id"],
     });
     res.status(200).json(agents);

@@ -21,6 +21,8 @@ import {
   MapPin,
   Car,
   LayoutDashboard,
+  TableProperties,
+  Package2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,36 +36,17 @@ const items = [
     icon: Table,
     subItems: [
       { title: "Utilisateur", href: "/users", icon: UsersIcon },
-      { title: "Produit Accessoire", href: "/ProdAcc", icon: Package },
-      { title: "Produit Appareillage", href: "/ProdApp", icon: Plug },
-      { title: "Produit Disjoncteur", href: "/ProdDisj", icon: Zap },
-      { title: "Produit Lampe", href: "/ProdLamp", icon: Lightbulb },
-      { title: "Concurrent Accessoire", href: "/ConcuAcc", icon: Package },
-      { title: "Concurrent Appareillage", href: "/ConcuApp", icon: Plug },
-      { title: "Concurrent Disjoncteur", href: "/ConcuDisj", icon: Zap },
-      { title: "Concurrent Lampe", href: "/ConcuLamp", icon: Lightbulb },
+      { title: "Produit", href: "/Produit", icon: Package2 },
+      { title: "Concurrent", href: "/Concurrent", icon: Plug },
       {
-        title: "Produit Concurrent Accessoire",
-        href: "/ProdConcuAcc",
-        icon: Package,
-      },
-      {
-        title: "Produit Concurrent Appareillage",
-        href: "/ProdConcuApp",
-        icon: Plug,
-      },
-      {
-        title: "Produit Concurrent Disjoncteur",
-        href: "/ProdConcuDisj",
-        icon: Zap,
-      },
-      {
-        title: "Produit Concurrent Lampe",
-        href: "/ProdConcuLamp",
+        title: "Produit Concurrent",
+        href: "/ProdConcu",
         icon: Lightbulb,
       },
+      { title: "Categorie", href: "/categorie", icon: Zap },
       { title: "Source Approvisionement", href: "/SourceAppro", icon: Truck },
       { title: "Activite", href: "/Activite", icon: Columns },
+      { title: "Objectif Mission", href: "/objectif", icon: TableProperties },
       { title: "Cadeau", href: "/Cadeau", icon: Gift },
       { title: "Wilaya", href: "/Location", icon: MapPin },
       { title: "vehicule", href: "/vehicule", icon: Car },
@@ -87,11 +70,7 @@ export default function Sidebar() {
 
   const filteredItems = items.filter((item) => {
     if (user?.role === "marketeur") {
-      if (
-        item.title === "Donnes de base" ||
-        item.title === "Mission" ||
-        item.title === "Dashboard"
-      ) {
+      if (item.title === "Donnes de base" || item.title === "Dashboard") {
         return false;
       }
     }

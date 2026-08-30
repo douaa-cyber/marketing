@@ -5,30 +5,12 @@ const Formulaire = require("../Features/form/model/Formulaire.js");
 const Cadeau = require("../Features/Cadeau/model/Cadeau.js");
 const CadeauForm = require("../Features/form/model/Form_Cadeau.js");
 const AlgeriaCities = require("../Features/Location/model/AlgeriaCities.js");
-const ConcurrentLampe = require("../Features/Concurrent/model/ConcurrentLampe.js");
-const ConcurrentAccessoire = require("../Features/Concurrent/model/ConcurrentAccessoire.js");
-const ConcurrentAppareillage = require("../Features/Concurrent/model/ConcurrentAppareillage.js");
-const ConcurrentDisjoncteur = require("../Features/Concurrent/model/ConcurrentDisjoncteur.js");
-const ProduitLampe = require("../Features/Product/model/ProduitLampe.js");
-const ProduitAppareillage = require("../Features/Product/model/ProduitAppareillage.js");
-const ProduitAccessoire = require("../Features/Product/model/ProduitAccessoire.js");
-const ProduitDisjoncteur = require("../Features/Product/model/ProduitDisjoncteur.js");
-const Form_ProdLampe = require("../Features/form/model/Form_ProduitLampe.js");
-const Form_ProdAppareillage = require("../Features/form/model/Form_ProdAppareillage.js");
-const Form_ProdAccessoire = require("../Features/form/model/Form_ProdAccessoire.js");
-const Form_ProdDisj = require("../Features/form/model/Form_ProdDisjoncteur.js");
-const Form_ConcuLampe = require("../Features/form/model/Form_ConcuLampe.js");
-const Form_ConcuAccessoire = require("../Features/form/model/Form_ConcuAccess.js");
-const Form_ConcuApp = require("../Features/form/model/Form_ConcuApp.js");
-const Form_ConcuDisj = require("../Features/form/model/Form_ConcuDisjoncteur.js");
-const ProdConcurrentLampe = require("../Features/Product_Concurrent/model/ProdConcurrentLampe.js");
-const Form_ProdConcuLampe = require("../Features/form/model/Form_ProdConcuLampe.js");
-const ProdConcurrentAccessoire = require("../Features/Product_Concurrent/model/ProdConcurrentAccessoire.js");
-const Form_ProdConcuAcc = require("../Features/form/model/Form_ProdConcuAcc.js");
-const ProdConcurrentAppareillage = require("../Features/Product_Concurrent/model/ProdConcurrentAppareillage.js");
-const Form_ProdConcuApp = require("../Features/form/model/Form_ProdConcuApp.js");
-const ProdConcurrentDisj = require("../Features/Product_Concurrent/model/ProdConcurrentDisjoncteur.js");
-const Form_ProdConcuDisj = require("../Features/form/model/Form_ProdConcuDisj.js");
+const Concurrent = require("../Features/Concurrent/model/Concurrent.js");
+const Cat_Concu = require("../Features/Concurrent/model/concurrent_cat.js");
+const Produit = require("../Features/Product/model/Produit.js");
+const Cat_Prod = require("../Features/Product/model/Produit_cat.js");
+const ProdConcu = require("../Features/Product_Concurrent/model/ProdConcurrent.js");
+const Form_Concu = require("../Features/form/model/Form_Concu.js");
 const SourceAppro = require("../Features/SourceAppro/model/SourceApprovisionement.js");
 const Form_SourceAppro = require("../Features/form/model/Form_SourceAppro.js");
 const Vehicule = require("../Features/vehicule/vehicule.model.js");
@@ -37,6 +19,24 @@ const Form_Critere = require("../Features/form/model/Form_critere.js");
 const Form_Action = require("../Features/form/model/Form_action.js");
 const Action = require("../Features/ActionMarketing/action.model.js");
 const Activity = require("../Features/Activite/model/Activite.js");
+const Objectif = require("../Features/Objectif/objectif.model.js");
+const Categorie = require("../Features/Categorie/categorie.model.js");
+const Form_Prod = require("../Features/form/model/Form_Prod.js");
+const ProdConcuCat = require("../Features/Product_Concurrent/model/ProdConcu_cat.js");
+const Form_ProdConcu = require("../Features/form/model/Form_ProdConcu.js");
+
+/* ========= User ========= */
+
+User.hasOne(Vehicule, {
+  foreignKey: "user_id",
+  as: "vehicule",
+});
+
+Vehicule.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
 /* ========= MISSIONS ========= */
 User.hasMany(Mission, {
   foreignKey: "agent_id",
@@ -66,6 +66,16 @@ Vehicule.hasMany(Mission, {
   foreignKey: "vehicule_id",
 });
 
+Objectif.hasMany(Mission, {
+  foreignKey: "objectif_id",
+  as: "missions",
+});
+
+Mission.belongsTo(Objectif, {
+  foreignKey: "objectif_id",
+  as: "objectif",
+});
+
 /* ========= FORMULAIRES ========= */
 User.hasMany(Formulaire, {
   foreignKey: "utilisateur_id",
@@ -88,15 +98,57 @@ Formulaire.belongsTo(Mission, {
 });
 
 /* ========= FORM LINKED WITH PRODUCTS ========= */
-Formulaire.belongsToMany(ProduitLampe, {
-  through: Form_ProdLampe,
+
+Categorie.belongsToMany(Produit, {
+  through: Cat_Prod,
 });
 
-ProduitLampe.belongsToMany(Formulaire, {
-  through: Form_ProdLampe,
+Produit.belongsToMany(Categorie, {
+  through: Cat_Prod,
 });
 
-Formulaire.belongsToMany(ProduitAppareillage, {
+Formulaire.belongsToMany(Produit, {
+  through: Form_Prod,
+  foreignKey: "formId",
+});
+
+Produit.belongsToMany(Formulaire, {
+  through: Form_Prod,
+  foreignKey: "produitId",
+});
+Form_Prod.belongsTo(Categorie, {
+  foreignKey: "categorieId",
+});
+
+Categorie.hasMany(Form_Prod, {
+  foreignKey: "categorieId",
+});
+
+Categorie.belongsToMany(ProdConcu, {
+  through: ProdConcuCat,
+});
+
+ProdConcu.belongsToMany(Categorie, {
+  through: ProdConcuCat,
+});
+
+Formulaire.belongsToMany(ProdConcu, {
+  through: Form_ProdConcu,
+  foreignKey: "formId",
+});
+
+ProdConcu.belongsToMany(Formulaire, {
+  through: Form_ProdConcu,
+  foreignKey: "prodConcuId",
+});
+Form_ProdConcu.belongsTo(Categorie, {
+  foreignKey: "categorieId",
+});
+
+Categorie.hasMany(Form_ProdConcu, {
+  foreignKey: "categorieId",
+});
+/* Formulaire.belongsToMany(ProduitAppareillage, {
   through: Form_ProdAppareillage,
 });
 
@@ -118,9 +170,9 @@ Formulaire.belongsToMany(ProduitDisjoncteur, {
 
 ProduitDisjoncteur.belongsToMany(Formulaire, {
   through: Form_ProdDisj,
-});
+}); */
 // --- CONFIGURATION À AJOUTER ---
-
+/* 
 // 1. Lampes
 Formulaire.hasMany(Form_ProdLampe, { foreignKey: "formulaireID" });
 Form_ProdLampe.belongsTo(Formulaire, { foreignKey: "formulaireID" });
@@ -137,41 +189,38 @@ Form_ProdAppareillage.belongsTo(Formulaire, { foreignKey: "formulaireID" });
 Formulaire.hasMany(Form_ProdDisj, { foreignKey: "formulaireID" });
 Form_ProdDisj.belongsTo(Formulaire, { foreignKey: "formulaireID" });
 
-/* ========= FORM LINKED WITH CONCURRENT ========= */
+*/
 
-Formulaire.belongsToMany(ConcurrentLampe, {
-  through: Form_ConcuLampe,
+Categorie.belongsToMany(Concurrent, {
+  through: Cat_Concu,
 });
 
-ConcurrentLampe.belongsToMany(Formulaire, {
-  through: Form_ConcuLampe,
+Concurrent.belongsToMany(Categorie, {
+  through: Cat_Concu,
 });
 
-Formulaire.belongsToMany(ConcurrentAccessoire, {
-  through: Form_ConcuAccessoire,
+Formulaire.belongsToMany(Concurrent, {
+  through: Form_Concu,
+  foreignKey: "formId",
+  otherKey: "concurrentId",
 });
 
-ConcurrentAccessoire.belongsToMany(Formulaire, {
-  through: Form_ConcuAccessoire,
+Concurrent.belongsToMany(Formulaire, {
+  through: Form_Concu,
+  foreignKey: "concurrentId",
+  otherKey: "formId",
 });
 
-Formulaire.belongsToMany(ConcurrentAppareillage, {
-  through: Form_ConcuApp,
+Form_Concu.belongsTo(Categorie, {
+  foreignKey: "categorieId",
 });
 
-ConcurrentAppareillage.belongsToMany(Formulaire, {
-  through: Form_ConcuApp,
-});
-Formulaire.belongsToMany(ConcurrentDisjoncteur, {
-  through: Form_ConcuDisj,
-});
-
-ConcurrentDisjoncteur.belongsToMany(Formulaire, {
-  through: Form_ConcuDisj,
+Categorie.hasMany(Form_Concu, {
+  foreignKey: "categorieId",
 });
 
 /* ========= FORM LINKED WITH PRODUCTS OF CONCURRENT ========= */
-
+/* 
 Formulaire.belongsToMany(ProdConcurrentLampe, {
   through: Form_ProdConcuLampe,
 });
@@ -186,7 +235,7 @@ Formulaire.belongsToMany(ProdConcurrentAccessoire, {
 
 ProdConcurrentAccessoire.belongsToMany(Formulaire, {
   through: Form_ProdConcuAcc,
-});
+}); */
 
 Formulaire.belongsToMany(Criteria, {
   through: Form_Critere,
@@ -202,7 +251,7 @@ Formulaire.belongsToMany(Action, {
 Criteria.belongsToMany(Formulaire, {
   through: Form_Critere,
 });
-
+/* 
 Formulaire.belongsToMany(ProdConcurrentAppareillage, {
   through: Form_ProdConcuApp,
 });
@@ -216,7 +265,7 @@ Formulaire.belongsToMany(ProdConcurrentDisj, {
 
 ProdConcurrentDisj.belongsToMany(Formulaire, {
   through: Form_ProdConcuDisj,
-});
+}); */
 
 /* ========= FORM LINKED WITH SOURCE APPRO ========= */
 
@@ -270,29 +319,11 @@ module.exports = {
   Cadeau,
   CadeauForm,
   AlgeriaCities,
-  ConcurrentLampe,
-  ConcurrentAccessoire,
-  ConcurrentAppareillage,
-  ConcurrentDisjoncteur,
-  ProduitLampe,
-  ProduitAppareillage,
-  ProduitDisjoncteur,
-  Form_ProdLampe,
-  Form_ProdAppareillage,
-  Form_ProdAccessoire,
-  Form_ProdDisj,
-  Form_ConcuLampe,
-  Form_ConcuAccessoire,
-  Form_ConcuApp,
-  Form_ConcuDisj,
-  ProdConcurrentLampe,
-  Form_ProdConcuLampe,
-  ProdConcurrentAccessoire,
-  Form_ProdConcuAcc,
-  ProdConcurrentAppareillage,
-  Form_ProdConcuApp,
-  ProdConcurrentDisj,
-  Form_ProdConcuDisj,
+  Concurrent,
+  Produit,
+  Form_Prod,
+  Form_Concu,
+  Form_ProdConcu,
   SourceAppro,
   Form_SourceAppro,
 };

@@ -1,16 +1,23 @@
-const ProduitAccessoire = require("../../model/ProduitAccessoire");
+const Produit = require("../../model/Produit");
 
-const updateProduitAccessoire = async (req, res) => {
+const updateProduit = async (req, res) => {
   try {
-    const item = await ProduitAccessoire.findByPk(req.params.id);
+    const { name, categorieId } = req.body;
+    const item = await Produit.findByPk(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "ProduitAccessoire not found" });
+      return res.status(404).json({ message: "Produit not found" });
     }
-    await item.update(req.body);
+    if (name) item.name = name;
+    await item.save();
+
+    if (categorieId) {
+      await item.setCategories([categorieId]);
+    }
+
     res.status(200).json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = updateProduitAccessoire;
+module.exports = updateProduit;

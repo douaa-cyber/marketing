@@ -1,22 +1,13 @@
 const Form = require("../model/Formulaire");
-const Form_ProdAccessoire = require("../model/Form_ProdAccessoire");
-const Form_ProdAppareillage = require("../model/Form_ProdAppareillage");
-const form_ProduitLampe = require("../model/Form_ProduitLampe");
-const Form_ProdDisjoncteur = require("../model/Form_ProdDisjoncteur");
-const Form_ConcuLampe = require("../model/Form_ConcuLampe");
-const Form_ConcuApp = require("../model/Form_ConcuApp");
-const Form_ConcuDisjoncteur = require("../model/Form_ConcuDisjoncteur");
-const Form_ConcuAccess = require("../model/Form_ConcuAccess");
-const Form_ProdConcuLampe = require("../model/Form_ProdConcuLampe");
-const Form_ProdConcuApp = require("../model/Form_ProdConcuApp");
-const Form_ProdConcuDisj = require("../model/Form_ProdConcuDisj");
-const Form_ProdConcuAcc = require("../model/Form_ProdConcuAcc");
 const Form_SourceAppro = require("../model/Form_SourceAppro");
 const Form_Cadeau = require("../model/Form_Cadeau");
 const Form_Critere = require("../model/Form_critere");
 const Form_Action = require("../model/Form_action");
 const fs = require("fs");
 const path = require("path");
+const Form_Concu = require("../model/Form_Concu");
+const Form_Prod = require("../model/Form_Prod");
+const Form_ProdConcu = require("../model/Form_ProdConcu");
 const createForm = async (req, res) => {
   try {
     const body = req.body;
@@ -69,111 +60,49 @@ const createForm = async (req, res) => {
     // Parcours des catégories
     for (const cat of Object.keys(selections)) {
       const sel = selections[cat];
+      const categorieId = Number(sel.categorieId);
 
       // Produits
       await Promise.all(
-        (sel.produits || [])
-          .map((p) => {
-            const id = Number(p.produitId);
-            const nbArticle = sel.nbr_article ?? 0;
-            const nbArticleCommande = sel.nbr_article_commande ?? 0;
-            if (!id) return null;
-            switch (cat) {
-              case "lampe":
-                return form_ProduitLampe.create({
-                  formulaireID: form.ID,
-                  ProduitLampeID: id,
-                  nbArticle: nbArticle,
-                  nbArticleCommande: nbArticleCommande,
-                });
-              case "appareillage":
-                return Form_ProdAppareillage.create({
-                  formulaireID: form.ID,
-                  ProduitAppareillageID: id,
-                  nbArticle: nbArticle,
-                  nbArticleCommande: nbArticleCommande,
-                });
-              case "disjoncteur":
-                return Form_ProdDisjoncteur.create({
-                  formulaireID: form.ID,
-                  ProduitDisjoncteurID: id,
-                  nbArticle: nbArticle,
-                  nbArticleCommande: nbArticleCommande,
-                });
-              case "accessoire":
-                return Form_ProdAccessoire.create({
-                  formulaireID: form.ID,
-                  ProduitAccessoireID: id,
-                  nbArticle: nbArticle,
-                  nbArticleCommande: nbArticleCommande,
-                });
-            }
-          })
-          .filter(Boolean),
+        (sel.produits || []).map((p) => {
+          const produitId = Number(p.produitId);
+          if (!produitId) return null;
+
+          return Form_Prod.create({
+            formId: form.ID,
+            produitId,
+            categorieId,
+            nbArticle: sel.nbr_article ?? 0,
+            nbArticleCommande: sel.nbr_article_commande ?? 0,
+          });
+        }),
       );
 
       // Concurrents
       await Promise.all(
-        (sel.concurrents || [])
-          .map((c) => {
-            const id = Number(c.concurrentId);
-            if (!id) return null;
-            switch (cat) {
-              case "lampe":
-                return Form_ConcuLampe.create({
-                  formulaireID: form.ID,
-                  ConcurrentLampeID: id,
-                });
-              case "appareillage":
-                return Form_ConcuApp.create({
-                  formulaireID: form.ID,
-                  ConcurrentAppareillageID: id,
-                });
-              case "disjoncteur":
-                return Form_ConcuDisjoncteur.create({
-                  formulaireID: form.ID,
-                  ConcurrentDisjoncteurID: id,
-                });
-              case "accessoire":
-                return Form_ConcuAccess.create({
-                  formulaireID: form.ID,
-                  ConcurrentAccessoireID: id,
-                });
-            }
-          })
-          .filter(Boolean),
+        (sel.concurrents || []).map((c) => {
+          const concurrentId = Number(c.concurrentId);
+          if (!concurrentId) return null;
+
+          return Form_Concu.create({
+            formId: form.ID,
+            concurrentId,
+            categorieId,
+          });
+        }),
       );
 
       // ProdConcurrents
       await Promise.all(
-        (sel.prodConcurrents || [])
-          .map((pc) => {
-            const id = Number(pc.prodConcurrentId);
-            if (!id) return null;
-            switch (cat) {
-              case "lampe":
-                return Form_ProdConcuLampe.create({
-                  formulaireID: form.ID,
-                  ProdConcurrentLampeID: id,
-                });
-              case "appareillage":
-                return Form_ProdConcuApp.create({
-                  formulaireID: form.ID,
-                  ProdConcurrentAppareillageID: id,
-                });
-              case "disjoncteur":
-                return Form_ProdConcuDisj.create({
-                  formulaireID: form.ID,
-                  ProdConcurrentDisjID: id,
-                });
-              case "accessoire":
-                return Form_ProdConcuAcc.create({
-                  formulaireID: form.ID,
-                  ProdConcurrentAccessoireID: id,
-                });
-            }
-          })
-          .filter(Boolean),
+        (sel.prodConcurrents || []).map((pc) => {
+          const id = Number(pc.prodConcurrentId);
+          if (!id) return null;
+          return Form_ProdConcu.create({
+            formId: form.ID,
+            prodConcuId: id,
+            categorieId,
+          });
+        }),
       );
     }
 

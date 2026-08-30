@@ -1,8 +1,12 @@
-const ProdConcurrentAccessoire = require("../../model/ProdConcurrentAccessoire");
+const ProdConcu = require("../../model/ProdConcurrent");
 
-const createProdConcurrentAccessoire = async (req, res) => {
+const createProduitConcu = async (req, res) => {
   try {
-    const item = await ProdConcurrentAccessoire.create(req.body);
+    const { name, categorieId } = req.body;
+    const item = await ProdConcu.create({ name });
+    if (categorieId) {
+      await item.addCategorie(categorieId);
+    }
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -10,5 +14,5 @@ const createProdConcurrentAccessoire = async (req, res) => {
 };
 
 module.exports = {
-  createProdConcurrentAccessoire,
+  createProduitConcu,
 };

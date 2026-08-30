@@ -75,6 +75,17 @@ export default function Accueil() {
           const statsData = await statsRes.json();
           const missions = await missionRes.json();
 
+          const parsedMissions = Array.isArray(missions)
+            ? missions.map((m) => ({
+                ...m,
+                objectif:
+                  typeof m.objectif === "string"
+                    ? JSON.parse(m.objectif)
+                    : m.objectif,
+              }))
+            : [];
+
+          setActiveMission(parsedMissions[0] || null);
           setStats({
             TotalMission: statsData.TotalMission || 0,
             TotalForm: statsData.TotalForm || 0,
@@ -189,7 +200,7 @@ export default function Accueil() {
             <div className="px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 leading-tight">
-                  {activeMission.Objectif}
+                  {activeMission.objectif?.name}
                 </h3>
 
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-0 text-sm md:text-md text-gray-500 italic mt-1">

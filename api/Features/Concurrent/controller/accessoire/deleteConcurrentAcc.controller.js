@@ -1,8 +1,8 @@
-const ConcurrentAccessoire = require("../../model/ConcurrentAccessoire");
+const Concurrent = require("../../model/Concurrent");
 
-const deleteConcurrentAccessoire = async (req, res) => {
+const deleteConcurrent = async (req, res) => {
   try {
-    const item = await ConcurrentAccessoire.findByPk(req.params.id);
+    const item = await Concurrent.findByPk(req.params.id);
     if (!item) {
       return res.status(404).json({ message: "Not found" });
     }
@@ -14,5 +14,5 @@ const deleteConcurrentAccessoire = async (req, res) => {
 };
 
 module.exports = {
-  deleteConcurrentAccessoire,
+  deleteConcurrent,
 };

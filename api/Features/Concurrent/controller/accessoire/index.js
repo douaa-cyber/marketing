@@ -1,17 +1,15 @@
-const { CreateConcurrentAcc } = require("./addConcurrentAcc.controller");
+const { CreateConcurrent } = require("./addConcurrentAcc.controller");
 const {
-  getAllConcurrentAccessoire,
-  getConcurrentAccessoireById,
+  getAllConcurrent,
+  getConcurrentById,
 } = require("./getConcurrentAcc.controller");
 const { updateConcurrent } = require("./updateConcurrentAcc.controller");
-const {
-  deleteConcurrentAccessoire,
-} = require("./deleteConcurrentAcc.controller");
+const { deleteConcurrent } = require("./deleteConcurrentAcc.controller");
 
 module.exports = {
-  CreateConcurrentAcc,
-  getAllConcurrentAccessoire,
-  getConcurrentAccessoireById,
+  CreateConcurrent,
+  getAllConcurrent,
+  getConcurrentById,
   updateConcurrent,
-  deleteConcurrentAccessoire,
+  deleteConcurrent,
 };

@@ -136,7 +136,7 @@ export default function ProductsPage() {
   const handleSubmit = async () => {
     if (selectedProduct) {
       // Update
-      await fetch(`http://localhost:3000/api/activite/${selectedProduct.ID}`, {
+      await fetch(`${URL}/api/activite/${selectedProduct.ID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -200,7 +200,7 @@ export default function ProductsPage() {
                   <TableHead key={header.id} className="text-center">
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </TableHead>
                 ))}
@@ -215,7 +215,7 @@ export default function ProductsPage() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

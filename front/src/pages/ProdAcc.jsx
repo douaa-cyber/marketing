@@ -8,17 +8,11 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, X } from "lucide-react";
 import { URL } from "@/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -27,16 +21,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// ===== Columns =====
+// ===== Définition des colonnes =====
 const columns = (onEdit, onDelete) => [
   {
     accessorKey: "name",
@@ -44,8 +45,17 @@ const columns = (onEdit, onDelete) => [
     cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
+    id: "categorie",
+    header: "Catégorie",
+    // accessorFn est crucial pour que le filtrage fonctionne sur le texte de la catégorie
+    accessorFn: (row) => row.Categories?.[0]?.name || "Non classé",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground">{row.getValue("categorie")}</span>
+    ),
+  },
+  {
     id: "actions",
-    header: "",
+    header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => (
       <div className="flex justify-end gap-2">
         <Button
@@ -68,139 +78,202 @@ const columns = (onEdit, onDelete) => [
 ];
 
 export default function ProductsPage() {
-  const [Products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(null);
 
-  // ===== Dialog states =====
+  // États pour les filtres
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilters, setColumnFilters] = useState([]);
+  // États des Dialogues
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [form, setForm] = useState({
     name: "",
+    categorieId: "",
   });
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteProductTarget, setDeleteProductTarget] = useState(null);
 
-  // ===== Fetch API =====
-  const fetchProducts = async () => {
+  // ===== Chargement des données =====
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${URL}/api/product/accessoire`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setProducts(data);
+      const [resProd, resCat] = await Promise.all([
+        fetch(`${URL}/api/product/`, { credentials: "include" }),
+        fetch(`${URL}/api/categorie/all`, { credentials: "include" }),
+      ]);
+
+      if (resProd.ok && resCat.ok) {
+        const prodData = await resProd.json();
+        const catData = await resCat.json();
+        setProducts(prodData);
+        setCategories(catData);
+      }
     } catch (err) {
-      console.error(err);
-      setProducts([]);
+      console.error("Erreur lors du chargement:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchData();
   }, []);
 
   // ===== Handlers =====
-  const handleEdit = (Product) => {
-    if (Product) {
-      setSelectedProduct(Product);
+  const handleEdit = (product) => {
+    if (product) {
+      setSelectedProduct(product);
       setForm({
-        name: Product.name,
+        name: product.name,
+        categorieId: product.Categories?.[0]?.ID?.toString() || "",
       });
     } else {
       setSelectedProduct(null);
-      setForm({ name: "" });
+      setForm({ name: "", categorieId: "" });
     }
     setOpenDialog(true);
   };
 
-  const handleDelete = (Product) => {
-    setDeleteProductTarget(Product);
+  const handleDelete = (product) => {
+    setDeleteProductTarget(product);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
     if (!deleteProductTarget) return;
-    await fetch(`${URL}/api/product/accessoire/${deleteProductTarget.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    setOpenDeleteDialog(false);
-    fetchProducts();
+    try {
+      await fetch(`${URL}/api/product/${deleteProductTarget.ID}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      setOpenDeleteDialog(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSubmit = async () => {
-    if (selectedProduct) {
-      // Update
-      await fetch(`${URL}/api/product/accessoire/${selectedProduct.id}`, {
-        method: "PUT",
+    if (!form.name.trim()) return;
+
+    const method = selectedProduct ? "PUT" : "POST";
+    const endpoint = selectedProduct
+      ? `${URL}/api/product/${selectedProduct.ID}`
+      : `${URL}/api/product/`;
+
+    try {
+      await fetch(endpoint, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          categorieId: form.categorieId || null,
+        }),
       });
-    } else {
-      await fetch(`${URL}/api/product/accessoire`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+      setOpenDialog(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
     }
-    setOpenDialog(false);
-    fetchProducts();
   };
 
-  // ===== Table =====
+  // ===== Configuration Table =====
   const table = useReactTable({
-    data: Products,
+    data: products,
     columns: columns(handleEdit, handleDelete),
-    state: { globalFilter },
-    globalFilterFn: (row, _, value) =>
-      row.original.name.toLowerCase().includes(value.toLowerCase()),
+    state: {
+      globalFilter,
+      columnFilters,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const rows = table.getRowModel().rows;
-
-  if (loading) return <p className="p-6">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des données...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Produits Accessoires</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          Gestion des Produits
+        </h1>
         <Button onClick={() => handleEdit(null)}>
-          <Pencil className="w-4 h-4 mr-2" /> Créer
+          <Plus className="w-4 h-4 mr-2" /> Nouveau Produit
         </Button>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center">
+      {/* Barre de recherche et Filtres */}
+      <div className="flex flex-wrap gap-4 items-center">
         <Input
-          placeholder="Rechercher Produits..."
-          value={globalFilter}
+          placeholder="Rechercher un produit..."
+          value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm"
+          className="max-w-sm bg-white"
         />
+
+        {/* Filtre par Catégorie */}
+        <Select
+          value={table.getColumn("categorie")?.getFilterValue() ?? "all"}
+          onValueChange={(value) =>
+            table
+              .getColumn("categorie")
+              ?.setFilterValue(value === "all" ? "" : value)
+          }
+        >
+          <SelectTrigger className="w-[220px] bg-white text-left">
+            <SelectValue placeholder="Toutes les catégories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les catégories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.ID} value={cat.name}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Bouton de réinitialisation des filtres */}
+        {(globalFilter || columnFilters.length > 0) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setGlobalFilter("");
+              setColumnFilters([]);
+            }}
+          >
+            <X className="w-4 h-4 mr-2" /> Réinitialiser
+          </Button>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-white shadow-sm">
+      {/* Tableau */}
+      <div className="rounded-md border bg-white shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-muted/50">
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((header) => (
-                  <TableHead key={header.id} className="text-center">
+          <TableHeader className="bg-slate-50">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </TableHead>
                 ))}
@@ -208,14 +281,14 @@ export default function ProductsPage() {
             ))}
           </TableHeader>
           <TableBody>
-            {rows.length ? (
-              rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/40 transition">
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="hover:bg-slate-50/50">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -223,8 +296,11 @@ export default function ProductsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
-                  Aucun Produit trouvé
+                <TableCell
+                  colSpan={3}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  Aucun produit trouvé.
                 </TableCell>
               </TableRow>
             )}
@@ -233,18 +309,22 @@ export default function ProductsPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-end space-x-2">
+        <span className="text-sm text-muted-foreground mr-2">
+          Page {table.getState().pagination.pageIndex + 1} sur{" "}
+          {table.getPageCount()}
+        </span>
         <Button
-          size="sm"
           variant="outline"
+          size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           Précédent
         </Button>
         <Button
-          size="sm"
           variant="outline"
+          size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
@@ -252,39 +332,79 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Dialog Création / Edition */}
+      {/* Modal Création / Édition */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>
-              {selectedProduct ? "Modifier Produit" : "Créer Produit"}
+              {selectedProduct ? "Modifier le produit" : "Ajouter un produit"}
             </DialogTitle>
+            <DialogDescription>
+              Saisissez les détails du produit ici. Le nom est obligatoire.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Input
-              placeholder="name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Nom du Produit
+              </label>
+              <Input
+                id="name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Ex: Chargeur Rapide USB-C"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Catégorie</label>
+              <Select
+                value={form.categorieId}
+                onValueChange={(val) => setForm({ ...form, categorieId: val })}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.ID} value={cat.ID.toString()}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSubmit}>
-              {selectedProduct ? "Modifier" : "Créer"}
+            <Button variant="outline" onClick={() => setOpenDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSubmit} disabled={!form.name.trim()}>
+              Enregistrer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Confirmation Suppression */}
+      {/* Modal Suppression */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmation</DialogTitle>
+            <DialogTitle>Confirmation de suppression</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est
+              irréversible.
+            </DialogDescription>
           </DialogHeader>
-          <p className="py-4">
-            Voulez-vous vraiment supprimer{" "}
-            <strong>{deleteProductTarget?.name}</strong> ?
-          </p>
+          <div className="py-4">
+            Le produit{" "}
+            <span className="font-semibold text-destructive">
+              {deleteProductTarget?.name}
+            </span>{" "}
+            sera supprimé.
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
@@ -293,7 +413,7 @@ export default function ProductsPage() {
               Annuler
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              Supprimer
+              Supprimer définitivement
             </Button>
           </DialogFooter>
         </DialogContent>

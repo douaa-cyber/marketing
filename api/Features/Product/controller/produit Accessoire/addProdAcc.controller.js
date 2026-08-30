@@ -1,12 +1,18 @@
-const ProduitAccessoire = require("../../model/ProduitAccessoire");
+const Produit = require("../../model/Produit");
 
-const createProduitAccessoire = async (req, res) => {
+const createProduit = async (req, res) => {
   try {
-    const item = await ProduitAccessoire.create(req.body);
+    const { name, categorieId } = req.body;
+    const item = await Produit.create({
+      name: name,
+    });
+    if (categorieId) {
+      await item.addCategorie(categorieId);
+    }
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = createProduitAccessoire;
+module.exports = createProduit;
