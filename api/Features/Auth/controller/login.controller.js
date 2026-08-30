@@ -29,11 +29,11 @@ const login = async (req, res) => {
     );
 
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      domain: hostname,
-      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,                         // Protects from XSS injection attacks
+      secure: true,                           
+      sameSite: "none",                    
+      maxAge: 24 * 60 * 60 * 1000,            // 1 day
+    
     });
     const userResponse = {
       id: user.id,
