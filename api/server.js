@@ -26,10 +26,8 @@ const hostname = process.env.hostname;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-      "http://10.19.36.193:5173",
-      "http://192.168.2.231:5173",
-      "http://192.168.2.42:5173",
+     
+      "https://marketing-frontend-93hu.onrender.com/",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
