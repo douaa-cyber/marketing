@@ -11,4 +11,4 @@ jobs:
       - name: Ping Render backend health endpoint
         run: |
           # ⚠️ REMPLACEZ CETTE URL PAR VOTRE URL RENDER DE PRODUCTION
-          curl -fsS https://marketingapp-9zxk.onrender.com/ || true
+          curl -fsS https://marketingapp-9zxk.onrender.com/test || true
